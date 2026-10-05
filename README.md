@@ -1,5 +1,7 @@
 # Zouroboros for Muse
 
+![Muse × Zouroboros — Two Minds. One Infinite Loop. One symbiotic system.](docs/assets/infographic.png)
+
 **The workshop behind your personal AI.**
 
 Muse is wonderful at being your personal assistant — it chats with you, manages your schedule, remembers who you are, and connects to your apps. But when there's serious building to do, you want a workshop: more than one kind of AI working together, a shared memory of what the work taught, and a process that verifies before it ships. That's Zouroboros. This repo packages it so any Muse user can set it up.
@@ -10,9 +12,9 @@ Think of it like a house. **Muse is the front door** — everything about you co
 
 One rule decides where everything goes: *if it's about you, it lives in Muse. If it's about building, it lives in Zouroboros.* Muse calls into the workshop when there's building to do, and the workshop reports back when it's done.
 
-![Muse x Zouroboros — the symbiotic architecture: front door plus workshop](docs/assets/architecture.png)
+![Meta Muse × Zouroboros — symbiotic AI concierge plus workshop: the architecture](docs/assets/architecture-diagram.png)
 
-*The diagram above shows the whole shape: you at the top, Muse on the left owning everything about you, Zouroboros on the right owning everything about building, with dispatch going one way and status reports coming back. A scalable vector version lives alongside it at docs/assets/architecture.svg.*
+*The architecture in one picture: Muse on the left as the personal concierge layer, Zouroboros on the right as the building layer — seven AI harnesses, the software factory, and the infrastructure beneath. Build requests flow one way, refined results flow back.*
 
 ## What you get
 

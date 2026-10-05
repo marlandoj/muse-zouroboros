@@ -148,6 +148,12 @@ Three bridges, in order of adoption:
 - **Shadow before live, everywhere.** Hooks, gates, and review verdicts earn
   enforcement by demonstrating judgment in shadow mode first.
 
+## Visual reference
+
+The detailed vector diagram of this architecture (front door, workshop,
+dispatch and read-status bridges, rollout phases) lives at
+`docs/assets/fusion-diagram.svg`, with a PNG render alongside it.
+
 ## Where the code lives
 
 `docs/packages.md` inventories every vendored package: what it is, where it
