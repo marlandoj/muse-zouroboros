@@ -27,10 +27,10 @@ bash <bridge> "<prompt>" [workdir]
 # exit 0 = success, non-zero = failure
 ```
 
-`registry/executor-registry.json` declares the eight supported harnesses
-(Claude Code, Hermes, Gemini, Codex, OpenCode, Kimi, Pi, Cursor): their
+`registry/executor-registry.json` declares the seven supported harnesses
+(Claude Code, Hermes, Gemini, Codex, OpenCode, Kimi, Pi): their
 bridges, health-check commands, timeouts, and env docs. You do **not** need
-all eight — install and authenticate whichever CLIs you use, and the router
+all seven — install and authenticate whichever CLIs you use, and the router
 skips the rest.
 
 Check health:

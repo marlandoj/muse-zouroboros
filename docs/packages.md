@@ -53,8 +53,8 @@ governor, hash-chained decision ledger, systemd/cgroup sandboxing, and a
 ## `packages/zo-swarm-executors` — the executor layer
 
 Bridges, health checks, and registry metadata for the CLIs the orchestrator
-can dispatch to: Claude Code, Hermes, Gemini, Codex, OpenCode, Kimi, Pi,
-Cursor. Bridge protocol is one shell script per executor:
+can dispatch to: Claude Code, Hermes, Gemini, Codex, OpenCode, Kimi, and
+Pi. Bridge protocol is one shell script per executor:
 `bash <bridge> "<prompt>" [workdir]` → clean text on stdout.
 
 - **Entry points:** `bun scripts/doctor.ts` (health),

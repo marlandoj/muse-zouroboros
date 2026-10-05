@@ -1,6 +1,6 @@
 ---
 name: zo-swarm-executors
-description: Local executor system for zo-swarm-orchestrator — manages ACP and bridge transports, health checks, and registry metadata for Claude Code, Hermes, Gemini, Codex, OpenCode, Kimi, Pi, and Cursor agents.
+description: Local executor system for zo-swarm-orchestrator — manages ACP and bridge transports, health checks, and registry metadata for Claude Code, Hermes, Gemini, Codex, OpenCode, Kimi, and Pi agents.
 version: 2.0.0
 author: marlandoj
 tags:
@@ -15,7 +15,6 @@ tags:
   - opencode
   - kimi
   - pi
-  - cursor
 related_skills:
   - zo-swarm-orchestrator
   - zo-memory-system
@@ -54,7 +53,6 @@ bun scripts/register.ts validate
 | `opencode` | OpenCode CLI | `opencode acp --pure` | provider-dependent | Model-neutral code execution across task-scoped providers |
 | `kimi` | Kimi Code CLI | `kimi acp` | provider-dependent | Large-context coding, multimodal work, MCP-enabled sessions |
 | `pi` | Pi Coding Agent | `bridges/pi-bridge.sh` | provider-dependent | Minimal-harness coding and model comparisons |
-| `cursor` | Cursor CLI | `bridges/cursor-bridge.sh` | provider-dependent | Cursor rules, repository-aware implementation, MCP-enabled coding |
 
 ## Bridge Protocol
 
@@ -111,9 +109,5 @@ Or let the orchestrator use its default path: `Skills/zo-swarm-executors/registr
 | `KIMI_TIMEOUT` | kimi | `600`s |
 | `PI_MODEL` | pi | `openrouter/moonshotai/kimi-k3` |
 | `PI_TIMEOUT` | pi | `600`s |
-| `CURSOR_API_KEY` | cursor | Optional; browser login is also supported |
-| `CURSOR_MODEL` | cursor | Cursor `auto` route |
-| `CURSOR_TIMEOUT` | cursor | `600`s |
-| `CURSOR_FORCE` | cursor | `1`; set `0` to omit `--force` |
 | `SWARM_WORKSPACE` | all | `/home/workspace` |
 | `SWARM_EXECUTOR_REGISTRY` | all | `Skills/zo-swarm-executors/registry/executor-registry.json` |

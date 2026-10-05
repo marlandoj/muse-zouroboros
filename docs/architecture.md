@@ -51,7 +51,7 @@ so Muse itself can dispatch and inspect runs.
 
 The other end of the orchestrator: bridge scripts and a registry describing
 the AI CLIs installed on the machine — Claude Code, Codex, OpenCode, Hermes,
-Gemini, Kimi, Pi, Cursor. The contract is tiny:
+Gemini, Kimi, and Pi. The contract is tiny:
 
 ```bash
 bash <bridge> "<prompt>" [workdir]
@@ -60,7 +60,7 @@ bash <bridge> "<prompt>" [workdir]
 ```
 
 `bun scripts/doctor.ts` checks executor health; the orchestrator's router
-skips whatever is missing or broken. You don't need all eight — any subset
+skips whatever is missing or broken. You don't need all seven — any subset
 works, and the fallback chain degrades to whatever is healthy.
 
 ### 3. zo-memory (`packages/zo-memory-system`)

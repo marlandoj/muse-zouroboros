@@ -22,7 +22,7 @@ python3 --version  # want 3.11+
 
 Install and authenticate **whichever of these you actually use** — any subset
 works, the router skips the rest: Claude Code, Codex CLI, OpenCode, Hermes,
-Gemini CLI, Kimi, Pi, Cursor.
+Gemini CLI, Kimi, and Pi.
 
 Two healthy executors is the practical minimum (so fallback chains mean
 something). Four is comfortable.

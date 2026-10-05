@@ -66,7 +66,7 @@ No. Muse stays exactly what it is — your assistant, your front door. The works
 To start, one thing: an OpenAI API key, which powers the memory's understanding (and there's a free fallback mode without it). The swarm itself runs on AI coding subscriptions you already pay for — that's the point. It puts them to work together instead of letting each one sit idle. The full breakdown — which keys exist, how to get each one, what they cost, and how to tell they're working — is in docs/api-keys.md.
 
 **What if I only have one AI coding tool installed?**
-Two is the practical minimum, so that when one fails or is slow, there's somewhere else for the work to go. You don't need all eight — install the ones you actually use.
+Two is the practical minimum, so that when one fails or is slow, there's somewhere else for the work to go. You don't need all seven — install the ones you actually use.
 
 **Does my data leave my machine?**
 Only to the AI services you choose to configure. The memory database, the hooks, and the factory all live on your machine. The safety hooks are designed to keep it that way — one of them runs with no AI model at all, and another logs fingerprints of prompts rather than the prompts themselves.
