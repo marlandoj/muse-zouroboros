@@ -1,62 +1,58 @@
 # Zouroboros for Muse
 
-**The workshop behind your personal AI.** Zouroboros is agent infrastructure —
-multi-model dispatch, a shared memory substrate, a verified software factory,
-and prompt-time quality hooks — packaged so any Muse user can install it on
-their own Muse VM and let Muse call into it.
+**The workshop behind your personal AI.**
 
-The one-line thesis: **Muse is the front door; Zouroboros is the workshop.**
-Muse owns the relationship layer — conversation, connectors, scheduling,
-personal memory, approvals. Zouroboros owns the building layer — running work
-across several model harnesses, remembering what the work taught, verifying
-before it ships. Muse calls into the workshop; the workshop reports back.
+Muse is wonderful at being your personal assistant — it chats with you, manages your schedule, remembers who you are, and connects to your apps. But when there's serious building to do, you want a workshop: more than one kind of AI working together, a shared memory of what the work taught, and a process that verifies before it ships. That's Zouroboros. This repo packages it so any Muse user can set it up.
 
-## What's in this repo
+## The big idea
 
-| Path | What it is |
-|---|---|
-| `packages/zo-memory-system` | Hybrid SQLite + vector memory (episodic, procedural, graph) with an MCP server every harness can share |
-| `packages/zo-swarm-orchestrator` | Multi-model DAG task execution with health-routed fallback chains, budget governor, and a hash-chained decision ledger |
-| `packages/zo-swarm-executors` | Local executor layer: bridge scripts, health checks, and registry for Claude Code, Codex, OpenCode, Hermes, Gemini, Kimi, Pi, Cursor |
-| `packages/wayfinder` | Prompt-time skill suggester (shadow or live) for every harness |
-| `packages/verity` | "Done" gate: refuses an agent's finish when tests/builds haven't passed since the last edit (shadow or live) |
-| `packages/sift` | Context pruner: shortens repeated tool output with recoverable evidence (shadow or live) |
-| `factory/lane` | The software-factory conveyor: Linear `factory-ready` tickets → contract → swarm build → verified PR |
-| `docs/` | Implementation documentation: architecture, per-component guides, security model, de-Zo porting notes |
-| `walkthrough/` | Step-by-step guide for Muse users, from prerequisites to day-two operations |
-| `scripts/` | `bootstrap.sh` (installer) and `verify.sh` (post-install smoke checks) |
-| `examples/` | Ready-made bridge scripts, including a workshop status reporter Muse can run |
+Think of it like a house. **Muse is the front door** — everything about you comes through it: conversation, relationships, scheduling, approvals, your personal memory. **Zouroboros is the workshop out back** — everything about building: running work across several AI tools, remembering what was learned, reviewing code, delivering finished work.
 
-## Start here
+One rule decides where everything goes: *if it's about you, it lives in Muse. If it's about building, it lives in Zouroboros.* Muse calls into the workshop when there's building to do, and the workshop reports back when it's done.
 
-1. Read `docs/architecture.md` (10 minutes) — the mental model everything else hangs on.
-2. Follow `walkthrough/` in order — it takes you from a bare Muse VM to a working workshop.
-3. Run `scripts/verify.sh` when you're done — it proves each piece is alive.
+![Muse x Zouroboros — the symbiotic architecture: front door plus workshop](docs/assets/architecture.png)
 
-## Requirements
+*The diagram above shows the whole shape: you at the top, Muse on the left owning everything about you, Zouroboros on the right owning everything about building, with dispatch going one way and status reports coming back. A scalable vector version lives alongside it at docs/assets/architecture.svg.*
 
-- A Muse VM (or any Linux host with the same shape: persistent home directory, shell, network)
-- Bun (for the memory system and swarm) and Node 22+ / Python 3.11+ (for the hooks)
-- One API key to start: `OPENAI_API_KEY` (embeddings + default generation). Everything else is optional and degrades gracefully.
-- Agent CLIs you want as executors, installed and authenticated your usual way: Claude Code, Codex CLI, OpenCode, Hermes, Gemini CLI, Kimi, Pi, or Cursor — any subset works; the health router skips what's missing.
+## What you get
 
-## Design principles
+Five working systems, each useful on its own, better together:
 
-- **Local-first.** SQLite, local files, stdio MCP. No platform account, no control plane to phone home to.
-- **Graceful degradation everywhere.** No embeddings key? FTS5 keyword search still works. An executor unhealthy? The router fails over. A hook crashes? It answers `{}` and the agent carries on.
-- **Shadow before live.** Every hook and every review gate starts in a mode that only observes. You flip to enforcement after reading the evidence.
-- **Fail closed where it matters.** The factory rejects tickets with missing contracts, unknown costs, or ambiguous authority — never a permissive default.
-- **Your subscriptions, your arbitrage.** Heavy token work runs on the model subscriptions you already pay for; the orchestrator layer stays thin.
+**A shared memory.** One place where everything your AI tools learn gets stored — facts, decisions, how things went, unfinished tasks. Your Claude Code session, your Codex session, and Muse itself all draw from the same well, so knowledge never starts from zero again. It understands meaning, not just keywords, and it quietly figures out when a conversation needs background context.
 
-## Status
+**A multi-harness swarm.** Instead of one AI doing everything, the swarm spreads work across the AI coding tools you already have installed and pay for — Claude Code, Codex, OpenCode, and others. It picks the right tool for each piece, reroutes around failures automatically, keeps spending inside a budget you set, and writes down every decision it made so you can audit it later.
 
-This is a working system extracted from a live deployment, not a demo. The
-packages are vendored snapshots with machine-specific paths and dead platform
-references removed (see `docs/de-zo-notes.md` for exactly what changed). Some
-edges are still rough — the walkthrough marks every known one honestly.
+**A software factory.** For real build work, there's a proper pipeline: you describe what you want as a ticket, the factory checks the description is complete, builds it with the swarm, tests the result, reviews what's missing, and opens a pull request. Nothing ships because an AI *felt* done — it ships because the checks passed.
+
+**Prompt-time hooks.** Three small guardians that watch your AI tools as they work. One suggests the right skill for the job. One refuses to let an agent declare victory when the tests haven't passed since the last edit. One trims repeated output so long sessions don't drown in their own context. All three start in observation mode — they watch and report before they ever enforce.
+
+**Bridges to Muse.** Small connectors so Muse can check on the workshop ("is everything healthy?"), read the shared work memory, and file build tickets — without you leaving the chat.
+
+## How the pieces fit together
+
+You talk to Muse like always. When something needs building, Muse hands it to the workshop instead of doing it all inline. The swarm does the heavy work across your AI tools, the shared memory records what was learned, the factory verifies the result, and Muse brings you the finished pull request. Your personal memory, your schedule, your messages — none of that ever enters the workshop. The bridge carries work requests and status reports, never your private credentials.
+
+## Is this for you?
+
+This is for you if you use Muse regularly, you build software (or want AI help building it), and you already pay for one or more AI coding subscriptions. The workshop puts those subscriptions to work together instead of letting each one sit in its own silo.
+
+It's probably not for you yet if you only use Muse for conversation and scheduling — the workshop earns its keep on building work. And it's not a second assistant: if what you want is someone to talk to, that's Muse, and this repo won't change that.
+
+## How to get started
+
+Everything is in the walkthrough folder, in order, written for someone doing this the first time. It starts with what your machine needs, then walks you through each system one at a time — memory first, then the swarm, then the hooks, then the factory — with a check at the end of every step so you know it worked before moving on. Plan on an afternoon, most of it waiting on installs.
+
+A few things to know going in:
+
+- **You stay in control.** Every hook and every review starts in a mode that only watches. You turn on enforcement after you've read the reports and trust what you see.
+- **It degrades gracefully.** Missing pieces don't break the whole thing — they get skipped with a note. Two AI tools is enough to start; you don't need all of them.
+- **Your keys stay yours.** API keys live in a private file on your machine that only you can read. They never go into chat, never into the repo, never across the bridge to Muse.
+- **Start small.** The walkthrough has you prove each piece with something tiny before trusting it with real work. That caution is the entire philosophy.
+
+## Honest notes
+
+This is a working system extracted from a live setup, not a polished product. Some edges are rough, and the walkthrough marks every known one. The factory's event-driven automation exists but ships turned off — the ticket-driven path is the one to use. The review panel watches and reports but doesn't block anything yet. These are deliberate choices: observation before enforcement, everywhere.
 
 ## License
 
-MIT. See `LICENSE`. Verity builds on [Canny](https://github.com/qkal/Canny)
-(MIT © 2026 Kal), which its installer clones at a pinned commit rather than
-vendoring.
+MIT. See LICENSE. The hooks build on fine open-source work that's credited in their own folders.

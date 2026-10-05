@@ -1,0 +1,119 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1040" viewBox="0 0 1600 1040" font-family="'DejaVu Sans','Segoe UI',system-ui,sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b1020"/>
+      <stop offset="1" stop-color="#0e1526"/>
+    </linearGradient>
+    <linearGradient id="goldCard" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1a2238"/>
+      <stop offset="1" stop-color="#141b2e"/>
+    </linearGradient>
+    <linearGradient id="tealCard" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#10202a"/>
+      <stop offset="1" stop-color="#0d1a24"/>
+    </linearGradient>
+    <linearGradient id="goldBar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#f5c96b"/>
+      <stop offset="1" stop-color="#e8a93d"/>
+    </linearGradient>
+    <linearGradient id="tealBar" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#5eead4"/>
+      <stop offset="1" stop-color="#22b8a8"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#000" flood-opacity="0.45"/>
+    </filter>
+    <filter id="glowG"><feDropShadow dx="0" dy="0" stdDeviation="10" flood-color="#f5c96b" flood-opacity="0.35"/></filter>
+    <filter id="glowT"><feDropShadow dx="0" dy="0" stdDeviation="10" flood-color="#5eead4" flood-opacity="0.35"/></filter>
+    <marker id="ahG" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#f5c96b"/>
+    </marker>
+    <marker id="ahT" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5eead4"/>
+    </marker>
+    <marker id="ahW" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M0,0 L10,5 L0,10 z" fill="#8b93a7"/>
+    </marker>
+  </defs>
+
+  <rect width="1600" height="1040" fill="url(#bg)"/>
+  <g stroke="#ffffff" stroke-opacity="0.035" stroke-width="1">
+    <path d="M0,130 H1600 M0,260 H1600 M0,390 H1600 M0,520 H1600 M0,650 H1600 M0,780 H1600 M0,910 H1600"/>
+    <path d="M200,0 V1040 M400,0 V1040 M600,0 V1040 M800,0 V1040 M1000,0 V1040 M1200,0 V1040 M1400,0 V1040"/>
+  </g>
+
+  <!-- Title -->
+  <text x="800" y="72" text-anchor="middle" font-size="46" font-weight="bold" fill="#f2f4f8" letter-spacing="4">MUSE x ZOUROBOROS</text>
+  <text x="800" y="108" text-anchor="middle" font-size="20" fill="#9aa3b5" letter-spacing="2">THE SYMBIOTIC ARCHITECTURE - FRONT DOOR + WORKSHOP</text>
+
+  <!-- You -->
+  <g filter="url(#soft)">
+    <rect x="660" y="140" width="280" height="64" rx="32" fill="#1b2340" stroke="#3b4666" stroke-width="1.5"/>
+    <text x="800" y="180" text-anchor="middle" font-size="24" font-weight="bold" fill="#f2f4f8">YOU</text>
+  </g>
+  <line x1="730" y1="204" x2="380" y2="278" stroke="#8b93a7" stroke-width="2" marker-end="url(#ahW)" opacity=".8"/>
+  <line x1="870" y1="204" x2="1220" y2="278" stroke="#8b93a7" stroke-width="2" marker-end="url(#ahW)" opacity=".8"/>
+
+  <!-- LEFT CARD : Muse -->
+  <g filter="url(#soft)">
+    <rect x="80" y="280" width="560" height="470" rx="20" fill="url(#goldCard)" stroke="#f5c96b" stroke-opacity=".45" stroke-width="1.5"/>
+    <rect x="80" y="280" width="560" height="470" rx="20" fill="none" stroke="url(#goldBar)" stroke-width="3" stroke-opacity=".55" filter="url(#glowG)"/>
+    <rect x="80" y="280" width="560" height="86" rx="20" fill="#f5c96b" opacity=".08"/>
+    <text x="120" y="322" font-size="15" font-weight="bold" fill="#f5c96b" letter-spacing="3">THE FRONT DOOR</text>
+    <text x="120" y="352" font-size="30" font-weight="bold" fill="#f7f9fc">Muse</text>
+    <g font-size="17" fill="#c9d1e0">
+      <text x="120" y="408">&#8226;  Chat everywhere - web, iOS, Android, Mac, WhatsApp</text>
+      <text x="120" y="446">&#8226;  Connectors - Gmail, Calendar, Messenger,</text>
+      <text x="120" y="484">    Instagram, Threads</text>
+      <text x="120" y="522">&#8226;  Personal memory - knows you, your people, commitments</text>
+      <text x="120" y="560">&#8226;  Approvals and Vault - your word required</text>
+      <text x="120" y="598">&#8226;  Scheduling and notifications - crons, watches, push</text>
+      <text x="120" y="636">&#8226;  Default-assistant SMS from your phone</text>
+    </g>
+    <rect x="120" y="648" width="480" height="62" rx="12" fill="#f5c96b" opacity=".12" stroke="#f5c96b" stroke-opacity=".4"/>
+    <text x="360" y="687" text-anchor="middle" font-size="19" font-weight="bold" fill="#f5c96b">Owns everything about YOU</text>
+  </g>
+
+  <!-- RIGHT CARD : Zouroboros -->
+  <g filter="url(#soft)">
+    <rect x="960" y="280" width="560" height="470" rx="20" fill="url(#tealCard)" stroke="#5eead4" stroke-opacity=".45" stroke-width="1.5"/>
+    <rect x="960" y="280" width="560" height="470" rx="20" fill="none" stroke="url(#tealBar)" stroke-width="3" stroke-opacity=".55" filter="url(#glowT)"/>
+    <rect x="960" y="280" width="560" height="86" rx="20" fill="#5eead4" opacity=".08"/>
+    <text x="1000" y="322" font-size="15" font-weight="bold" fill="#5eead4" letter-spacing="3">THE WORKSHOP</text>
+    <text x="1000" y="352" font-size="30" font-weight="bold" fill="#f7f9fc">Zouroboros System</text>
+    <g font-size="17" fill="#c9d1e0">
+      <text x="1000" y="408">&#8226;  Swarm - multi-harness dispatch on subs you already pay for</text>
+      <text x="1000" y="446">&#8226;  Software factory - contract &gt; build &gt; verified PR</text>
+      <text x="1000" y="484">&#8226;  zo-memory - shared knowledge substrate, MCP-wired</text>
+      <text x="1000" y="522">&#8226;  Consensus panel - shadow review, already caught a bug</text>
+      <text x="1000" y="560">&#8226;  Command Center - operator console, terminal on phone</text>
+      <text x="1000" y="598">&#8226;  Decision ledger - hash-chained proof of agent actions</text>
+    </g>
+    <rect x="1000" y="648" width="480" height="62" rx="12" fill="#5eead4" opacity=".12" stroke="#5eead4" stroke-opacity=".4"/>
+    <text x="1240" y="687" text-anchor="middle" font-size="19" font-weight="bold" fill="#5eead4">Owns everything about BUILDING</text>
+  </g>
+
+  <!-- bridges between cards -->
+  <line x1="648" y1="462" x2="952" y2="462" stroke="#f5c96b" stroke-width="3" marker-end="url(#ahG)"/>
+  <text x="800" y="428" text-anchor="middle" font-size="16" font-weight="bold" fill="#f5c96b" letter-spacing="2">DISPATCH</text>
+  <text x="800" y="450" text-anchor="middle" font-size="15" fill="#f5c96b" opacity=".85">file a ticket</text>
+  <line x1="952" y1="562" x2="648" y2="562" stroke="#5eead4" stroke-width="3" marker-end="url(#ahT)"/>
+  <text x="800" y="596" text-anchor="middle" font-size="16" font-weight="bold" fill="#5eead4" letter-spacing="2">READ STATUS</text>
+  <text x="800" y="618" text-anchor="middle" font-size="15" fill="#5eead4" opacity=".85">reports back</text>
+
+  <!-- phase strip -->
+  <g filter="url(#soft)">
+    <rect x="120" y="790" width="1360" height="118" rx="16" fill="#131a30" stroke="#2a3552" stroke-width="1.5"/>
+    <text x="160" y="828" font-size="15" font-weight="bold" fill="#9aa3b5" letter-spacing="3">THE ROLLOUT</text>
+    <circle cx="180" cy="864" r="9" fill="#f5c96b"/>
+    <text x="200" y="871" font-size="19" fill="#e6ebf4">Phase 1 - now: read bridges, Muse sees the workshop</text>
+    <circle cx="180" cy="894" r="9" fill="#5eead4"/>
+    <text x="200" y="901" font-size="19" fill="#e6ebf4">Phase 2 - next: "build X" files a factory ticket</text>
+    <text x="920" y="871" font-size="19" fill="#9aa3b5">Phase 3 - unified ops: one console for everything you own</text>
+    <text x="920" y="901" font-size="19" fill="#9aa3b5">Never: credentials through the tunnel, no second scheduler</text>
+  </g>
+
+  <!-- footer rule -->
+  <text x="800" y="962" text-anchor="middle" font-size="23" font-weight="bold" fill="#f2f4f8">About YOU, think Muse    -    about BUILDING, think Zouroboros</text>
+  <text x="800" y="996" text-anchor="middle" font-size="16" fill="#6b7488" letter-spacing="1">Infrastructure + product - exactly how good systems are shaped.</text>
+</svg>
