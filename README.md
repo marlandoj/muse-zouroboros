@@ -53,6 +53,26 @@ A few things to know going in:
 
 This is a working system extracted from a live setup, not a polished product. Some edges are rough, and the walkthrough marks every known one. The factory's event-driven automation exists but ships turned off — the ticket-driven path is the one to use. The review panel watches and reports but doesn't block anything yet. These are deliberate choices: observation before enforcement, everywhere.
 
+## Questions people ask
+
+**Will this replace my Muse?**
+No. Muse stays exactly what it is — your assistant, your front door. The workshop only does building work when Muse hands it over. If you never build software with AI, you'll never notice it's there.
+
+**Do I need to pay for anything extra?**
+To start, one thing: an OpenAI API key, which powers the memory's understanding (and there's a free fallback mode without it). The swarm itself runs on AI coding subscriptions you already pay for — that's the point. It puts them to work together instead of letting each one sit idle.
+
+**What if I only have one AI coding tool installed?**
+Two is the practical minimum, so that when one fails or is slow, there's somewhere else for the work to go. You don't need all eight — install the ones you actually use.
+
+**Does my data leave my machine?**
+Only to the AI services you choose to configure. The memory database, the hooks, and the factory all live on your machine. The safety hooks are designed to keep it that way — one of them runs with no AI model at all, and another logs fingerprints of prompts rather than the prompts themselves.
+
+**I'm not very technical. Can I still set this up?**
+The walkthrough was written for exactly that person. It goes step by step, tells you what each piece does in plain terms, and every step ends with a check so you know it worked before moving on. If a step confuses you, ask your Muse — that's what it's for.
+
+**What if something breaks?**
+There's a verification script that checks every system and tells you which one is unhappy and where to look. And the design rule throughout is graceful: a broken piece gets skipped with a note, never silently, and never takes the rest down with it.
+
 ## License
 
 MIT. See LICENSE. The hooks build on fine open-source work that's credited in their own folders.
