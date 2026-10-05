@@ -1,0 +1,204 @@
+{
+  "name": "continuation-recall-14d",
+  "windowDays": 14,
+  "threshold": 0.85,
+  "facts": [
+    {
+      "entity": "project.health-dashboard",
+      "key": "scope",
+      "value": "Core v1 focuses on vitals, medications, notes, and anomaly detection.",
+      "text": "Health dashboard v1 scope: vitals, medications, notes, anomaly detection.",
+      "category": "decision",
+      "decayClass": "stable",
+      "createdDaysAgo": 5,
+      "lastAccessedDaysAgo": 2
+    },
+    {
+      "entity": "decision.ffb-supplier-scorecard",
+      "key": "source_of_truth",
+      "value": "FFB_SKU_CANON.md is the source of truth for SKU variants and supplier documents.",
+      "text": "Supplier scorecard and questionnaire must align to FFB_SKU_CANON.md.",
+      "category": "decision",
+      "decayClass": "stable",
+      "createdDaysAgo": 6,
+      "lastAccessedDaysAgo": 4
+    },
+    {
+      "entity": "project.jhf-risk-dashboard",
+      "key": "focus",
+      "value": "JHF risk dashboard should show concentration risk, stop-loss coverage, and portfolio exposure.",
+      "text": "Jackson Heritage Finance risk dashboard focus is concentration risk, stop-loss coverage, portfolio exposure.",
+      "category": "project",
+      "decayClass": "active",
+      "createdDaysAgo": 7,
+      "lastAccessedDaysAgo": 3
+    },
+    {
+      "entity": "project.old-archive",
+      "key": "note",
+      "value": "An old archived item that should not dominate continuation recall.",
+      "text": "old archived item unrelated to current work",
+      "category": "fact",
+      "decayClass": "stable",
+      "createdDaysAgo": 45,
+      "lastAccessedDaysAgo": 40
+    }
+  ],
+  "episodes": [
+    {
+      "summary": "Hermes executor failed because system role format was invalid and empty tool names were passed.",
+      "outcome": "failure",
+      "happenedDaysAgo": 4,
+      "entities": ["executor.hermes", "project.zo-swarm-orchestrator", "incident.executor-config"],
+      "metadata": { "errorType": "invalid_system_role" }
+    },
+    {
+      "summary": "OmniRoute service returned 502 and 521 errors during health checks, blocking progress until the service recovered.",
+      "outcome": "failure",
+      "happenedDaysAgo": 3,
+      "entities": ["service.omniroute", "incident.service-availability", "project.omniroute"],
+      "metadata": { "httpStatus": [502, 521] }
+    },
+    {
+      "summary": "Health dashboard planning session settled on core metrics only for v1 and deferred extra metric types to a later release.",
+      "outcome": "resolved",
+      "happenedDaysAgo": 5,
+      "entities": ["project.health-dashboard", "decision.health-dashboard-v1"],
+      "metadata": { "phase": "planning" }
+    }
+  ],
+  "openLoops": [
+    {
+      "title": "Review anomaly detection thresholds for the health dashboard",
+      "summary": "Next step is to review anomaly detection thresholds for the health dashboard before release.",
+      "kind": "commitment",
+      "status": "open",
+      "priority": 0.9,
+      "entity": "project.health-dashboard",
+      "createdDaysAgo": 2,
+      "updatedDaysAgo": 1
+    },
+    {
+      "title": "Resolve stale vitals card bug",
+      "summary": "There is still an unresolved dashboard bug causing stale vitals cards on refresh.",
+      "kind": "bug",
+      "status": "open",
+      "priority": 0.9,
+      "entity": "project.health-dashboard",
+      "createdDaysAgo": 2,
+      "updatedDaysAgo": 1
+    },
+    {
+      "title": "Decide whether medications should support dosage history in v1",
+      "summary": "Pending approval on whether medications should support dosage history in the first release.",
+      "kind": "approval",
+      "status": "open",
+      "priority": 0.8,
+      "entity": "project.health-dashboard",
+      "createdDaysAgo": 2,
+      "updatedDaysAgo": 1
+    },
+    {
+      "title": "Repair Hermes executor configuration",
+      "summary": "Hermes executor configuration still needs a fix for system role formatting and empty tool names.",
+      "kind": "task",
+      "status": "open",
+      "priority": 0.9,
+      "entity": "executor.hermes",
+      "createdDaysAgo": 4,
+      "updatedDaysAgo": 3
+    }
+  ],
+  "cases": [
+    {
+      "id": "health-dashboard-left-off",
+      "query": "where did we leave off on the health dashboard?",
+      "expectDetection": true,
+      "expectAny": [
+        "health dashboard",
+        "anomaly detection thresholds",
+        "stale vitals cards",
+        "dosage history"
+      ]
+    },
+    {
+      "id": "dashboard-next-step",
+      "query": "what is the next step on the dashboard work?",
+      "expectDetection": true,
+      "expectAny": [
+        "anomaly detection thresholds",
+        "stale vitals cards"
+      ]
+    },
+    {
+      "id": "supplier-scorecard",
+      "query": "update the supplier scorecard",
+      "expectDetection": true,
+      "expectAny": [
+        "ffb_sku_canon.md",
+        "supplier scorecard"
+      ]
+    },
+    {
+      "id": "hermes-failure",
+      "query": "what happened with hermes a few days ago?",
+      "expectDetection": true,
+      "expectAny": [
+        "system role",
+        "empty tool",
+        "hermes"
+      ]
+    },
+    {
+      "id": "omniroute-outage",
+      "query": "what was the omniroute outage again?",
+      "expectDetection": true,
+      "expectAny": [
+        "502",
+        "521",
+        "omniroute"
+      ]
+    },
+    {
+      "id": "medications-approval",
+      "query": "is there still a pending approval for medications in v1?",
+      "expectDetection": true,
+      "expectAny": [
+        "dosage history",
+        "pending approval",
+        "medications"
+      ]
+    },
+    {
+      "id": "risk-dashboard-focus",
+      "query": "what were we tracking on the jhf risk dashboard?",
+      "expectDetection": true,
+      "expectAny": [
+        "concentration risk",
+        "stop-loss coverage",
+        "portfolio exposure"
+      ]
+    },
+    {
+      "id": "greeting-negative",
+      "query": "hello",
+      "expectDetection": false,
+      "expectAny": []
+    },
+    {
+      "id": "self-contained-negative",
+      "query": "write a python function to sort a list",
+      "expectDetection": false,
+      "expectAny": []
+    },
+    {
+      "id": "dashboard-bug-status",
+      "query": "is that dashboard bug still open?",
+      "expectDetection": true,
+      "expectAny": [
+        "stale vitals cards",
+        "dashboard bug"
+      ]
+    }
+  ]
+}

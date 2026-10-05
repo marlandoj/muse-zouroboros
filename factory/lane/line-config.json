@@ -1,0 +1,38 @@
+{
+  "bugfix": {
+    "mandatory_gates": ["sf002_classify", "postflight"],
+    "max_rung": "staging",
+    "auto_merge_eligible": true,
+    "risk_posture": "aggressive"
+  },
+  "dependency": {
+    "mandatory_gates": ["sf002_classify", "postflight"],
+    "max_rung": "staging",
+    "auto_merge_eligible": true,
+    "risk_posture": "aggressive"
+  },
+  "docs": {
+    "mandatory_gates": ["sf002_classify", "postflight"],
+    "max_rung": "staging",
+    "auto_merge_eligible": true,
+    "risk_posture": "aggressive"
+  },
+  "feature": {
+    "mandatory_gates": ["sf002_classify", "seed_eval", "postflight"],
+    "max_rung": "open-pr",
+    "auto_merge_eligible": true,
+    "risk_posture": "standard"
+  },
+  "refactor": {
+    "mandatory_gates": ["sf002_classify", "seed_eval", "postflight"],
+    "max_rung": "open-pr",
+    "auto_merge_eligible": true,
+    "risk_posture": "standard"
+  },
+  "migration": {
+    "mandatory_gates": ["sf002_classify", "seed_eval", "postflight", "scenario_runner"],
+    "max_rung": "branch-write",
+    "auto_merge_eligible": false,
+    "risk_posture": "conservative"
+  }
+}

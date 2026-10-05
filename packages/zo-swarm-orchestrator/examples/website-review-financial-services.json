@@ -1,0 +1,120 @@
+[
+  {
+    "id": "plan",
+    "persona": "product-manager",
+    "task": "Create a structured review plan for https://example.com. Fetch the homepage and identify key pages and areas to audit. This is a financial services website so pay special attention to trust signals, compliance language, fiduciary disclosures, and regulatory requirements. Organize into categories: UX/Design, Performance, Security, SEO, Accessibility, Content Quality, and Financial Compliance. Output a prioritized checklist.",
+    "priority": "critical",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "planning",
+      "priority": "critical",
+      "tags": ["planning", "review-plan", "financial-services"]
+    }
+  },
+  {
+    "id": "ux-audit",
+    "persona": "frontend-developer",
+    "task": "Audit https://example.com for UX/UI quality. Fetch the homepage and key pages. Analyze: visual hierarchy, navigation flow, responsive design indicators, component consistency, typography, color usage, call-to-action effectiveness, trust signals (testimonials, certifications, security badges), and overall user experience for a financial services audience. Provide severity-rated findings (P0-P3).",
+    "priority": "high",
+    "dependsOn": ["plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "design",
+      "priority": "high",
+      "tags": ["ux", "ui", "design", "financial-services"]
+    }
+  },
+  {
+    "id": "accessibility-audit",
+    "persona": "frontend-developer",
+    "task": "Analyze https://example.com for accessibility compliance. Fetch the homepage and check WCAG 2.1 AA conformance: semantic HTML structure, ARIA usage, keyboard navigation indicators, color contrast, focus management, alt text on images, form labels, and screen reader compatibility. Financial services sites must be ADA-compliant. Provide specific code-level findings with severity ratings. OUTPUT REQUIREMENT: You MUST produce a comprehensive report of at least 2000 characters with detailed findings, code snippets, and remediation steps for each issue.",
+    "priority": "high",
+    "dependsOn": ["plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "accessibility",
+      "priority": "high",
+      "tags": ["accessibility", "wcag", "a11y", "financial-services"]
+    }
+  },
+  {
+    "id": "security-audit",
+    "persona": "security-engineer",
+    "task": "Perform a security review of https://example.com. Fetch the homepage and assess: HTTPS configuration, security headers (CSP, HSTS, X-Frame-Options, X-Content-Type-Options), cookie security flags, form handling, third-party script risks, and financial data protection indicators. As a financial services site, security is critical for client trust and regulatory compliance. Provide P0-P3 severity ratings with remediation steps. OUTPUT REQUIREMENT: You MUST produce a comprehensive report of at least 2000 characters with detailed findings, specific header values observed, and step-by-step remediation instructions.",
+    "priority": "critical",
+    "dependsOn": ["plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "security",
+      "priority": "critical",
+      "tags": ["security", "headers", "compliance", "financial-services"]
+    }
+  },
+  {
+    "id": "performance-audit",
+    "persona": "devops-engineer",
+    "task": "Analyze https://example.com for performance. Fetch the homepage and examine: total page weight, asset sizes, image optimization opportunities, script loading strategy (defer/async), CSS delivery method, third-party script count and impact, caching headers, and Core Web Vitals indicators (LCP, FID, CLS). Provide specific measurable findings with targets.",
+    "priority": "high",
+    "dependsOn": ["plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "performance",
+      "priority": "high",
+      "tags": ["performance", "cwv", "optimization", "financial-services"]
+    }
+  },
+  {
+    "id": "seo-audit",
+    "persona": "research-analyst",
+    "task": "Perform an SEO audit of https://example.com. Fetch the homepage and analyze: title tags, meta descriptions, structured data/schema markup (especially FinancialService, LocalBusiness), Open Graph tags, canonical URLs, heading hierarchy (H1-H6), internal linking structure, mobile-friendliness signals, and content quality for financial services SEO. Provide actionable recommendations ranked by impact. OUTPUT REQUIREMENT: You MUST produce a comprehensive report of at least 2000 characters with specific tag values found, missing elements, and prioritized recommendations with implementation examples.",
+    "priority": "high",
+    "dependsOn": ["plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "seo",
+      "priority": "high",
+      "tags": ["seo", "meta", "structured-data", "financial-services"]
+    }
+  },
+  {
+    "id": "compliance-audit",
+    "persona": "research-analyst",
+    "task": "Review https://example.com for financial services compliance and regulatory content. Fetch the homepage and key pages. Check for: SEC/FINRA disclaimer presence and accuracy, fiduciary disclosure, ADV brochure availability, privacy policy (Reg S-P), CRS (Client Relationship Summary) accessibility, fee transparency, risk disclosures, and general regulatory language. This is NOT legal advice but a content-level compliance scan. Provide P0-P3 severity findings. OUTPUT REQUIREMENT: You MUST produce a comprehensive report of at least 2000 characters with specific compliance items found or missing, exact locations, and remediation guidance.",
+    "priority": "critical",
+    "dependsOn": ["plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "compliance",
+      "priority": "critical",
+      "tags": ["compliance", "regulatory", "finra", "sec", "financial-services"]
+    }
+  },
+  {
+    "id": "synthesis",
+    "persona": "product-manager",
+    "task": "Synthesize ALL prior specialist findings (UX, accessibility, security, performance, SEO, compliance) into a comprehensive executive report for the client RIA. Include: 1) Overall site health score (1-10) with justification, 2) Top 5 critical issues requiring immediate attention (P0/P1), 3) Top 5 quick wins (high impact, low effort), 4) Prioritized roadmap grouped into Sprint 1 (critical), Sprint 2 (high), Sprint 3 (medium), 5) Resource and effort estimates per sprint, 6) Financial-services-specific recommendations for trust and compliance. Format as a professional report with clear headers and tables.",
+    "priority": "critical",
+    "dependsOn": ["ux-audit", "accessibility-audit", "security-audit", "performance-audit", "seo-audit", "compliance-audit"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "synthesis",
+      "priority": "critical",
+      "tags": ["report", "executive-summary", "roadmap", "financial-services"]
+    }
+  }
+]

@@ -1,0 +1,74 @@
+{
+  "name": "zouroboros-swarm",
+  "version": "5.1.1",
+  "description": "Production multi-agent orchestration with circuit breakers, adaptive 6/8-signal routing, DAG execution, tier-resolve, and MCP transport",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist/",
+    "README.md",
+    "assets/"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marlandoj/zouroboros.git",
+    "directory": "packages/swarm"
+  },
+  "bin": {
+    "zouroboros-swarm": "./dist/cli/index.js"
+  },
+  "scripts": {
+    "build": "tsc && mkdir -p dist/executor/registry dist/executor/bridges && cp src/executor/registry/executor-registry.json src/executor/registry/harness-contract.json dist/executor/registry/ && cp src/executor/bridges/*.sh src/executor/bridges/*.py src/executor/bridges/pi-mcp-bootstrap.ts dist/executor/bridges/",
+    "dev": "tsc --watch",
+    "test": "bun test src/__tests__/ src/cli/ scripts/__tests__/",
+    "orchestrate": "bun scripts/orchestrate-v5.ts",
+    "doctor": "bun scripts/orchestrate-v5.ts doctor",
+    "status": "bun scripts/orchestrate-v5.ts status",
+    "bench": "bun scripts/swarm-bench.ts",
+    "tier-resolve": "bun scripts/tier-resolve.ts",
+    "dep-graph": "bun scripts/dep-graph.ts",
+    "mcp": "bun scripts/mcp-server.ts",
+    "mcp-http": "bun scripts/mcp-server-http.ts",
+    "typecheck": "tsc --noEmit",
+    "harness-matrix": "bun scripts/generate-harness-matrix.ts",
+    "harness-matrix:check": "bun scripts/generate-harness-matrix.ts --check",
+    "model-catalog": "bun scripts/model-catalog.ts",
+    "bench:native": "bun scripts/native-swarm-bench.ts"
+  },
+  "dependencies": {
+    "@agentclientprotocol/sdk": "0.25.0",
+    "@modelcontextprotocol/sdk": "1.29.0",
+    "hono": "^4.12.12",
+    "pi-mcp-adapter": "2.15.0",
+    "yaml": "^2.9.0",
+    "zouroboros-core": "workspace:*",
+    "zouroboros-rag": "workspace:*",
+    "zouroboros-selfheal": "workspace:*",
+    "zouroboros-workflow": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/node": "^20.0.0",
+    "typescript": "^5.0.0"
+  },
+  "keywords": [
+    "swarm",
+    "orchestration",
+    "multi-agent",
+    "circuit-breaker",
+    "routing",
+    "dag",
+    "tier-resolve",
+    "mcp",
+    "zouroboros"
+  ],
+  "license": "MIT",
+  "author": "marlandoj.zo.computer"
+}

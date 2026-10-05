@@ -1,0 +1,49 @@
+id: seed-conveyor-smoke-timeout-2026-08-15
+created: "2026-08-15T16:45:00Z"
+status: approved
+operator_approval:
+  channel: email
+  received_at: "2026-08-15T16:45:00Z"
+  text: Approved
+goal: >-
+  Preserve the conveyor smoke gate's bounded execution while preventing transient
+  pool-probe timeouts from being misreported as child assertion failures.
+constraints:
+  - Work only in an isolated clean worktree.
+  - Do not mutate production state, runtime flags, Linear records, holds, or dispatch state.
+  - Do not retry the pool probe blindly.
+  - Keep the pool timeout finite and scoped to the pool self-test call site.
+  - Do not invoke model-based MoA or a model Consensus Gate.
+  - Open a reversible pull request and do not merge it automatically.
+acceptance_criteria:
+  - A regression test proves timeout evidence takes precedence over captured stdout.
+  - Timeout, signal-only termination, and non-timeout spawn errors are reported explicitly.
+  - The pool self-test timeout is increased from 30 seconds to 60 seconds and remains finite.
+  - Focused tests and strict TypeScript pass with zero errors.
+  - The full hermetic conveyor smoke test reports HEALTHY.
+  - Constitutional verification, post-flight evaluation, and the five-part gap audit pass.
+tasks:
+  - id: T1
+    wave: 1
+    deps: []
+    files:
+      - scripts/smoke-diagnostics.ts
+      - scripts/smoke-diagnostics.test.ts
+    description: Add process-aware diagnostic precedence and regression tests.
+  - id: T2
+    wave: 2
+    deps: [T1]
+    files:
+      - scripts/conveyor-smoke-test.ts
+    description: Thread spawn context into test probes and raise only the pool timeout to 60 seconds.
+  - id: T3
+    wave: 3
+    deps: [T2]
+    files:
+      - PROGRESS.md
+      - evaluations/conveyor-smoke-timeout-postflight-2026-08-15.md
+    description: Run mechanical checks, audit every acceptance criterion, and record the gap audit.
+exit_conditions:
+  - All acceptance criteria have file or command evidence.
+  - No production state, runtime flags, Linear records, holds, or dispatch state changed.
+  - A committed branch is pushed and a non-merged pull request is open.

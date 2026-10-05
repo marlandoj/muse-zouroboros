@@ -1,0 +1,253 @@
+{
+  "version": "1.0.0",
+  "description": "Evaluation fixtures for Tarjan articulation point protection in open loops",
+  "fixtures": [
+    {
+      "id": "fixture-001",
+      "name": "Critical blocker in star graph",
+      "description": "An open loop connected to a hub node that connects 5 workstreams should be protected",
+      "graph": {
+        "type": "star",
+        "center": { "entity": "project.ffb", "key": "hub", "value": "FFB Project Hub" },
+        "leaves": [
+          { "entity": "project.ffb", "key": "supplier", "value": "Supplier management" },
+          { "entity": "project.ffb", "key": "marketing", "value": "Marketing campaigns" },
+          { "entity": "project.ffb", "key": "inventory", "value": "Inventory tracking" },
+          { "entity": "project.ffb", "key": "website", "value": "Website updates" },
+          { "entity": "project.ffb", "key": "compliance", "value": "Compliance review" }
+        ]
+      },
+      "openLoop": {
+        "title": "Resolve FFB hub integration issue",
+        "summary": "Critical blocker affecting all FFB workstreams",
+        "entity": "project.ffb",
+        "kind": "bug",
+        "priority": 0.9
+      },
+      "expected": {
+        "isProtected": true,
+        "reasonContains": "articulation point",
+        "minBridges": 4
+      }
+    },
+    {
+      "id": "fixture-002",
+      "name": "Regular task in cycle graph",
+      "description": "An open loop in a cyclic dependency should not be protected (cycles are resilient)",
+      "graph": {
+        "type": "cycle",
+        "nodes": [
+          { "entity": "feature.auth", "key": "login", "value": "Login feature" },
+          { "entity": "feature.auth", "key": "signup", "value": "Signup feature" },
+          { "entity": "feature.auth", "key": "password", "value": "Password reset" },
+          { "entity": "feature.auth", "key": "oauth", "value": "OAuth integration" }
+        ]
+      },
+      "openLoop": {
+        "title": "Update OAuth provider settings",
+        "summary": "Regular maintenance task for OAuth integration",
+        "entity": "feature.auth",
+        "kind": "task",
+        "priority": 0.6
+      },
+      "expected": {
+        "isProtected": false,
+        "reasonContains": "No articulation points"
+      }
+    },
+    {
+      "id": "fixture-003",
+      "name": "Bridge node between two projects",
+      "description": "A task connected to a node that bridges two distinct knowledge clusters should be protected",
+      "graph": {
+        "type": "bridge",
+        "cluster1": [
+          { "entity": "project.a", "key": "api", "value": "Project A API" },
+          { "entity": "project.a", "key": "db", "value": "Project A Database" }
+        ],
+        "cluster2": [
+          { "entity": "project.b", "key": "api", "value": "Project B API" },
+          { "entity": "project.b", "key": "db", "value": "Project B Database" }
+        ],
+        "bridge": { "entity": "integration", "key": "shared-lib", "value": "Shared library between A and B" }
+      },
+      "openLoop": {
+        "title": "Fix shared library compatibility issue",
+        "summary": "Blocking integration between Project A and Project B",
+        "entity": "integration",
+        "kind": "bug",
+        "priority": 0.95
+      },
+      "expected": {
+        "isProtected": true,
+        "reasonContains": "disconnect knowledge graph"
+      }
+    },
+    {
+      "id": "fixture-004",
+      "name": "Line graph endpoint",
+      "description": "Endpoint of a line graph is not an articulation point and should not be protected",
+      "graph": {
+        "type": "line",
+        "nodes": [
+          { "entity": "pipeline", "key": "step1", "value": "Build step" },
+          { "entity": "pipeline", "key": "step2", "value": "Test step" },
+          { "entity": "pipeline", "key": "step3", "value": "Deploy step" }
+        ]
+      },
+      "openLoop": {
+        "title": "Update deploy configuration",
+        "summary": "Deploy step endpoint task",
+        "entity": "pipeline",
+        "kind": "task",
+        "priority": 0.5
+      },
+      "expected": {
+        "isProtected": false
+      }
+    },
+    {
+      "id": "fixture-005",
+      "name": "Line graph internal node",
+      "description": "Internal node of a line graph IS an articulation point and should be protected",
+      "graph": {
+        "type": "line",
+        "nodes": [
+          { "entity": "workflow", "key": "ingest", "value": "Data ingestion" },
+          { "entity": "workflow", "key": "transform", "value": "Data transformation" },
+          { "entity": "workflow", "key": "export", "value": "Data export" }
+        ]
+      },
+      "openLoop": {
+        "title": "Fix data transformation logic",
+        "summary": "Middle step that connects ingestion and export",
+        "entity": "workflow",
+        "kind": "bug",
+        "priority": 0.8
+      },
+      "expected": {
+        "isProtected": true,
+        "articulationFactKeys": ["transform"]
+      }
+    },
+    {
+      "id": "fixture-006",
+      "name": "Orphan loop with no graph connections",
+      "description": "An open loop not connected to any facts should not be protected",
+      "graph": {
+        "type": "empty"
+      },
+      "openLoop": {
+        "title": "Research competitor pricing",
+        "summary": "Standalone research task with no knowledge graph links",
+        "entity": "research.competitor",
+        "kind": "task",
+        "priority": 0.4
+      },
+      "expected": {
+        "isProtected": false,
+        "reasonContains": "No graph connections"
+      }
+    },
+    {
+      "id": "fixture-007",
+      "name": "Multiple articulation points",
+      "description": "Complex graph with multiple articulation points - loop should be protected",
+      "graph": {
+        "type": "complex",
+        "description": "Cycle1 -- AP1 -- AP2 -- Cycle2"
+      },
+      "openLoop": {
+        "title": "Resolve AP2 integration issue",
+        "summary": "Middle bridge node between two clusters",
+        "entity": "bridge",
+        "kind": "incident",
+        "priority": 1.0
+      },
+      "expected": {
+        "isProtected": true,
+        "minArticulationPoints": 1
+      }
+    },
+    {
+      "id": "fixture-008",
+      "name": "Stale loop restoration",
+      "description": "A stale open loop connected to an articulation point should be restored to 'open'",
+      "graph": {
+        "type": "star",
+        "center": { "entity": "system.core", "key": "router", "value": "Core routing service" },
+        "leaves": [
+          { "entity": "service", "key": "auth", "value": "Auth service" },
+          { "entity": "service", "key": "payments", "value": "Payments service" },
+          { "entity": "service", "key": "notifications", "value": "Notifications service" }
+        ]
+      },
+      "openLoop": {
+        "title": "Fix core router timeout",
+        "summary": "Critical service affecting multiple downstream systems",
+        "entity": "system.core",
+        "kind": "incident",
+        "priority": 1.0,
+        "initialStatus": "stale"
+      },
+      "expected": {
+        "afterProtectionStatus": "open",
+        "isProtected": true
+      }
+    },
+    {
+      "id": "fixture-009",
+      "name": "Entity match but no links",
+      "description": "Open loop has entity that exists but fact has no graph links - should not be protected",
+      "graph": {
+        "type": "isolated",
+        "facts": [
+          { "entity": "orphan.entity", "key": "fact1", "value": "Isolated fact 1" },
+          { "entity": "orphan.entity", "key": "fact2", "value": "Isolated fact 2" }
+        ]
+      },
+      "openLoop": {
+        "title": "Update orphan documentation",
+        "summary": "Task for entity with unlinked facts",
+        "entity": "orphan.entity",
+        "kind": "task",
+        "priority": 0.5
+      },
+      "expected": {
+        "isProtected": false
+      }
+    },
+    {
+      "id": "fixture-010",
+      "name": "High priority non-critical loop",
+      "description": "High priority alone should not protect - must be articulation point",
+      "graph": {
+        "type": "cycle",
+        "nodes": [
+          { "entity": "urgent", "key": "task1", "value": "Urgent task 1" },
+          { "entity": "urgent", "key": "task2", "value": "Urgent task 2" }
+        ]
+      },
+      "openLoop": {
+        "title": "Critical urgent task",
+        "summary": "High priority but in resilient cycle graph",
+        "entity": "urgent",
+        "kind": "task",
+        "priority": 1.0
+      },
+      "expected": {
+        "isProtected": false,
+        "note": "Priority alone doesn't trigger protection - only graph topology"
+      }
+    }
+  ],
+  "passCriteria": {
+    "description": "All fixtures must pass for Phase 1 to be considered complete",
+    "minPassRate": 1.0,
+    "requiredFixtures": ["fixture-001", "fixture-003", "fixture-005", "fixture-008"]
+  },
+  "benchmarks": {
+    "maxLatencyMs": 100,
+    "targetLatencyMs": 50
+  }
+}

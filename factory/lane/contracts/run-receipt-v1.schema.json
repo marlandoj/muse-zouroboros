@@ -1,0 +1,454 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zouroboros.ai/schemas/run-receipt-v1.schema.json",
+  "title": "Zouroboros Canonical Run Receipt v1",
+  "type": "object",
+  "required": [
+    "contract_id",
+    "schema_version",
+    "receipt_id",
+    "operation_id",
+    "idempotency_key",
+    "receipt_hash",
+    "trigger",
+    "lineage",
+    "versions",
+    "authority",
+    "events",
+    "attempts",
+    "terminal",
+    "acknowledgements",
+    "verification",
+    "observation",
+    "ts_created",
+    "ts_terminal"
+  ],
+  "properties": {
+    "$schema": { "type": "string", "format": "uri" },
+    "contract_id": { "const": "zouroboros-run-receipt/v1" },
+    "schema_version": { "const": 1 },
+    "receipt_id": { "$ref": "#/$defs/receiptId" },
+    "operation_id": { "$ref": "#/$defs/operationId" },
+    "idempotency_key": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "receipt_hash": { "$ref": "#/$defs/hash" },
+    "trigger": { "$ref": "#/$defs/trigger" },
+    "lineage": { "$ref": "#/$defs/lineage" },
+    "versions": { "$ref": "#/$defs/versions" },
+    "authority": { "$ref": "#/$defs/authority" },
+    "events": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/event" }
+    },
+    "attempts": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/attempt" }
+    },
+    "terminal": { "$ref": "#/$defs/terminal" },
+    "acknowledgements": { "$ref": "#/$defs/acknowledgements" },
+    "verification": { "$ref": "#/$defs/verification" },
+    "observation": { "$ref": "#/$defs/observation" },
+    "redaction": { "$ref": "#/$defs/redaction" },
+    "ts_created": { "$ref": "#/$defs/timestamp" },
+    "ts_terminal": { "$ref": "#/$defs/timestamp" }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "receiptId": {
+      "type": "string",
+      "pattern": "^rr-[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "operationId": {
+      "type": "string",
+      "pattern": "^op-[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "eventId": {
+      "type": "string",
+      "pattern": "^evt-[A-Za-z0-9._:-]{1,128}$"
+    },
+    "trigger": {
+      "type": "object",
+      "required": ["kind", "identity", "intent", "input_hash", "ts"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["operator", "schedule", "automation", "webhook", "agent", "consensus", "factory", "evaluator"]
+        },
+        "identity": { "type": "string", "minLength": 1 },
+        "intent": { "type": "string", "minLength": 1 },
+        "input_hash": { "$ref": "#/$defs/hash" },
+        "ts": { "$ref": "#/$defs/timestamp" }
+      },
+      "additionalProperties": false
+    },
+    "lineage": {
+      "type": "object",
+      "required": ["parent_receipt_id", "trace_id", "span_id", "inherited_state_refs", "wave_id", "seed_id"],
+      "properties": {
+        "parent_receipt_id": {
+          "oneOf": [
+            { "$ref": "#/$defs/receiptId" },
+            { "type": "null" }
+          ]
+        },
+        "trace_id": { "type": "string", "pattern": "^[0-9a-f]{32}$" },
+        "span_id": { "type": "string", "pattern": "^[0-9a-f]{16}$" },
+        "inherited_state_refs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "wave_id": { "type": ["string", "null"] },
+        "seed_id": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "versions": {
+      "type": "object",
+      "required": ["contract_version", "policy_version", "model_versions", "tool_versions", "schema_migrations"],
+      "properties": {
+        "contract_version": { "const": "zouroboros-run-receipt/v1" },
+        "policy_version": { "type": ["string", "null"] },
+        "model_versions": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "tool_versions": {
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "schema_migrations": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "authority": {
+      "type": "object",
+      "required": [
+        "envelope_kind",
+        "approving_authority",
+        "approval_ts",
+        "approval_ref",
+        "autonomy_tier",
+        "authorization_evidence_ref"
+      ],
+      "properties": {
+        "envelope_kind": {
+          "type": "string",
+          "enum": ["operator_approval", "seed_authority", "receipt_authority", "consensus_quorum", "autonomy_policy", "none"]
+        },
+        "approving_authority": { "type": ["string", "null"] },
+        "approval_ts": {
+          "oneOf": [
+            { "$ref": "#/$defs/timestamp" },
+            { "type": "null" }
+          ]
+        },
+        "approval_ref": { "type": ["string", "null"] },
+        "autonomy_tier": {
+          "type": ["string", "null"],
+          "enum": ["T0", "T1", "T2", null]
+        },
+        "authorization_evidence_ref": { "type": ["string", "null"] },
+        "capability_envelope": { "$ref": "#/$defs/capabilityEnvelope" },
+        "authority_events": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/authorityEvent" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "capabilityEnvelope": {
+      "type": "object",
+      "required": ["envelope_ref", "envelope_sha256", "evaluation_summary"],
+      "properties": {
+        "envelope_ref": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "envelope_sha256": { "$ref": "#/$defs/hash" },
+        "evaluation_summary": {
+          "type": "object",
+          "required": ["decision", "evaluated_at", "reason_count"],
+          "properties": {
+            "decision": { "type": "string", "enum": ["PERMIT", "DENY"] },
+            "evaluated_at": { "$ref": "#/$defs/timestamp" },
+            "reason_count": { "type": "integer", "minimum": 0 }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "authorityEvent": {
+      "type": "object",
+      "required": ["sequence", "kind", "capability", "decision", "reason", "ts"],
+      "properties": {
+        "sequence": { "type": "integer", "minimum": 1 },
+        "kind": { "type": "string", "enum": ["decision", "violation"] },
+        "capability": { "type": "string", "minLength": 1 },
+        "decision": { "type": "string", "enum": ["PERMIT", "DENY"] },
+        "reason": { "type": ["string", "null"] },
+        "ts": { "$ref": "#/$defs/timestamp" }
+      },
+      "additionalProperties": false
+    },
+    "event": {
+      "type": "object",
+      "required": [
+        "event_id",
+        "source_event_id",
+        "causal_parent_id",
+        "sequence",
+        "cursor",
+        "kind",
+        "ts",
+        "attempt_n",
+        "tool_call_id",
+        "tool_result_for",
+        "payload_hash"
+      ],
+      "properties": {
+        "event_id": { "$ref": "#/$defs/eventId" },
+        "source_event_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "causal_parent_id": {
+          "oneOf": [
+            { "$ref": "#/$defs/eventId" },
+            { "type": "null" }
+          ]
+        },
+        "sequence": { "type": "integer", "minimum": 1 },
+        "cursor": { "type": "string", "pattern": "^rrc:op-[0-9A-HJKMNP-TV-Z]{26}:[1-9][0-9]*$" },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "operation.accepted",
+            "attempt.started",
+            "tool.called",
+            "tool.completed",
+            "attempt.completed",
+            "operation.completed",
+            "operation.failed",
+            "operation.held",
+            "delivery.visible"
+          ]
+        },
+        "ts": { "$ref": "#/$defs/timestamp" },
+        "attempt_n": { "type": ["integer", "null"], "minimum": 1 },
+        "tool_call_id": { "type": ["string", "null"] },
+        "tool_result_for": { "type": ["string", "null"] },
+        "payload_hash": { "$ref": "#/$defs/hash" }
+      },
+      "additionalProperties": false
+    },
+    "sideEffect": {
+      "type": "object",
+      "required": ["effect_id", "kind", "target", "committed", "reversible", "rollback_ref"],
+      "properties": {
+        "effect_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "file_write",
+            "file_delete",
+            "api_call",
+            "ledger_append",
+            "service_register",
+            "git_push",
+            "linear_mutation",
+            "qdrant_upsert",
+            "qdrant_delete"
+          ]
+        },
+        "target": { "type": "string", "minLength": 1 },
+        "committed": { "type": "boolean" },
+        "reversible": { "type": "boolean" },
+        "rollback_ref": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "attempt": {
+      "type": "object",
+      "required": ["attempt_n", "ts_start", "ts_end", "status", "side_effects", "error", "retry_reason"],
+      "properties": {
+        "attempt_n": { "type": "integer", "minimum": 1 },
+        "ts_start": { "$ref": "#/$defs/timestamp" },
+        "ts_end": {
+          "oneOf": [
+            { "$ref": "#/$defs/timestamp" },
+            { "type": "null" }
+          ]
+        },
+        "status": {
+          "type": "string",
+          "enum": ["success", "failure", "timeout", "cancelled"]
+        },
+        "side_effects": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/sideEffect" }
+        },
+        "error": { "type": ["string", "null"] },
+        "retry_reason": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "artifact": {
+      "type": "object",
+      "required": ["kind", "ref", "hash", "description"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["file", "pr", "ledger_entry", "service", "report", "evaluation"]
+        },
+        "ref": { "type": "string", "minLength": 1 },
+        "hash": {
+          "oneOf": [
+            { "$ref": "#/$defs/hash" },
+            { "type": "null" }
+          ]
+        },
+        "description": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "ledgerEntry": {
+      "type": "object",
+      "required": ["ledger", "record_hash", "chain_verified"],
+      "properties": {
+        "ledger": { "type": "string", "minLength": 1 },
+        "record_hash": { "$ref": "#/$defs/hash" },
+        "chain_verified": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "terminal": {
+      "type": "object",
+      "required": ["outcome", "committed_state_hash", "artifacts", "ledger_entries"],
+      "properties": {
+        "outcome": {
+          "type": "string",
+          "enum": ["success", "failure", "partial", "timeout", "cancelled", "held"]
+        },
+        "committed_state_hash": { "$ref": "#/$defs/hash" },
+        "artifacts": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/artifact" }
+        },
+        "ledger_entries": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/ledgerEntry" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "acknowledgement": {
+      "type": "object",
+      "required": ["kind", "event_id", "ts", "evidence_ref"],
+      "properties": {
+        "kind": { "type": "string", "enum": ["accepted", "completed", "user_visible"] },
+        "event_id": { "$ref": "#/$defs/eventId" },
+        "ts": { "$ref": "#/$defs/timestamp" },
+        "evidence_ref": { "type": "string", "minLength": 1 }
+      },
+      "additionalProperties": false
+    },
+    "acknowledgements": {
+      "type": "object",
+      "required": ["accepted", "completed", "user_visible"],
+      "properties": {
+        "accepted": { "$ref": "#/$defs/acknowledgement" },
+        "completed": {
+          "oneOf": [
+            { "$ref": "#/$defs/acknowledgement" },
+            { "type": "null" }
+          ]
+        },
+        "user_visible": {
+          "oneOf": [
+            { "$ref": "#/$defs/acknowledgement" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "verificationCheck": {
+      "type": "object",
+      "required": ["check_id", "kind", "pass", "evidence_ref", "detail"],
+      "properties": {
+        "check_id": { "type": "string", "minLength": 1 },
+        "kind": {
+          "type": "string",
+          "enum": ["mechanical", "consensus", "parity", "gap_audit", "constitutional"]
+        },
+        "pass": { "type": "boolean" },
+        "evidence_ref": { "type": ["string", "null"] },
+        "detail": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "edgeProof": {
+      "type": "object",
+      "required": ["chain_ok", "anchor_ok", "ledger_head"],
+      "properties": {
+        "chain_ok": { "type": "boolean" },
+        "anchor_ok": { "type": "boolean" },
+        "ledger_head": {
+          "oneOf": [
+            { "$ref": "#/$defs/hash" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "verification": {
+      "type": "object",
+      "required": ["verifier_identity", "verifier_org_separate", "checks", "edge_proof"],
+      "properties": {
+        "verifier_identity": { "type": "string", "minLength": 1 },
+        "verifier_org_separate": { "type": "boolean" },
+        "checks": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/verificationCheck" }
+        },
+        "edge_proof": { "$ref": "#/$defs/edgeProof" }
+      },
+      "additionalProperties": false
+    },
+    "observation": {
+      "type": "object",
+      "required": ["user_visible_outcome", "user_confirmed", "feedback_ref"],
+      "properties": {
+        "user_visible_outcome": { "type": ["string", "null"] },
+        "user_confirmed": { "type": ["boolean", "null"] },
+        "feedback_ref": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "redaction": {
+      "type": "object",
+      "required": ["redacted_fields", "redaction_reason", "redaction_hash"],
+      "properties": {
+        "redacted_fields": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "redaction_reason": { "type": "string", "minLength": 1 },
+        "redaction_hash": { "$ref": "#/$defs/hash" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

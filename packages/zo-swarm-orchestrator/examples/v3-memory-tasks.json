@@ -1,0 +1,56 @@
+[
+  {
+    "id": "research-phase-1",
+    "persona": "research-analyst",
+    "task": "Conduct initial research on the target topic. Focus on: 1) Key developments and milestones, 2) Major players and their approaches, 3) Current state of the art. Provide a structured summary with key findings.",
+    "priority": "critical",
+    "contextAccess": "none",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "research",
+      "priority": "critical",
+      "tags": ["initial-research", "landscape"]
+    }
+  },
+  {
+    "id": "deep-analysis",
+    "persona": "data-scientist",
+    "task": "Based on the initial research, identify 3-5 key opportunities or insights. For each, provide: a description, supporting evidence, confidence level (1-5), and recommended next steps.",
+    "priority": "high",
+    "contextAccess": "read",
+    "contextTags": ["research", "landscape"],
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "analysis",
+      "priority": "high",
+      "tags": ["opportunities", "deep-analysis"]
+    }
+  },
+  {
+    "id": "risk-review",
+    "persona": "security-engineer",
+    "task": "Review the identified opportunities and conduct a comprehensive risk assessment. Consider: feasibility risks, competitive risks, technical challenges, and timing concerns. Provide specific mitigation recommendations for each risk.",
+    "priority": "high",
+    "contextAccess": "read",
+    "contextTags": ["analysis"],
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "risk-analysis",
+      "priority": "high",
+      "tags": ["risk", "mitigation"]
+    }
+  },
+  {
+    "id": "final-synthesis",
+    "persona": "product-manager",
+    "task": "Synthesize all previous analyses into a final recommendation report. Include: 1) Executive summary, 2) Recommended actions prioritized by impact, 3) Risk-adjusted assessment, 4) Implementation timeline, 5) Key success metrics. Reference all prior analyses.",
+    "priority": "critical",
+    "contextAccess": "read",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "final-recommendation",
+      "priority": "critical",
+      "tags": ["synthesis", "final-report"]
+    }
+  }
+]

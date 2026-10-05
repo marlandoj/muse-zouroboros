@@ -1,0 +1,36 @@
+{
+  "date": "2026-09-23",
+  "shell_checks_passed": 66,
+  "regression_tests_passed": 2,
+  "predecessor_tests_passed": 64,
+  "pi_typecheck": "passed",
+  "persistent_host_modes": "shadow",
+  "real_model_responses": [
+    "claude",
+    "codex",
+    "gemini",
+    "opencode",
+    "pi"
+  ],
+  "hook_delivery_without_final_response": [
+    "kimi"
+  ],
+  "serialized_provider_request_verified": [
+    "hermes"
+  ],
+  "source_sha256": {
+    "engine/adapters.py": "b025350ff396cb22909c2b33699f877b40653b3cfe0508834dbb641b9ce509d8",
+    "engine/catalog.py": "9868ee3efe7e33c446439be6efe0d7f5b3e1229a73f240890caf4869c4ea36be",
+    "engine/local_rank.py": "090f3b6c8374ab57aad7f739b7358ab90440ebf4308156609ef3111f695b7d09",
+    "engine/run.py": "b1e5d23d51f0635210b262dd6f09b9711b1cb99f3f73ab291fc42a87e93c3889",
+    "plugins/hermes/wayfinder/__init__.py": "94f53cfc8c292952a1463a44a32f5eeaae8899401dedc997e0abeee185bad538",
+    "plugins/hermes/wayfinder/plugin.yaml": "4f4317363f8d8fe13a2e4ce4f29a8c34ce7922fedf64970a0e84659962cc0a97",
+    "plugins/opencode/wayfinder.js": "da436848d8dc43706507bf0348b112d7e4468231bd1a122fcf6e05e70741532d",
+    "plugins/pi/wayfinder.ts": "3e22d0d1d00beddc5d15798e46deaf38a117092ea9ef7e2b00c52930c4552db1",
+    "scripts/hermes_enable.py": "f1d65b0033d006327938f3b14325a4a108043ca72c45ccd943f2d4c17eb70eda",
+    "scripts/install.sh": "5aefbc49d34cc289ff2fc3a1fdd6e4592fbe9846d2f5c61e608aa6f58010cf20",
+    "scripts/setup_model.py": "fafe9c4a51fe2d583cf444af3aab14e93968dee9ad924eb4f3554d20597a50b0",
+    "scripts/wayfinder-hook.sh": "c1664c03da07b5633b9fab814daec6ebf06eae00e4aee81be528febf93d79154",
+    "scripts/wayfinder.sh": "144f22ba97b43f4e832044f7bf03b85afe54a9aec5e02884cbedcd4bb6d7cafd"
+  }
+}

@@ -1,0 +1,4 @@
+name: sift
+version: "0.1.0"
+description: "Conservative context pruning through request middleware; shadow by default."
+author: "Marlandoj"

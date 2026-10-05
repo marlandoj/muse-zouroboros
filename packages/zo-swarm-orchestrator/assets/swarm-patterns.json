@@ -1,0 +1,74 @@
+{
+  "patterns": [
+    {
+      "name": "website-review",
+      "description": "Multi-angle website audit covering UX, performance, security, and SEO",
+      "personas": ["frontend-developer", "security-engineer", "backend-architect"],
+      "tasks": {
+        "frontend-developer": "Audit UI/UX, accessibility, responsive design, and user flow",
+        "security-engineer": "Review security headers, TLS, authentication, and vulnerability exposure",
+        "backend-architect": "Assess performance, caching, API design, and scalability concerns"
+      },
+      "synthesize": true,
+      "output_format": "markdown"
+    },
+    {
+      "name": "codebase-review",
+      "description": "Comprehensive code quality and architecture review",
+      "personas": ["backend-architect", "security-engineer", "devops-engineer"],
+      "tasks": {
+        "backend-architect": "Review architecture patterns, code organization, and technical debt",
+        "security-engineer": "Identify security vulnerabilities and unsafe patterns",
+        "devops-engineer": "Assess build pipeline, test coverage, and deployment readiness"
+      },
+      "synthesize": true,
+      "output_format": "markdown"
+    },
+    {
+      "name": "product-launch",
+      "description": "Pre-launch readiness assessment across engineering, product, and docs",
+      "personas": ["product-manager", "frontend-developer", "technical-writer"],
+      "tasks": {
+        "product-manager": "Evaluate feature completeness, user stories, and launch criteria",
+        "frontend-developer": "Review UI polish, edge cases, and cross-browser compatibility",
+        "technical-writer": "Assess documentation completeness, onboarding flow, and changelog"
+      },
+      "synthesize": true,
+      "output_format": "markdown"
+    },
+    {
+      "name": "deep-research",
+      "description": "Multi-perspective research and analysis on a topic",
+      "personas": ["research-analyst", "data-scientist", "product-manager", "technical-writer"],
+      "tasks": {
+        "research-analyst": "Gather primary sources, competitive landscape, and trend data",
+        "data-scientist": "Analyze quantitative data, identify patterns, and validate claims",
+        "product-manager": "Assess market fit, user impact, and strategic implications",
+        "technical-writer": "Synthesize findings into a clear, structured report"
+      },
+      "synthesize": true,
+      "output_format": "markdown"
+    },
+    {
+      "name": "incident-postmortem",
+      "description": "Post-incident analysis across infrastructure, security, and process",
+      "personas": ["devops-engineer", "security-engineer", "backend-architect"],
+      "tasks": {
+        "devops-engineer": "Analyze infrastructure logs, deployment timeline, and monitoring gaps",
+        "security-engineer": "Assess whether the incident had security implications or root causes",
+        "backend-architect": "Identify architectural weaknesses that contributed to the incident"
+      },
+      "synthesize": true,
+      "output_format": "markdown"
+    },
+    {
+      "name": "validation-swarm",
+      "description": "Multiple agents independently validate the same thesis or claim",
+      "personas": ["research-analyst", "data-scientist", "backend-architect"],
+      "mode": "validate",
+      "consensus_threshold": 0.7,
+      "synthesize": true,
+      "output_format": "summary"
+    }
+  ]
+}

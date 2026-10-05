@@ -1,0 +1,71 @@
+[
+  {
+    "id": "task1",
+    "persona": "frontend-developer",
+    "task": "Analyze the UI/UX design of a typical e-commerce product page. List 3 key findings about layout, accessibility, and user flow.",
+    "priority": "high",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "ui-analysis",
+      "priority": "high",
+      "tags": ["ui", "ux", "frontend"]
+    }
+  },
+  {
+    "id": "task2",
+    "persona": "backend-architect",
+    "task": "Review backend architecture for a high-traffic e-commerce API. Identify 3 scalability or performance improvements.",
+    "priority": "high",
+    "memoryStrategy": "hierarchical",
+    "contextAccess": "read",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "backend-review",
+      "priority": "high",
+      "tags": ["backend", "architecture", "api"]
+    }
+  },
+  {
+    "id": "task3",
+    "persona": "security-engineer",
+    "task": "Perform a security audit of a standard web application. Identify 3 common vulnerabilities and suggest fixes.",
+    "priority": "critical",
+    "memoryStrategy": "hierarchical",
+    "contextAccess": "read",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "security-audit",
+      "priority": "critical",
+      "tags": ["security", "audit", "vulnerabilities"]
+    }
+  },
+  {
+    "id": "task4",
+    "persona": "product-manager",
+    "task": "Define 3 user stories for an e-commerce checkout flow based on common customer pain points.",
+    "priority": "high",
+    "memoryStrategy": "hierarchical",
+    "contextAccess": "read",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "product-requirements",
+      "priority": "high",
+      "tags": ["product", "user-stories", "checkout"]
+    }
+  },
+  {
+    "id": "task5",
+    "persona": "qa-automation",
+    "task": "Design a test automation strategy for e-commerce checkout. Identify 3 critical test cases for regression.",
+    "priority": "medium",
+    "memoryStrategy": "hierarchical",
+    "contextAccess": "read",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "qa-strategy",
+      "priority": "medium",
+      "tags": ["qa", "testing", "automation"]
+    }
+  }
+]

@@ -1,0 +1,23 @@
+{
+  "contract_id": "zouroboros-run-receipt-shadow-config/v1",
+  "version": 1,
+  "updated_at": "2026-08-11T14:32:43-07:00",
+  "updated_by": "zou-1055-remediation-seed",
+  "mode": "off",
+  "activation_manifest_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "effective_config_sha256": "0000000000000000000000000000000000000000000000000000000000000000",
+  "automation_id": "7760679f-6ac8-461c-a567-43fae21c3eee",
+  "runtime": "zo-native",
+  "policy_path": "/home/workspace/Skills/zouroboros-governance/config/autonomy-policy.json",
+  "policy_sha256": "3c3715e3f064626312c5d69b0bbff10364c1441c26c9223a3be67cdd9f9cc2a0",
+  "database_path": "/home/workspace/.runtime/evidence-substrate/state/run-receipt-shadow.sqlite",
+  "registry_path": "/home/workspace/.runtime/evidence-substrate/config/run-receipt-shadow-adapters.json",
+  "registry_sha256": "1b7684895c743a990edfcdb90e52687f888445defadb792cb4e0eedbac4e9cd7",
+  "cohort_amendment_sha256": "495bc7ad0ffaccd26f2cffca59bc5ff47ceec92ebcf8be92dec3db1dc6b4b66f",
+  "qualification_window_days": 225,
+  "required_operations_per_class": 30,
+  "max_plans_per_harvest": 12,
+  "max_database_bytes": 67108864,
+  "write_high_water_bytes": 58720256,
+  "github_readback_enabled": false
+}

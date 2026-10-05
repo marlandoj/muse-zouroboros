@@ -1,0 +1,69 @@
+[
+  {
+    "id": "research-fanout",
+    "executor": "hermes",
+    "persona": "auto",
+    "task": "Perform a read-only parallel analysis of the current executor policy, then synthesize the top delegation opportunities and risks.",
+    "priority": "high",
+    "timeoutSeconds": 300,
+    "delegation": {
+      "mode": "auto",
+      "maxChildren": 3
+    },
+    "memoryMetadata": {
+      "category": "validation",
+      "tags": ["hierarchical", "research", "delegation"]
+    }
+  },
+  {
+    "id": "implementation-safe",
+    "executor": "claude-code",
+    "persona": "auto",
+    "task": "Implement the delegated parser cleanup and synthesize the parent result after child work completes.",
+    "priority": "high",
+    "timeoutSeconds": 300,
+    "delegation": {
+      "mode": "auto",
+      "maxChildren": 2,
+      "writeScopes": [
+        { "childId": "parser-a", "paths": ["src/parser/a.ts"] },
+        { "childId": "parser-b", "paths": ["src/parser/b.ts"] }
+      ]
+    },
+    "memoryMetadata": {
+      "category": "validation",
+      "tags": ["hierarchical", "mutation", "write-scope"]
+    }
+  },
+  {
+    "id": "implementation-blocked",
+    "executor": "claude-code",
+    "persona": "auto",
+    "task": "Implement a mutation-heavy follow-up without declaring child file ownership and confirm the task stays leaf-only.",
+    "priority": "medium",
+    "timeoutSeconds": 300,
+    "delegation": {
+      "mode": "auto",
+      "maxChildren": 2
+    },
+    "memoryMetadata": {
+      "category": "validation",
+      "tags": ["hierarchical", "blocked", "mutation"]
+    }
+  },
+  {
+    "id": "auto-route-probe",
+    "persona": "auto",
+    "task": "Research and compare bounded alternatives, then synthesize the result in a way that benefits from proven hierarchical delegation telemetry.",
+    "priority": "high",
+    "timeoutSeconds": 300,
+    "delegation": {
+      "mode": "auto",
+      "maxChildren": 3
+    },
+    "memoryMetadata": {
+      "category": "validation",
+      "tags": ["hierarchical", "routing", "telemetry"]
+    }
+  }
+]

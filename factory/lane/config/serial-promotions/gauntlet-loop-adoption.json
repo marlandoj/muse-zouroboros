@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "retired": true,
+  "project_id": "52a5e645-c1c1-4d42-bf02-a1e5d438a298",
+  "project_name": "Gauntlet Loop Adoption",
+  "intake_project_id": "b621d7a1-bb3d-4df9-ae11-3034789e204c",
+  "factory_ready_label_id": "f4a73851-6c6b-4a19-b397-c2bd62eeb694",
+  "tickets": [
+    {
+      "identifier": "ZOU-1161",
+      "stable_key": "GLA-01",
+      "prerequisites": []
+    },
+    {
+      "identifier": "ZOU-1162",
+      "stable_key": "GLA-02",
+      "prerequisites": ["ZOU-1161"]
+    },
+    {
+      "identifier": "ZOU-1163",
+      "stable_key": "GLA-03",
+      "prerequisites": ["ZOU-1161"]
+    },
+    {
+      "identifier": "ZOU-1164",
+      "stable_key": "GLA-04",
+      "prerequisites": ["ZOU-1162", "ZOU-1163"]
+    },
+    {
+      "identifier": "ZOU-1165",
+      "stable_key": "GLA-05",
+      "prerequisites": ["ZOU-1163"]
+    },
+    {
+      "identifier": "ZOU-1166",
+      "stable_key": "GLA-06",
+      "prerequisites": ["ZOU-1164"]
+    },
+    {
+      "identifier": "ZOU-1178",
+      "stable_key": "GLA-07",
+      "prerequisites": ["ZOU-1166"]
+    },
+    {
+      "identifier": "ZOU-1179",
+      "stable_key": "GLA-08",
+      "prerequisites": ["ZOU-1165"]
+    },
+    {
+      "identifier": "ZOU-1180",
+      "stable_key": "GLA-09",
+      "prerequisites": ["ZOU-1164", "ZOU-1165"]
+    },
+    {
+      "identifier": "ZOU-1181",
+      "stable_key": "GLA-10",
+      "prerequisites": ["ZOU-1180"]
+    },
+    {
+      "identifier": "ZOU-1182",
+      "stable_key": "GLA-11",
+      "prerequisites": ["ZOU-1161"]
+    },
+    {
+      "identifier": "ZOU-1183",
+      "stable_key": "GLA-12",
+      "prerequisites": ["ZOU-1164"]
+    },
+    {
+      "identifier": "ZOU-1184",
+      "stable_key": "GLA-13",
+      "prerequisites": ["ZOU-1179", "ZOU-1182"]
+    },
+    {
+      "identifier": "ZOU-1235",
+      "stable_key": "GLA-16",
+      "prerequisites": []
+    },
+    {
+      "identifier": "ZOU-1236",
+      "stable_key": "GLA-17",
+      "prerequisites": ["ZOU-1161", "ZOU-1235"]
+    },
+    {
+      "identifier": "ZOU-1237",
+      "stable_key": "GLA-18",
+      "prerequisites": ["ZOU-1163", "ZOU-1165", "ZOU-1166", "ZOU-1179", "ZOU-1182", "ZOU-1236"]
+    },
+    {
+      "identifier": "ZOU-1167",
+      "stable_key": "GLA-14",
+      "prerequisites": ["ZOU-1178", "ZOU-1181", "ZOU-1183", "ZOU-1184", "ZOU-1237"]
+    },
+    {
+      "identifier": "ZOU-1238",
+      "stable_key": "GLA-19",
+      "prerequisites": ["ZOU-1167", "ZOU-1237"]
+    },
+    {
+      "identifier": "ZOU-1168",
+      "stable_key": "GLA-15",
+      "prerequisites": ["ZOU-1167", "ZOU-1238"]
+    }
+  ]
+}

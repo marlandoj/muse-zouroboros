@@ -1,0 +1,21 @@
+{
+  "localConcurrency": 8,
+  "timeoutSeconds": 600,
+  "maxRetries": 3,
+  "crossTaskContextWindow": 3,
+  "timeoutTiers": {
+    "_comment": "R2: Per-task timeout classes. Use these values in campaign JSON 'timeoutSeconds' field per task.",
+    "quickEdit": 120,
+    "analysis": 600,
+    "heavyIO": 900,
+    "buildTest": 600
+  },
+  "memory": {
+    "enable": true,
+    "workingMemorySize": 2,
+    "longTermMemorySize": 3,
+    "enableDeduplication": true,
+    "enableHTMLStripping": true,
+    "maxTokens": 16000
+  }
+}

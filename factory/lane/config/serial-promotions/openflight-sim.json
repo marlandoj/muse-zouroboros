@@ -1,0 +1,40 @@
+{
+  "version": 1,
+  "retired": true,
+  "project_id": "6499f076-762f-4df7-a4d7-876397339723",
+  "project_name": "OpenFlight Sim",
+  "intake_project_id": "b621d7a1-bb3d-4df9-ae11-3034789e204c",
+  "factory_ready_label_id": "f4a73851-6c6b-4a19-b397-c2bd62eeb694",
+  "tickets": [
+    {
+      "identifier": "ZOU-914",
+      "stable_key": "OFS-001",
+      "prerequisites": []
+    },
+    {
+      "identifier": "ZOU-915",
+      "stable_key": "OFS-002",
+      "prerequisites": ["ZOU-914"]
+    },
+    {
+      "identifier": "ZOU-916",
+      "stable_key": "OFS-003",
+      "prerequisites": ["ZOU-914", "ZOU-915"]
+    },
+    {
+      "identifier": "ZOU-917",
+      "stable_key": "OFS-004",
+      "prerequisites": ["ZOU-914"]
+    },
+    {
+      "identifier": "ZOU-918",
+      "stable_key": "OFS-005",
+      "prerequisites": ["ZOU-915", "ZOU-917"]
+    },
+    {
+      "identifier": "ZOU-919",
+      "stable_key": "OFS-006",
+      "prerequisites": ["ZOU-914", "ZOU-915", "ZOU-916", "ZOU-917", "ZOU-918"]
+    }
+  ]
+}

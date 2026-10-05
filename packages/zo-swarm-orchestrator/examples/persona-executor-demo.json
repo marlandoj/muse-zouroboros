@@ -1,0 +1,63 @@
+[
+  {
+    "id": "security-review",
+    "executor": "gemini",
+    "agencyPersona": "Backend Architect",
+    "task": "Review the executor registry for security issues: hardcoded secrets, missing input validation, and unsafe deserialization patterns.",
+    "priority": "high",
+    "model": "swarm-heavy",
+    "timeoutSeconds": 180,
+    "memoryMetadata": {
+      "category": "security",
+      "tags": ["executor-registry", "security-review"]
+    }
+  },
+  {
+    "id": "performance-audit",
+    "executor": "claude-code",
+    "agencyPersona": "Performance Benchmarker",
+    "task": "Analyze the executor retry and reroute chain for latency bottlenecks. Identify timeout cascades and suggest improvements.",
+    "priority": "high",
+    "model": "swarm-heavy",
+    "timeoutSeconds": 300,
+    "memoryMetadata": {
+      "category": "performance",
+      "tags": ["executor-routing", "latency"]
+    }
+  },
+  {
+    "id": "compliance-check",
+    "executor": "hermes",
+    "agencyPersona": "Legal Compliance Checker",
+    "task": "Check the model router configuration for data residency issues — are API calls being routed through regions that comply with GDPR?",
+    "priority": "medium",
+    "model": "swarm-mid",
+    "timeoutSeconds": 180,
+    "memoryMetadata": {
+      "category": "compliance",
+      "tags": ["model-router", "gdpr"]
+    }
+  },
+  {
+    "id": "synthesis",
+    "executor": "claude-code",
+    "agencyPersona": "Executive Summary Generator",
+    "task": "Synthesize findings from the security review, performance audit, and compliance check into a prioritized action plan with P0/P1/P2 severity ratings.",
+    "priority": "critical",
+    "model": "swarm-heavy",
+    "timeoutSeconds": 300,
+    "dependsOn": ["security-review", "performance-audit", "compliance-check"],
+    "memoryMetadata": {
+      "category": "synthesis",
+      "tags": ["swarm-routing", "action-plan"]
+    }
+  },
+  {
+    "_comment": "Backward-compat example: old-style task with only persona field still works",
+    "id": "quick-check",
+    "persona": "gemini",
+    "task": "List the top 5 most-used tier labels from the model router config.",
+    "priority": "low",
+    "timeoutSeconds": 60
+  }
+]

@@ -1,0 +1,113 @@
+[
+  {
+    "id": "task1",
+    "persona": "cybersecurity-analyst",
+    "task": "Review and update the Security Engineer persona core identity. Based on current cybersecurity standards and MCP (Model Context Protocol) security requirements, enhance the persona's mission statement, tone, and responsibilities to include:\n\n1. MCP server security auditing capabilities\n2. AI agent threat modeling\n3. Prompt injection prevention\n4. Supply chain security for AI tools\n\nCurrent file: file 'IDENTITY/cybersecurity-analyst.md'\n\nRead the current file, then create an enhanced version that includes MCP security as a primary competency.",
+    "priority": "critical",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "persona-core-update",
+      "priority": "critical",
+      "tags": ["security", "mcp", "persona-update"]
+    }
+  },
+  {
+    "id": "task2",
+    "persona": "backend-architect",
+    "task": "Define the MCP (Model Context Protocol) architecture and security framework that the Security Engineer persona should understand and audit. Include:\n\n1. MCP client-server architecture overview\n2. Key MCP security attack vectors:\n   - Confused Deputy Problem\n   - Token Passthrough vulnerabilities\n   - Server-Side Request Forgery (SSRF)\n   - Session Hijacking via prompt injection\n   - Local MCP server compromise\n3. MCP security best practices\n\nCreate a technical reference document at: file 'Skills/security-mcp-audit/references/mcp-security-framework.md'",
+    "priority": "high",
+    "memoryStrategy": "hierarchical",
+    "contextAccess": "read",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "mcp-architecture",
+      "priority": "high",
+      "tags": ["mcp", "architecture", "security"]
+    }
+  },
+  {
+    "id": "task3",
+    "persona": "ai-engineer",
+    "task": "Research and document the essential MCP security audit tools that the Security Engineer persona should be proficient with. Based on industry best practices, include:\n\n1. mcp-scan (by Invariant Labs) - for constraining, logging, and scanning MCP connections\n2. mcp-inspector - visual testing tool for MCP servers\n3. mcp-watch - security scanner for MCP servers\n4. Semgrep for MCP - code scanning for vulnerabilities\n5. Custom MCP security validators\n\nFor each tool, document:\n- Purpose and capabilities\n- Installation/usage basics\n- Integration with audit workflows\n\nCreate the document at: file 'Skills/security-mcp-audit/references/mcp-audit-tools.md'",
+    "priority": "high",
+    "memoryStrategy": "hierarchical",
+    "contextAccess": "read",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "audit-tools",
+      "priority": "high",
+      "tags": ["tools", "mcp", "audit"]
+    }
+  },
+  {
+    "id": "task4",
+    "persona": "devops-automator",
+    "task": "Create a practical MCP security audit skill for the Security Engineer persona. This skill should provide:\n\n1. SKILL.md with:\n   - Description: MCP server security auditing capabilities\n   - Clear usage instructions\n   - Required tools and dependencies\n   - Example audit workflows\n\n2. An audit checklist template covering:\n   - Pre-installation assessment\n   - Runtime security validation\n   - Permission scope verification\n   - Data exfiltration prevention checks\n   - Supply chain integrity verification\n\nCreate at: file 'Skills/security-mcp-audit/SKILL.md' and file 'Skills/security-mcp-audit/assets/audit-checklist.md'",
+    "priority": "high",
+    "memoryStrategy": "hierarchical",
+    "contextAccess": "read",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "skill-creation",
+      "priority": "high",
+      "tags": ["skill", "mcp", "audit", "template"]
+    }
+  },
+  {
+    "id": "task5",
+    "persona": "technical-seo-strategist",
+    "task": "Research and summarize the top 10 MCP security risks based on 2024-2025 industry reports. Include:\n\n1. Misalignment and privilege escalation\n2. Unsafe actions by over-privileged agents\n3. Prompt injection attacks on MCP tools\n4. Data exfiltration via webhooks\n5. Command injection in skill code\n6. Supply chain attacks (malicious MCP servers)\n7. Session hijacking via OAuth token theft\n8. Confused deputy attacks\n9. SSRF through MCP servers\n10. Code drift and post-installation modifications\n\nFor each risk, provide:\n- Description of the attack\n- Real-world impact\n- Mitigation strategies\n\nCreate: file 'Skills/security-mcp-audit/references/top-10-mcp-risks.md'",
+    "priority": "medium",
+    "memoryStrategy": "hierarchical",
+    "contextAccess": "read",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "risk-assessment",
+      "priority": "medium",
+      "tags": ["risks", "mcp", "threats"]
+    }
+  },
+  {
+    "id": "task6",
+    "persona": "incident-response-coordinator",
+    "task": "Create an incident response playbook specifically for MCP security breaches. The playbook should cover:\n\n1. Detection: Signs of compromised MCP servers or skills\n2. Containment: Immediate steps to isolate affected agents\n3. Eradication: Removing malicious MCP servers/skills\n4. Recovery: Restoring secure operations\n5. Post-incident: Forensic analysis and hardening\n\nInclude specific MCP-focused scenarios:\n- Malicious skill installation\n- Unauthorized data exfiltration\n- Prompt injection compromise\n- OAuth token compromise\n\nCreate: file 'Skills/security-mcp-audit/assets/mcp-incident-response-playbook.md'",
+    "priority": "medium",
+    "memoryStrategy": "hierarchical",
+    "contextAccess": "read",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "incident-response",
+      "priority": "medium",
+      "tags": ["incident-response", "mcp", "playbook"]
+    }
+  },
+  {
+    "id": "task7",
+    "persona": "quantitative-developer",
+    "task": "Design a scoring and rating system for MCP server security assessments. Create a framework that evaluates:\n\n1. Static Analysis Score (0-100):\n   - Code quality\n   - Dependency vulnerabilities\n   - Permission manifest validation\n\n2. Runtime Security Score (0-100):\n   - Network behavior\n   - Data access patterns\n   - Privilege escalation attempts\n\n3. Supply Chain Score (0-100):\n   - Author verification\n   - Update frequency\n   - Community trust\n\n4. Overall Risk Rating: Critical/High/Medium/Low\n\nCreate a scoring rubric and calculator guidance at: file 'Skills/security-mcp-audit/assets/mcp-security-scoring-framework.md'",
+    "priority": "medium",
+    "memoryStrategy": "hierarchical",
+    "contextAccess": "read",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "scoring-framework",
+      "priority": "medium",
+      "tags": ["scoring", "rating", "framework"]
+    }
+  },
+  {
+    "id": "task8",
+    "persona": "frontend-developer",
+    "task": "Create a comprehensive security audit report template for MCP server assessments. The template should be professional and include sections for:\n\n1. Executive Summary\n   - Overall risk rating\n   - Key findings count by severity\n   - Recommendations priority\n\n2. Assessment Scope\n   - MCP servers evaluated\n   - Tools used\n   - Assessment date/duration\n\n3. Detailed Findings\n   - Vulnerability description\n   - CVSS-style severity\n   - Evidence/reproduction steps\n   - Remediation guidance\n\n4. Appendices\n   - Tool output logs\n   - Configuration reviews\n   - Compliance mapping\n\nCreate as a markdown template at: file 'Skills/security-mcp-audit/templates/audit-report-template.md'",
+    "priority": "low",
+    "memoryStrategy": "hierarchical",
+    "contextAccess": "read",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "template",
+      "priority": "low",
+      "tags": ["report", "template", "audit"]
+    }
+  }
+]

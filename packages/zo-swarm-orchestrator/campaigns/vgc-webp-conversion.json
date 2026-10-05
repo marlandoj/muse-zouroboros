@@ -1,0 +1,85 @@
+[
+  {
+    "id": "webp-convert-images",
+    "persona": "claude-code",
+    "task": "TASK: Convert all product/ingredient/hero images to WebP format with optimized sizes.\n\nCONTEXT: Verdant Goods Co. e-commerce site at /home/workspace/verdant-goods-store. The images directory is client/public/images/ containing 91 PNG and JPG files totaling 32MB. The tool `cwebp` is installed at /usr/bin/cwebp (v1.2.4).\n\nSTEPS:\n1. Navigate to /home/workspace/verdant-goods-store/client/public/images/\n2. Create a bash script at /home/workspace/verdant-goods-store/scripts/convert-webp.sh that:\n   a. Iterates over ALL .png and .jpg files in the images directory\n   b. For each file, runs: cwebp -q 82 -m 6 \"$file\" -o \"${file%.*}.webp\"\n   c. For product mockup PNGs (VGC_*.png files), also generate a smaller 800px-wide version: cwebp -q 82 -m 6 -resize 800 0 \"$file\" -o \"${file%.*}-800w.webp\"\n   d. For product mockup PNGs, also generate a 400px-wide thumbnail: cwebp -q 82 -m 6 -resize 400 0 \"$file\" -o \"${file%.*}-400w.webp\"\n   e. Prints size comparison for each file (original vs webp)\n   f. At end, prints total original size vs total webp size and savings percentage\n3. Run the script: bash /home/workspace/verdant-goods-store/scripts/convert-webp.sh\n4. Verify WebP files exist alongside originals (originals kept as fallback)\n5. Report: total files converted, total size savings, list of any failures\n\nIMPORTANT:\n- Keep original PNG/JPG files in place (they serve as fallbacks for browsers without WebP support)\n- Quality 82 is a good balance of size vs quality for product photography\n- The -m 6 flag enables maximum compression effort\n- For non-product images (ingredient-*.jpg, hero-*.jpg, lifestyle-*.jpg, texture-*.jpg, product-*.jpg), only generate the standard WebP (no responsive sizes needed as they're used at fixed sizes)",
+    "priority": "critical",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "performance",
+      "priority": "critical",
+      "tags": ["webp", "images", "conversion"]
+    }
+  },
+  {
+    "id": "webp-picture-component",
+    "persona": "claude-code",
+    "task": "TASK: Create a reusable OptimizedImage React component that serves WebP with JPG/PNG fallback.\n\nCONTEXT: Verdant Goods Co. React SPA at /home/workspace/verdant-goods-store. Uses TypeScript, Tailwind CSS, Vite build. Images are in /images/ directory. WebP versions will be generated alongside originals.\n\nSTEPS:\n1. Create /home/workspace/verdant-goods-store/client/src/components/OptimizedImage.tsx:\n\n```tsx\nimport React from 'react';\n\ninterface OptimizedImageProps {\n  src: string;\n  alt: string;\n  width?: number;\n  height?: number;\n  className?: string;\n  loading?: 'lazy' | 'eager';\n  sizes?: string;\n  priority?: boolean;\n}\n\nexport function OptimizedImage({\n  src,\n  alt,\n  width,\n  height,\n  className,\n  loading = 'lazy',\n  sizes,\n  priority = false,\n}: OptimizedImageProps) {\n  // Derive WebP path from original path\n  const ext = src.match(/\\.(png|jpe?g)$/i)?.[0] || '';\n  const basePath = src.replace(/\\.(png|jpe?g)$/i, '');\n  const webpSrc = `${basePath}.webp`;\n  \n  // Check if this is a product mockup (VGC_*.png) that has responsive sizes\n  const isProductMockup = src.includes('VGC_') && src.endsWith('.png');\n  \n  const srcSet = isProductMockup\n    ? `${basePath}-400w.webp 400w, ${basePath}-800w.webp 800w, ${basePath}.webp 1200w`\n    : undefined;\n  \n  const defaultSizes = isProductMockup\n    ? '(max-width: 640px) 400px, (max-width: 1024px) 800px, 1200px'\n    : undefined;\n\n  return (\n    <picture>\n      {isProductMockup && srcSet ? (\n        <source\n          type=\"image/webp\"\n          srcSet={srcSet}\n          sizes={sizes || defaultSizes}\n        />\n      ) : (\n        <source type=\"image/webp\" srcSet={webpSrc} />\n      )}\n      <img\n        src={src}\n        alt={alt}\n        width={width}\n        height={height}\n        className={className}\n        loading={priority ? 'eager' : loading}\n        sizes={isProductMockup ? (sizes || defaultSizes) : undefined}\n      />\n    </picture>\n  );\n}\n```\n\n2. Verify the file compiles (no syntax errors, proper TypeScript types)\n3. Report: file created with explanation of the component API\n\nIMPORTANT:\n- The component must be a named export (not default) for tree-shaking\n- Keep it simple - no external dependencies\n- The fallback <img> always uses the original src (PNG/JPG)\n- WebP source is derived by replacing the extension\n- Product mockup PNGs have -400w.webp and -800w.webp responsive variants\n- Other images (ingredient-*.jpg, hero-*.jpg, etc.) only have a single .webp variant",
+    "priority": "high",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "performance",
+      "priority": "high",
+      "tags": ["webp", "react-component", "picture-element"]
+    }
+  },
+  {
+    "id": "webp-update-products",
+    "persona": "claude-code",
+    "task": "TASK: Update products.ts to reference WebP images instead of PNG/JPG.\n\nCONTEXT: Verdant Goods Co. React SPA at /home/workspace/verdant-goods-store. The products data file is at client/src/lib/products.ts. WebP versions of all images have been generated alongside the originals in client/public/images/.\n\nSTEPS:\n1. Read /home/workspace/verdant-goods-store/client/src/lib/products.ts\n2. For every `image:` field that references a .png or .jpg file:\n   - Change the extension from .png to .webp\n   - Change the extension from .jpg to .webp\n   Examples:\n   - '/images/VGC_BeardOil_Mockup_VerdantGoods.png' -> '/images/VGC_BeardOil_Mockup_VerdantGoods.webp'\n   - '/images/ingredient-tallow-botanical.jpg' -> '/images/ingredient-tallow-botanical.webp'\n3. Do this for ALL product image fields AND all ingredient image fields within each product\n4. Make sure you don't change any other fields or data\n5. Report: number of image references updated, list of before/after changes\n\nIMPORTANT:\n- This is a simple find-and-replace of file extensions in the image path strings\n- Do NOT change the path structure, only the extension\n- Every .png becomes .webp, every .jpg becomes .webp\n- There are approximately 40+ image references to update\n- The original PNG/JPG files remain on disk as fallbacks (the OptimizedImage component handles fallback via <picture> element)",
+    "priority": "high",
+    "dependsOn": ["webp-convert-images"],
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "performance",
+      "priority": "high",
+      "tags": ["webp", "products", "data-update"]
+    }
+  },
+  {
+    "id": "webp-update-hero-slides",
+    "persona": "claude-code",
+    "task": "TASK: Update hero-slides.ts to reference WebP images.\n\nCONTEXT: Verdant Goods Co. React SPA at /home/workspace/verdant-goods-store. The hero slides data is at client/src/lib/hero-slides.ts. WebP versions have been generated.\n\nSTEPS:\n1. Read /home/workspace/verdant-goods-store/client/src/lib/hero-slides.ts\n2. Update all image references from .png/.jpg to .webp:\n   - '/images/VGC_BeardVitalitySystem_Bundle_Mockup.png' -> '/images/VGC_BeardVitalitySystem_Bundle_Mockup.webp'\n   - '/images/VGC_RadiantFaceRitual_Bundle_Mockup.png' -> '/images/VGC_RadiantFaceRitual_Bundle_Mockup.webp'\n   - '/images/VGC_BodyRestorationKit_Bundle_Mockup.png' -> '/images/VGC_BodyRestorationKit_Bundle_Mockup.webp'\n3. Report: files modified, changes made\n\nIMPORTANT: Only change the file extension in the image path strings. Do not modify anything else.",
+    "priority": "high",
+    "dependsOn": ["webp-convert-images"],
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "performance",
+      "priority": "high",
+      "tags": ["webp", "hero", "data-update"]
+    }
+  },
+  {
+    "id": "webp-update-pages",
+    "persona": "claude-code",
+    "task": "TASK: Update page components to use the OptimizedImage component for WebP support with fallbacks.\n\nCONTEXT: Verdant Goods Co. React SPA at /home/workspace/verdant-goods-store. An OptimizedImage component has been created at client/src/components/OptimizedImage.tsx. It renders <picture> with WebP <source> and original <img> fallback.\n\nSTEPS:\n1. Update /home/workspace/verdant-goods-store/client/src/pages/Home.tsx:\n   - Import: import { OptimizedImage } from '../components/OptimizedImage';\n   - Replace the <img> at line ~148 (product-bundle-beard-complete-v2.jpg) with: <OptimizedImage src=\"/images/product-bundle-beard-complete-v2.jpg\" alt=\"...\" (keep existing alt, className, width, height, loading attributes) />\n   - Replace the <img> at line ~205 (ingredients-hero.jpg) with: <OptimizedImage src=\"/images/ingredients-hero.jpg\" alt=\"...\" (keep existing attributes) />\n   - Do NOT change the OG meta tag image URLs (those should stay as .jpg for social sharing compatibility)\n\n2. Update /home/workspace/verdant-goods-store/client/src/pages/About.tsx:\n   - Import: import { OptimizedImage } from '../components/OptimizedImage';\n   - Replace the <img> at line ~31 (hero-main-v2.jpg) with: <OptimizedImage src=\"/images/hero-main-v2.jpg\" alt=\"...\" (keep existing attributes) />\n\n3. Update /home/workspace/verdant-goods-store/client/src/pages/Ingredients.tsx:\n   - Import: import { OptimizedImage } from '../components/OptimizedImage';\n   - Replace the <img> at line ~190 (texture-botanical.jpg) with: <OptimizedImage src=\"/images/texture-botanical.jpg\" alt=\"...\" (keep existing attributes) />\n   - Replace the <img> at line ~218 (VGC_BeardOil_Mockup_VerdantGoods.png) with: <OptimizedImage src=\"/images/VGC_BeardOil_Mockup_VerdantGoods.png\" alt=\"...\" (keep existing attributes) />\n\n4. Check if Shop.tsx or ProductDetail.tsx render <img> tags with product images:\n   - If ProductDetail.tsx renders product.image in an <img> tag, wrap it with OptimizedImage\n   - If Shop.tsx renders product thumbnails, wrap them with OptimizedImage\n   - Read these files first to check\n\n5. Report: all files modified, specific changes made per file\n\nIMPORTANT:\n- Keep ALL existing className, alt, width, height, and loading attributes\n- The OptimizedImage component accepts the same props as <img> plus a `priority` prop\n- For hero/above-fold images, add priority={true} so they use loading='eager'\n- Do NOT change OG/meta tag image URLs - social crawlers don't support WebP",
+    "priority": "high",
+    "dependsOn": ["webp-convert-images", "webp-picture-component"],
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "performance",
+      "priority": "high",
+      "tags": ["webp", "pages", "picture-element"]
+    }
+  },
+  {
+    "id": "webp-build-verify",
+    "persona": "claude-code",
+    "task": "TASK: Build the Verdant Goods Co. site and verify all WebP changes compile correctly.\n\nCONTEXT: React SPA at /home/workspace/verdant-goods-store. WebP images have been generated, OptimizedImage component created, and all data/page files updated to use WebP.\n\nSTEPS:\n1. cd /home/workspace/verdant-goods-store\n2. Run: pnpm run check (TypeScript type checking)\n   - If there are type errors related to OptimizedImage or image references, fix them\n3. Run: pnpm run build (Vite production build)\n   - If there are build errors, fix them\n4. Verify:\n   - ls dist/public/images/*.webp | head -20 (confirm WebP files are in build output)\n   - Check that OptimizedImage component is bundled (grep for 'picture' in output JS)\n5. Run a quick count:\n   - Number of .webp files in client/public/images/\n   - Total size of .webp files vs original PNG/JPG files\n   - Percentage savings\n6. Report:\n   - TypeScript check: PASS/FAIL\n   - Build: PASS/FAIL\n   - Total WebP files generated\n   - Size savings (original vs WebP)\n   - Any warnings or issues\n\nIMPORTANT: If the build fails, analyze the error and fix it. Common issues:\n- Missing import for OptimizedImage\n- TypeScript prop type mismatches\n- File path issues",
+    "priority": "critical",
+    "dependsOn": ["webp-update-products", "webp-update-hero-slides", "webp-update-pages"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "validation",
+      "priority": "critical",
+      "tags": ["build", "verification", "webp"]
+    }
+  }
+]

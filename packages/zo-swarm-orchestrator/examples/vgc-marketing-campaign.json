@@ -1,0 +1,150 @@
+[
+  {
+    "id": "campaign-strategy",
+    "persona": "marketing-growth-hacker",
+    "task": "Define the marketing campaign strategy for Verdant Goods Co. product launch. Review the SKU canon at /home/workspace/Notes/VGC_Canon/VGC_SKU_CANON.md to understand the product line (13 SKUs: beard care, face care, body care, bundles). Create a go-to-market strategy with: 1) Campaign objectives and KPIs, 2) Target audience segments (demographics, psychographics, pain points), 3) Key messaging pillars, 4) Channel mix and budget allocation, 5) Campaign timeline (pre-launch, launch, post-launch phases), 6) Success metrics and tracking plan. Output in structured format with clear priorities.",
+    "priority": "critical",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "strategy",
+      "priority": "critical",
+      "tags": ["campaign-strategy", "go-to-market"]
+    }
+  },
+  {
+    "id": "instagram-content-plan",
+    "persona": "marketing-instagram-curator",
+    "task": "Create a 4-week Instagram content calendar for Verdant Goods Co. launch campaign. Reference the SKU canon and campaign strategy from previous task. Develop: 1) Content pillars (3-4 themes aligned with brand: natural ingredients, sustainability, effectiveness, lifestyle), 2) Grid strategy (aesthetic cohesion, posting cadence), 3) 28 post ideas (mix of feed posts, reels, stories, carousels), 4) Hooks and captions for top 10 priority posts, 5) Hashtag strategy (branded, niche, trending), 6) Engagement tactics (polls, questions, UGC prompts). Format as actionable content calendar with publish dates and asset requirements.",
+    "priority": "high",
+    "dependsOn": ["campaign-strategy"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "content",
+      "priority": "high",
+      "tags": ["instagram", "content-calendar", "social-media"]
+    }
+  },
+  {
+    "id": "pinterest-strategy",
+    "persona": "marketing-pinterest-specialist",
+    "task": "Design a Pinterest marketing strategy for Verdant Goods Co.. Analyze the product line and create: 1) Board structure (5-7 boards with themes like 'Natural Beard Care', 'Sustainable Skincare', 'Grooming Routines', 'DIY Wellness'), 2) Pin design guidelines (formats, sizing, text overlays, branding), 3) 20 high-performing pin ideas (mix of product shots, lifestyle, tutorials, infographics), 4) SEO-optimized descriptions and keywords, 5) Linking strategy to drive traffic to verdantgoods.com, 6) Seasonal content plan. Focus on evergreen content that drives long-tail traffic.",
+    "priority": "high",
+    "dependsOn": ["campaign-strategy"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "content",
+      "priority": "high",
+      "tags": ["pinterest", "seo", "visual-content"]
+    }
+  },
+  {
+    "id": "tiktok-viral-hooks",
+    "persona": "marketing-tiktok-strategist",
+    "task": "Create a TikTok content strategy for Verdant Goods Co. targeting men's grooming and natural skincare audiences. Develop: 1) 15 viral-ready video concepts (trends, hooks, formats), 2) Scripts for top 5 priority videos (15-60 seconds, hook-value-CTA structure), 3) Sound/music recommendations (trending audio that fits brand), 4) Hashtag strategy (#BeardCare, #NaturalGrooming, niche tags), 5) Posting cadence and best times, 6) Influencer/creator outreach list for UGC partnerships. Focus on education, transformation content (before/after), and relatable humor.",
+    "priority": "high",
+    "dependsOn": ["campaign-strategy"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "content",
+      "priority": "high",
+      "tags": ["tiktok", "video-content", "viral-strategy"]
+    }
+  },
+  {
+    "id": "reddit-community-engagement",
+    "persona": "marketing-reddit-community-builder",
+    "task": "Design a Reddit engagement strategy for Verdant Goods Co.. Identify relevant subreddits (r/beards, r/malegrooming, r/SkincareAddiction, r/naturalbeauty, r/ZeroWaste) and create: 1) Engagement playbook (how to participate authentically without spamming), 2) Value-first content ideas (AMA format, educational posts, before/after stories), 3) 10 conversation starters that provide value while subtly introducing VGC, 4) Community rules summary for each subreddit, 5) Comment response templates for common questions, 6) Launch announcement strategy (where/when/how to share without violating self-promotion rules). Emphasize authenticity and community-first approach.",
+    "priority": "medium",
+    "dependsOn": ["campaign-strategy"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "community",
+      "priority": "medium",
+      "tags": ["reddit", "community-building", "engagement"]
+    }
+  },
+  {
+    "id": "twitter-engagement",
+    "persona": "marketing-twitter-engager",
+    "task": "Build a Twitter/X engagement strategy for Verdant Goods Co.. Create: 1) Brand voice guidelines for Twitter (tone: approachable, knowledgeable, sustainable-focused), 2) Tweet templates (educational threads, product highlights, sustainability facts, customer stories), 3) 30 days of tweet ideas (mix of threads, single tweets, polls, replies), 4) Influencer/account engagement list (grooming experts, sustainability advocates, men's lifestyle accounts to engage with), 5) Hashtag strategy, 6) Twitter Spaces or live chat ideas for community building. Focus on thought leadership in natural men's grooming.",
+    "priority": "medium",
+    "dependsOn": ["campaign-strategy"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "content",
+      "priority": "medium",
+      "tags": ["twitter", "engagement", "thought-leadership"]
+    }
+  },
+  {
+    "id": "ugc-content-strategy",
+    "persona": "ugc-content-coordinator",
+    "task": "Design a User-Generated Content (UGC) program for Verdant Goods Co.. Create: 1) UGC campaign concept (branded hashtag like #VGCTransformation or #NaturalGroomingJourney), 2) Customer incentive structure (discount codes, feature on brand page, monthly giveaways), 3) Content briefs for customers (photo/video guidelines, what to include, examples), 4) Outreach templates for requesting reviews/testimonials from early customers, 5) Rights and permissions workflow (how to get usage rights), 6) UGC curation and repurposing strategy (where to use UGC: website, ads, social proof). Include metrics to track UGC performance.",
+    "priority": "high",
+    "dependsOn": ["campaign-strategy", "instagram-content-plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "content",
+      "priority": "high",
+      "tags": ["ugc", "social-proof", "customer-content"]
+    }
+  },
+  {
+    "id": "content-creation-briefs",
+    "persona": "marketing-content-creator",
+    "task": "Write detailed content creation briefs based on all channel strategies. For each platform (Instagram, Pinterest, TikTok, Reddit, Twitter), create: 1) 5 priority content pieces with full creative briefs (objective, audience, key message, format, tone, CTA), 2) Copy for top-performing posts/pins/videos (headlines, body copy, captions), 3) Visual direction (mood boards, style references, shot lists), 4) Brand voice consistency check across all pieces, 5) Content approval checklist. Ensure all content aligns with VGC brand: natural, sustainable, effective, approachable.",
+    "priority": "high",
+    "dependsOn": ["instagram-content-plan", "pinterest-strategy", "tiktok-viral-hooks", "reddit-community-engagement", "twitter-engagement"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "content",
+      "priority": "high",
+      "tags": ["content-briefs", "copywriting", "brand-voice"]
+    }
+  },
+  {
+    "id": "growth-experiments",
+    "persona": "marketing-growth-hacker",
+    "task": "Design a growth experimentation roadmap for Verdant Goods Co. post-launch. Based on all channel strategies, create: 1) Experiment backlog with 15 growth ideas ranked by ICE score (Impact, Confidence, Ease), 2) Top 5 experiments to run in first 90 days (A/B tests, channel tests, messaging tests, offer tests), 3) Tracking plan for each experiment (metrics, success criteria, dashboards), 4) Resource requirements (budget, time, tools), 5) Stop conditions and learning documentation templates, 6) Iteration plan based on learnings. Focus on low-cost, high-learning experiments.",
+    "priority": "high",
+    "dependsOn": ["instagram-content-plan", "pinterest-strategy", "tiktok-viral-hooks", "reddit-community-engagement", "twitter-engagement", "ugc-content-strategy"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "growth",
+      "priority": "high",
+      "tags": ["experiments", "optimization", "metrics"]
+    }
+  },
+  {
+    "id": "campaign-playbook",
+    "persona": "marketing-content-creator",
+    "task": "Synthesize ALL marketing specialist outputs into a comprehensive VGC Marketing Campaign Playbook. Create a master document with: 1) Executive Summary (campaign overview, timeline, key strategies), 2) Channel-by-channel strategy summaries (Instagram, Pinterest, TikTok, Reddit, Twitter, UGC), 3) 90-day launch roadmap with milestones and deliverables, 4) Content calendar master view (all channels integrated), 5) Asset production requirements (what needs to be created), 6) Budget allocation across channels, 7) KPI dashboard (metrics to track weekly), 8) Team responsibilities and handoffs, 9) Risk mitigation and contingencies. Format as actionable playbook ready for execution. Save to /home/workspace/Projects/demo-shop/marketing-campaign-playbook.md",
+    "priority": "critical",
+    "dependsOn": ["campaign-strategy", "instagram-content-plan", "pinterest-strategy", "tiktok-viral-hooks", "reddit-community-engagement", "twitter-engagement", "ugc-content-strategy", "content-creation-briefs", "growth-experiments"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "synthesis",
+      "priority": "critical",
+      "tags": ["playbook", "campaign-master", "execution-plan"]
+    }
+  }
+]

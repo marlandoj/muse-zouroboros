@@ -1,0 +1,37 @@
+{
+  "version": 1,
+  "enabled": true,
+  "provider": "hetzner",
+  "location": "hel1",
+  "image": "ubuntu-24.04",
+  "default_profile": "medium",
+  "max_profile": "large",
+  "max_in_flight": 1,
+  "profiles": {
+    "small": {
+      "server_type": "cpx32",
+      "vcpus": 4,
+      "memory_gib": 8,
+      "cpu": "shared",
+      "ttl_minutes": 45,
+      "max_cost_usd": 0.1
+    },
+    "medium": {
+      "server_type": "ccx23",
+      "vcpus": 4,
+      "memory_gib": 16,
+      "cpu": "dedicated",
+      "ttl_minutes": 60,
+      "max_cost_usd": 0.25
+    },
+    "large": {
+      "server_type": "ccx33",
+      "vcpus": 8,
+      "memory_gib": 32,
+      "cpu": "dedicated",
+      "ttl_minutes": 90,
+      "max_cost_usd": 0.5
+    }
+  },
+  "kill_switch": "SF_HETZNER_EXECUTOR=0"
+}

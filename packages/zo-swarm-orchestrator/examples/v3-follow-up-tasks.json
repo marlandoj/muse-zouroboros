@@ -1,0 +1,30 @@
+[
+  {
+    "id": "follow-up-research",
+    "persona": "research-analyst",
+    "task": "Review the previous research and identify any new developments since the initial analysis. Focus on: 1) Any major announcements from key players, 2) Landscape changes, 3) Updated assessments or data. Append your findings to the existing research context.",
+    "priority": "high",
+    "contextAccess": "append",
+    "contextTags": ["research", "landscape"],
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "research",
+      "priority": "high",
+      "tags": ["follow-up", "updates"]
+    }
+  },
+  {
+    "id": "updated-recommendations",
+    "persona": "product-manager",
+    "task": "Re-evaluate the previously recommended actions based on the updated research. Provide: 1) Updated priority rankings, 2) Any changes to recommendations, 3) New opportunities that emerged, 4) Any actions to deprioritize. Reference both original and follow-up research.",
+    "priority": "critical",
+    "contextAccess": "read",
+    "contextTags": ["research", "analysis"],
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "updated-recommendations",
+      "priority": "critical",
+      "tags": ["updates", "revised-plan"]
+    }
+  }
+]

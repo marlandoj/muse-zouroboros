@@ -1,0 +1,105 @@
+[
+  {
+    "id": "plan",
+    "persona": "product-manager",
+    "task": "Create a structured review plan for https://verdantgoods.com. Fetch the homepage and identify key pages and areas to audit. Organize into categories: UX/Design, Performance, Security, SEO, Accessibility, and Content Quality. Output a prioritized checklist.",
+    "priority": "critical",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "planning",
+      "priority": "critical",
+      "tags": ["planning", "review-plan"]
+    }
+  },
+  {
+    "id": "ux-audit",
+    "persona": "frontend-developer",
+    "task": "Audit https://verdantgoods.com for UX/UI quality. Fetch the homepage and analyze: visual hierarchy, navigation flow, responsive design indicators, component consistency, typography, color usage, call-to-action effectiveness, and overall user experience. Provide severity-rated findings (P0-P3).",
+    "priority": "high",
+    "dependsOn": ["plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "design",
+      "priority": "high",
+      "tags": ["ux", "ui", "design"]
+    }
+  },
+  {
+    "id": "accessibility-audit",
+    "persona": "frontend-developer",
+    "task": "Analyze https://verdantgoods.com for accessibility compliance. Fetch the homepage and check WCAG 2.1 AA conformance: semantic HTML structure, ARIA usage, keyboard navigation indicators, color contrast, focus management, alt text on images, form labels, and screen reader compatibility. Provide specific code-level findings with severity ratings. OUTPUT REQUIREMENT: You MUST produce a comprehensive report of at least 2000 characters with detailed findings, code snippets, and remediation steps for each issue.",
+    "priority": "high",
+    "dependsOn": ["plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "accessibility",
+      "priority": "high",
+      "tags": ["accessibility", "wcag", "a11y"]
+    }
+  },
+  {
+    "id": "security-audit",
+    "persona": "security-engineer",
+    "task": "Perform a security review of https://verdantgoods.com. Fetch the homepage and assess: HTTPS configuration, security headers (CSP, HSTS, X-Frame-Options, X-Content-Type-Options), cookie security flags, form handling, third-party script risks, and e-commerce payment security indicators. Provide P0-P3 severity ratings with remediation steps. OUTPUT REQUIREMENT: You MUST produce a comprehensive report of at least 2000 characters with detailed findings, specific header values observed, and step-by-step remediation instructions.",
+    "priority": "critical",
+    "dependsOn": ["plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "security",
+      "priority": "critical",
+      "tags": ["security", "headers", "compliance"]
+    }
+  },
+  {
+    "id": "performance-audit",
+    "persona": "devops-engineer",
+    "task": "Analyze https://verdantgoods.com for performance. Fetch the homepage and examine: total page weight, asset sizes, image optimization opportunities, script loading strategy (defer/async), CSS delivery method, third-party script count and impact, caching headers, and Core Web Vitals indicators (LCP, FID, CLS). Provide specific measurable findings with targets.",
+    "priority": "high",
+    "dependsOn": ["plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "performance",
+      "priority": "high",
+      "tags": ["performance", "cwv", "optimization"]
+    }
+  },
+  {
+    "id": "seo-audit",
+    "persona": "research-analyst",
+    "task": "Perform an SEO audit of https://verdantgoods.com. Fetch the homepage and analyze: title tags, meta descriptions, structured data/schema markup, Open Graph tags, canonical URLs, heading hierarchy (H1-H6), internal linking structure, mobile-friendliness signals, and content quality. Provide actionable recommendations ranked by impact. OUTPUT REQUIREMENT: You MUST produce a comprehensive report of at least 2000 characters with specific tag values found, missing elements, and prioritized recommendations with implementation examples.",
+    "priority": "high",
+    "dependsOn": ["plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "seo",
+      "priority": "high",
+      "tags": ["seo", "meta", "structured-data"]
+    }
+  },
+  {
+    "id": "synthesis",
+    "persona": "product-manager",
+    "task": "Synthesize ALL prior specialist findings (UX, accessibility, security, performance, SEO) into a comprehensive executive report. Include: 1) Overall site health score (1-10) with justification, 2) Top 5 critical issues requiring immediate attention (P0/P1), 3) Top 5 quick wins (high impact, low effort), 4) Prioritized roadmap grouped into Sprint 1 (critical), Sprint 2 (high), Sprint 3 (medium), 5) Resource and effort estimates per sprint. Format with clear headers and tables.",
+    "priority": "critical",
+    "dependsOn": ["ux-audit", "accessibility-audit", "security-audit", "performance-audit", "seo-audit"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "synthesis",
+      "priority": "critical",
+      "tags": ["report", "executive-summary", "roadmap"]
+    }
+  }
+]

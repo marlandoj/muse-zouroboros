@@ -1,0 +1,90 @@
+[
+  {
+    "id": "plan",
+    "persona": "auto",
+    "task": "Create a structured review plan for the target website. Fetch the homepage and identify key pages and areas to audit. Organize into categories: UX/Design, Performance, Security, SEO, Accessibility, and Content Quality. Output a prioritized checklist.",
+    "priority": "critical",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "planning",
+      "priority": "critical",
+      "tags": ["planning", "review-plan"]
+    }
+  },
+  {
+    "id": "ux-audit",
+    "persona": "auto",
+    "task": "Audit the website for UX/UI quality. Analyze visual hierarchy, navigation flow, responsive design indicators, component consistency, typography, color usage, call-to-action effectiveness, and overall user experience. Provide severity-rated findings (P0-P3).",
+    "priority": "high",
+    "dependsOn": ["plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "design",
+      "priority": "high",
+      "tags": ["ux", "ui", "design"]
+    }
+  },
+  {
+    "id": "security-audit",
+    "persona": "auto",
+    "task": "Perform a security review and vulnerability assessment. Check HTTPS configuration, security headers (CSP, HSTS), cookie security, form handling, third-party script risks, and compliance. Provide P0-P3 severity ratings with remediation steps. OUTPUT REQUIREMENT: You MUST produce a comprehensive report of at least 2000 characters with detailed findings, specific header values observed, and step-by-step remediation instructions.",
+    "priority": "critical",
+    "dependsOn": ["plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "security",
+      "priority": "critical",
+      "tags": ["security", "headers", "compliance"]
+    }
+  },
+  {
+    "id": "web-research",
+    "persona": "auto",
+    "task": "Research competitor websites and gather data on industry best practices. Scrape competitor product pages, analyze their SEO strategies, and compare feature sets. Provide a competitive analysis report.",
+    "priority": "high",
+    "dependsOn": ["plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "research",
+      "priority": "high",
+      "tags": ["research", "competitive-analysis"]
+    }
+  },
+  {
+    "id": "code-fixes",
+    "persona": "auto",
+    "task": "Implement quick-win code fixes: refactor the navigation component, fix accessibility bugs, add missing ARIA labels, and write unit tests for the updated components.",
+    "priority": "high",
+    "dependsOn": ["ux-audit", "security-audit"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "implementation",
+      "priority": "high",
+      "tags": ["code", "fixes", "refactoring"]
+    }
+  },
+  {
+    "id": "synthesis",
+    "persona": "auto",
+    "task": "Synthesize ALL prior specialist findings into a comprehensive executive report. Include overall site health score, critical issues, quick wins, and a prioritized roadmap with effort estimates.",
+    "priority": "critical",
+    "dependsOn": ["ux-audit", "security-audit", "web-research", "code-fixes"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "synthesis",
+      "priority": "critical",
+      "tags": ["report", "executive-summary", "roadmap"]
+    }
+  }
+]

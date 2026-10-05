@@ -1,0 +1,701 @@
+{
+  "version": 1,
+  "namespace": "zouroboros-software-factory",
+  "state_root_env": "FACTORY_STATE_DIR",
+  "marker": ".factory-state-root.json",
+  "owner_count": 71,
+  "owners": [
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/agreement-baseline.ts",
+      "group": "subsystem",
+      "access": "read_write",
+      "subpaths": [
+        "**"
+      ],
+      "locking": "module_defined"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/approval-ledger.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "approval-ledger.jsonl",
+        "exec-${executionId}.json"
+      ],
+      "locking": "append_only"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/archetype-allowlist.ts",
+      "group": "observer",
+      "access": "read_write",
+      "subpaths": [
+        "archetype-allowlist.json"
+      ],
+      "locking": "module_defined"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/auto-merge-lane.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "approval-ledger.jsonl",
+        "archetype-allowlist.json",
+        "canary/**",
+        "operator-queue.jsonl"
+      ],
+      "locking": "append_only"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/auto-rollback.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "canary/**",
+        "sf010-circuit-open.sentinel",
+        "slo-state.json"
+      ],
+      "locking": "module_defined"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/benchmark-slo-intake.ts",
+      "group": "subsystem",
+      "access": "read_write",
+      "subpaths": [
+        "benchmark-slo-intake.json"
+      ],
+      "locking": "atomic_rename"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/branch-ownership.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "branch-ownership.jsonl"
+      ],
+      "locking": "append_only"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/codebase-index-reconcile.ts",
+      "group": "subsystem",
+      "access": "read_write",
+      "subpaths": [
+        "**"
+      ],
+      "locking": "atomic_rename"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/cycle-contract.ts",
+      "group": "critical",
+      "access": "read_only",
+      "subpaths": [
+        "**"
+      ],
+      "locking": "none"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/decision-signals.ts",
+      "group": "subsystem",
+      "access": "read_write",
+      "subpaths": [
+        "decision-signals.jsonl",
+        "operator-queue.jsonl"
+      ],
+      "locking": "append_only"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/execution-telemetry-report.ts",
+      "group": "subsystem",
+      "access": "read_only",
+      "subpaths": [
+        "**"
+      ],
+      "locking": "none"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/factory-collect.ts",
+      "group": "subsystem",
+      "access": "read_write",
+      "subpaths": [
+        "approval-ledger.jsonl",
+        "factory-log.jsonl"
+      ],
+      "locking": "append_only"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/factory-conveyor-adapters.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "conveyor-runner/cycles/**",
+        "conveyor-runner/idempotency/**"
+      ],
+      "locking": "per_cycle_lock_and_immutable_records"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/factory-conveyor-observer.ts",
+      "group": "observer",
+      "access": "read_write",
+      "subpaths": [
+        "lane-utilization.jsonl",
+        "exec-*.json",
+        "flight/**",
+        "conveyor-runner/parity/**"
+      ],
+      "locking": "module_defined"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/factory-conveyor-parity.ts",
+      "group": "observer",
+      "access": "read_write",
+      "subpaths": [
+        "conveyor-runner/parity/**"
+      ],
+      "locking": "immutable_hash_chain"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/factory-conveyor-release.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "conveyor-runner/releases/**"
+      ],
+      "locking": "immutable_records"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/factory-conveyor-runner.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "conveyor-runner/cycles/**",
+        "conveyor-runner/idempotency/**"
+      ],
+      "locking": "per_cycle_lock_and_immutable_records"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/factory-evidence.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "evidence/**"
+      ],
+      "locking": "module_defined"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/factory-hardening-replay.ts",
+      "group": "subsystem",
+      "access": "read_write",
+      "subpaths": [
+        "**"
+      ],
+      "locking": "module_defined"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/factory-mvp.ts",
+      "group": "subsystem",
+      "access": "read_write",
+      "subpaths": [
+        "mvp/**",
+        "pool/**"
+      ],
+      "locking": "module_defined"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/factory-metrics.ts",
+      "group": "observer",
+      "access": "read_only",
+      "subpaths": [
+        "factory-log.jsonl",
+        "first-pass-ledger.jsonl",
+        "outcome-evidence-ledger.jsonl"
+      ],
+      "locking": "none"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/factory-observatory.ts",
+      "group": "observer",
+      "access": "read_only",
+      "subpaths": [
+        "approval-ledger.jsonl",
+        "auto-merge-audit/**",
+        "first-pass-ledger.jsonl",
+        "outcome-evidence-ledger.jsonl",
+        "pool/**",
+        "shadow-state.json"
+      ],
+      "locking": "none"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/factory-review-gate.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "**"
+      ],
+      "locking": "atomic_rename"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/factory-review-recovery.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "**"
+      ],
+      "locking": "atomic_rename"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/factory-slo.ts",
+      "group": "subsystem",
+      "access": "read_write",
+      "subpaths": [
+        "factory-log.jsonl",
+        "slo-state.json",
+        "slo-status.md"
+      ],
+      "locking": "atomic_rename"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/fleet-spec.ts",
+      "group": "subsystem",
+      "access": "read_write",
+      "subpaths": [
+        "fleet-audit.jsonl",
+        "fleet-parks.jsonl"
+      ],
+      "locking": "append_only"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/flight-recorder.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "flight/**"
+      ],
+      "locking": "append_only"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/flight-status.ts",
+      "group": "critical",
+      "access": "read_only",
+      "subpaths": [
+        "**"
+      ],
+      "locking": "none"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/harness-ablation-runner.ts",
+      "group": "subsystem",
+      "access": "read_write",
+      "subpaths": [
+        "harness-ablation-ledger.jsonl"
+      ],
+      "locking": "append_only"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/hetzner-executor-adapter.ts",
+      "group": "subsystem",
+      "access": "read_write",
+      "subpaths": [
+        "hetzner-executor/**"
+      ],
+      "locking": "module_defined"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/hold-notify.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "exec-${id}.json"
+      ],
+      "locking": "append_only"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/host-resource-guard.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "host-resource-executor.lease.json"
+      ],
+      "locking": "exclusive_create"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/intake-ledger.ts",
+      "group": "subsystem",
+      "access": "read_write",
+      "subpaths": [
+        "intake-ledger.jsonl"
+      ],
+      "locking": "append_only"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/l4-qualification.ts",
+      "group": "observer",
+      "access": "read_write",
+      "subpaths": [
+        "**"
+      ],
+      "locking": "atomic_rename"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/lane-halt.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "deterministic-failures.jsonl",
+        "lane-halt-${safeSegment(project)}.sentinel"
+      ],
+      "locking": "append_only"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/lane-utilization.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "lane-utilization.jsonl"
+      ],
+      "locking": "append_only"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/lever-board.ts",
+      "group": "observer",
+      "access": "read_only",
+      "subpaths": [
+        "approval-ledger.jsonl",
+        "auto-merge-audit/**",
+        "decision-signals.jsonl",
+        "dedup-decisions.jsonl",
+        "events.jsonl",
+        "factory-log.jsonl",
+        "fleet-audit.jsonl",
+        "fleet-parks.jsonl",
+        "harness-ablation-ledger.jsonl",
+        "intake-ledger.jsonl",
+        "pool/**",
+        "scenario-runs.jsonl",
+        "shadow-state.json",
+        "signal-decisions.jsonl",
+        "signal-ledger.jsonl",
+        "slo-status.md",
+        "survivability-ledger.jsonl"
+      ],
+      "locking": "none"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/lifecycle-projection.ts",
+      "group": "critical",
+      "access": "read_only",
+      "subpaths": [
+        "**"
+      ],
+      "locking": "none"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/line-config.ts",
+      "group": "subsystem",
+      "access": "read_only",
+      "subpaths": [
+        "**"
+      ],
+      "locking": "none"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/merge-audit-trail.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "auto-merge-audit/**"
+      ],
+      "locking": "module_defined"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/outcome-coverage-gate.ts",
+      "group": "observer",
+      "access": "read_only",
+      "subpaths": [
+        "outcome-evidence-ledger.jsonl"
+      ],
+      "locking": "none"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/outcome-evidence-reconcile.ts",
+      "group": "subsystem",
+      "access": "read_write",
+      "subpaths": [
+        "exec-*.json",
+        "outcome-evidence-ledger.jsonl",
+        "outcome-evidence-ledger.jsonl.lock"
+      ],
+      "locking": "exclusive_create"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/pattern-promotion-runner.ts",
+      "group": "observer",
+      "access": "read_write",
+      "subpaths": [
+        "pattern-promotion-ledger.jsonl"
+      ],
+      "locking": "append_only"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/permission-ladder.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "permission-ladder.json"
+      ],
+      "locking": "module_defined"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/persona-orchestrator.ts",
+      "group": "subsystem",
+      "access": "read_write",
+      "subpaths": [
+        "pool/**"
+      ],
+      "locking": "atomic_rename"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/persona-shadow-qualification.ts",
+      "group": "observer",
+      "access": "read_write",
+      "subpaths": [
+        "pool/**",
+        "persona-shadow-qualification/**"
+      ],
+      "locking": "exclusive_create"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/plan-gate-evidence-monitor.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "../state/plan-gate-shadow-audit.jsonl"
+      ],
+      "locking": "atomic_rename"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/pool-manager.ts",
+      "group": "subsystem",
+      "access": "read_write",
+      "subpaths": [
+        "**"
+      ],
+      "locking": "append_only"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/pool-queue.ts",
+      "group": "subsystem",
+      "access": "read_write",
+      "subpaths": [
+        "pool/**"
+      ],
+      "locking": "atomic_rename"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/product-lifecycle-gate.ts",
+      "group": "subsystem",
+      "access": "read_write",
+      "subpaths": [
+        "product-gate/**"
+      ],
+      "locking": "atomic_rename"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/reap-stale-execs.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "**"
+      ],
+      "locking": "module_defined"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/receipt-advance.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "**"
+      ],
+      "locking": "atomic_rename"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/repository-drift.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "repository-drift.jsonl"
+      ],
+      "locking": "module_defined"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/run-edge-proof-adapters.ts",
+      "group": "critical",
+      "access": "read_only",
+      "subpaths": [
+        "**"
+      ],
+      "locking": "none"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/run-operation-journal-schema.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "operation-journal.sqlite"
+      ],
+      "locking": "atomic_rename"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/runtime-config.ts",
+      "group": "subsystem",
+      "access": "read_write",
+      "subpaths": [
+        "config-ticks.jsonl",
+        "config-transitions.log"
+      ],
+      "locking": "atomic_rename"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/scenario-run.ts",
+      "group": "observer",
+      "access": "read_write",
+      "subpaths": [
+        "**"
+      ],
+      "locking": "append_only"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/scenario-spec.ts",
+      "group": "subsystem",
+      "access": "read_only",
+      "subpaths": [
+        "scenario-runs.jsonl"
+      ],
+      "locking": "none"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/shadow-state.ts",
+      "group": "observer",
+      "access": "read_write",
+      "subpaths": [
+        "shadow-state.json",
+        "shadow-transition.log"
+      ],
+      "locking": "append_only"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/shadow-validate.ts",
+      "group": "observer",
+      "access": "read_only",
+      "subpaths": [
+        "shadow-state.json"
+      ],
+      "locking": "none"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/ship-ready-core.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "ship-ready/**"
+      ],
+      "locking": "append_only"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/ship-ready-runner.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "**"
+      ],
+      "locking": "atomic_rename"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/ship-ready-scan.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "**"
+      ],
+      "locking": "module_defined"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/signal-adapters.ts",
+      "group": "subsystem",
+      "access": "read_only",
+      "subpaths": [
+        "signals-inbox/**",
+        "slo-status.md"
+      ],
+      "locking": "none"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/signal-intake.ts",
+      "group": "subsystem",
+      "access": "read_write",
+      "subpaths": [
+        "signal-decisions.jsonl"
+      ],
+      "locking": "append_only"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/signal-ledger.ts",
+      "group": "subsystem",
+      "access": "read_write",
+      "subpaths": [
+        "signal-ledger.jsonl"
+      ],
+      "locking": "append_only"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/stub-scan.ts",
+      "group": "subsystem",
+      "access": "read_write",
+      "subpaths": [
+        "stub-scan/stub-scan-runs.json"
+      ],
+      "locking": "module_defined"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/survivability-core.ts",
+      "group": "subsystem",
+      "access": "read_only",
+      "subpaths": [
+        "survivability-ledger.jsonl"
+      ],
+      "locking": "none"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/survivability-probe.ts",
+      "group": "observer",
+      "access": "read_write",
+      "subpaths": [
+        "auto-merge-audit/**"
+      ],
+      "locking": "append_only"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/swarm-exec.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "evidence/**",
+        "exec-${exec.execution_id}.json",
+        "first-pass-contracts/**",
+        "first-pass-holdouts.json",
+        "first-pass-ledger.jsonl",
+        "hold-${hold.execution_id}.json",
+        "permission-ladder.json"
+      ],
+      "locking": "module_defined"
+    },
+    {
+      "path": "Projects/zouroboros-software-factory/scripts/ticket-claim.ts",
+      "group": "critical",
+      "access": "read_write",
+      "subpaths": [
+        "**"
+      ],
+      "locking": "exclusive_create"
+    }
+  ]
+}

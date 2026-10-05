@@ -1,0 +1,135 @@
+[
+  {
+    "id": "qw-plan",
+    "persona": "claude-code",
+    "task": "Create a remediation execution plan for 10 VGC quick wins from the Feb 28 review report. Tasks: 1) Fix fake address in privacy policy, 2) Fix email domain, 3) Add DEMO MODE banner to checkout, 4) Enable HSTS in Cloudflare, 5) Remove zoom-blocking viewport meta, 6) Fix dynamic Last Updated date, 7) Fix Twitter meta tag property attribute, 8) Add hero image preload, 9) Block /server/* paths via Cloudflare rule, 10) Remove hardcoded review count text. Estimate effort per task and total parallelism. Identify which tasks can be done in parallel (code changes) vs sequential (Cloudflare dashboard).",
+    "priority": "critical",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "planning",
+      "priority": "critical",
+      "tags": ["quick-wins", "remediation"]
+    }
+  },
+  {
+    "id": "qw-privacy-fixes",
+    "persona": "claude-code",
+    "task": "Fix the VGC privacy policy file (client/src/pages/PrivacyPolicy.tsx). Two quick changes: 1) Replace the fake address '123 Ancestral Way, Nature Valley, NV 12345' with a realistic business address (use 'PO Box 123, Portland, OR 97201' or similar for now), 2) Change email from 'hello@verdantgoods.com' to 'hello@verdantgoods.com'. These are P0-04 and P0-05 fixes. Show the before/after diff for verification. Total effort: 10 minutes.",
+    "priority": "critical",
+    "dependsOn": ["qw-plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "legal",
+      "priority": "critical",
+      "tags": ["privacy", "p0", "quick-win"]
+    }
+  },
+  {
+    "id": "qw-viewport-fixes",
+    "persona": "claude-code",
+    "task": "Fix viewport and meta tag issues in VGC (client/src/pages/App.tsx or index.html, and Home.tsx): 1) Remove 'maximum-scale=1' from viewport meta, change to 'maximum-scale=5' to allow user zoom (P2-09 WCAG fix), 2) Fix the dynamic 'Last updated' date in PrivacyPolicy.tsx and TermsOfService.tsx - replace with static date like 'Last updated: 2026-02-28' (P1-19 fix), 3) Fix Twitter card meta tags - change incorrect 'property=' attributes to 'name=' for twitter:card, twitter:title, twitter:description (P1-14 fix). These are 3 quick wins totaling ~15 minutes. Show all diffs.",
+    "priority": "high",
+    "dependsOn": ["qw-plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "frontend",
+      "priority": "high",
+      "tags": ["meta-tags", "seo", "accessibility", "p1", "p2"]
+    }
+  },
+  {
+    "id": "qw-checkout-banner",
+    "persona": "claude-code",
+    "task": "Add a prominent 'DEMO MODE - Payment Processing Disabled' banner to the VGC checkout page (client/src/pages/Checkout.tsx). The banner should: 1) appear at the very top of the page above all PII collection fields, 2) use red/orange background (#dc2626 or #ea580c) with white text, 3) be sticky position so it stays visible when scrolling, 4) use z-index: 50 to stay above other content, 5) have clear warning text like 'This is a DEMO. Payment processing is DISABLED. Do not submit real payment information.' This mitigates P0-10 risk. Total effort: 15 minutes. Show the code change.",
+    "priority": "critical",
+    "dependsOn": ["qw-plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "security",
+      "priority": "critical",
+      "tags": ["checkout", "pii", "p0", "quick-win"]
+    }
+  },
+  {
+    "id": "qw-hero-preload",
+    "persona": "claude-code",
+    "task": "Add hero image preload to VGC to improve LCP score (P1-18 quick win). Edit client/index.html and add this line to the <head> section before other scripts: <link rel='preload' as='image' href='/images/hero.jpg' fetchpriority='high'>. If the hero image path is different, use the correct path from Home.tsx. Total effort: 5 minutes. Show the exact HTML change.",
+    "priority": "high",
+    "dependsOn": ["qw-plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "performance",
+      "priority": "high",
+      "tags": ["performance", "lcp", "p1", "quick-win"]
+    }
+  },
+  {
+    "id": "qw-review-count",
+    "persona": "claude-code",
+    "task": "Remove hardcoded review count from VGC product pages (P2-17 quick win). Find the hardcoded '(24 Reviews)' text that appears on every product in client/src/pages/Shop.tsx and client/src/components/ProductCard.tsx. Either remove this text entirely or replace it with a dynamic count that shows 0 until real reviews are added. The goal is to stop showing fake review counts. Total effort: 5 minutes. Show the before/after code.",
+    "priority": "medium",
+    "dependsOn": ["qw-plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "content",
+      "priority": "medium",
+      "tags": ["reviews", "ux", "p2", "quick-win"]
+    }
+  },
+  {
+    "id": "qw-cloudflare-hsts",
+    "persona": "claude-code",
+    "task": "Enable HSTS in Cloudflare for VGC (P1-01 quick win). Instructions: 1) Log into Cloudflare dashboard (https://dash.cloudflare.com), 2) Navigate to SSL/TLS section, 3) Find HTTP Strict Transport Security (HSTS) option, 4) Click 'Enable' button, 5) Set Max Age to 12 months (31536000 seconds), 6) Check 'includeSubdomains' and 'Preload' boxes if available, 7) Save and confirm. This is a dashboard-only change (no code). Total effort: 5 minutes. Provide verification command: 'curl -sI https://verdantgoods.com | grep -i strict-transport'",
+    "priority": "high",
+    "dependsOn": ["qw-plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "devops",
+      "priority": "high",
+      "tags": ["security", "hsts", "cloudflare", "p1", "quick-win"]
+    }
+  },
+  {
+    "id": "qw-cloudflare-block-server",
+    "persona": "claude-code",
+    "task": "Block /server/* paths via Cloudflare WAF rule for VGC (P1-04 quick win - source path exposure). Instructions: 1) Log into Cloudflare dashboard, 2) Navigate to Security > WAF (Web Application Firewall) or Security > Page Rules depending on plan, 3) Create a new rule with: Path contains '/server/', Action: Block with HTTP 403, 4) Enable and save. Alternative: Use Security Rules > Custom Rules if available. Total effort: 10 minutes. Provide verification command: 'curl -v https://verdantgoods.com/server/index.ts' (should return 403 after the rule is applied).",
+    "priority": "high",
+    "dependsOn": ["qw-plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "devops",
+      "priority": "high",
+      "tags": ["security", "cloudflare", "waf", "p1", "quick-win"]
+    }
+  },
+  {
+    "id": "qw-summary",
+    "persona": "claude-code",
+    "task": "Synthesize all 8 quick-win remediation tasks into an executive summary. Include: 1) Overview of 10 quick wins (2 Ops, 4 Engineering, 2 DevOps/Cloudflare, 2 Dashboard), 2) Code changes required (list all files modified and line counts), 3) Cloudflare changes required (HSTS + WAF rule), 4) Total estimated effort: 70-80 minutes, 5) Impact: Resolves 2 P0s (fake address, email), 4 P1s (HSTS, /server block, meta tags, preload), 2 P2s (viewport zoom, review count), 6) Severity of issues fixed (P0-P2), 7) Verification checklist with curl commands and code inspection steps. Format as a professional remediation report.",
+    "priority": "high",
+    "dependsOn": ["qw-privacy-fixes", "qw-viewport-fixes", "qw-checkout-banner", "qw-hero-preload", "qw-review-count", "qw-cloudflare-hsts", "qw-cloudflare-block-server"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "synthesis",
+      "priority": "high",
+      "tags": ["report", "summary", "remediation"]
+    }
+  }
+]

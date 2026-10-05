@@ -1,0 +1,248 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://zouroboros.ai/schemas/authority-envelope-v1.schema.json",
+  "title": "Zouroboros Capability Authority Envelope v1",
+  "type": "object",
+  "required": [
+    "contract_id",
+    "schema_version",
+    "envelope_id",
+    "principal",
+    "capabilities",
+    "validity",
+    "environment",
+    "approval_binding",
+    "global_rung_cap",
+    "delegation",
+    "integration_refs",
+    "enforcement_evidence"
+  ],
+  "properties": {
+    "$schema": { "type": "string", "format": "uri" },
+    "contract_id": { "const": "zouroboros-authority-envelope/v1" },
+    "schema_version": { "const": 1 },
+    "envelope_id": { "$ref": "#/$defs/envelopeId" },
+    "principal": { "$ref": "#/$defs/principal" },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/capabilityGrant" }
+    },
+    "validity": { "$ref": "#/$defs/validity" },
+    "environment": { "$ref": "#/$defs/environment" },
+    "approval_binding": { "$ref": "#/$defs/approvalBinding" },
+    "global_rung_cap": { "$ref": "#/$defs/rung" },
+    "delegation": { "$ref": "#/$defs/delegation" },
+    "integration_refs": { "$ref": "#/$defs/integrationRefs" },
+    "enforcement_evidence": { "$ref": "#/$defs/enforcementEvidence" }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "hash": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "timestamp": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "envelopeId": {
+      "type": "string",
+      "pattern": "^ae-[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "capabilityId": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9._-]{0,127}$"
+    },
+    "credentialClass": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9-]{0,63}$"
+    },
+    "resourcePattern": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512,
+      "pattern": "^[A-Za-z0-9._:@/-]+(/\\*)?$"
+    },
+    "rung": {
+      "type": "string",
+      "enum": ["read-only", "branch-write", "open-pr", "staging", "production"]
+    },
+    "principal": {
+      "type": "object",
+      "required": ["kind", "id"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["operator", "agent", "automation", "service"]
+        },
+        "id": { "type": "string", "minLength": 1, "maxLength": 256 }
+      },
+      "additionalProperties": false
+    },
+    "argumentConstraint": {
+      "type": "object",
+      "minProperties": 1,
+      "properties": {
+        "const": { "type": ["string", "number", "boolean"] },
+        "pattern": { "type": "string", "minLength": 1 },
+        "enum": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": ["string", "number", "boolean"] }
+        },
+        "max_length": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "capabilityGrant": {
+      "type": "object",
+      "required": [
+        "capability",
+        "resources",
+        "argument_constraints",
+        "credential_classes",
+        "revoked_at"
+      ],
+      "properties": {
+        "capability": { "$ref": "#/$defs/capabilityId" },
+        "resources": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/resourcePattern" },
+          "uniqueItems": true
+        },
+        "argument_constraints": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/argumentConstraint" }
+        },
+        "credential_classes": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/credentialClass" },
+          "uniqueItems": true
+        },
+        "revoked_at": {
+          "oneOf": [
+            { "$ref": "#/$defs/timestamp" },
+            { "type": "null" }
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "validity": {
+      "type": "object",
+      "required": ["not_before", "expires_at"],
+      "properties": {
+        "not_before": { "$ref": "#/$defs/timestamp" },
+        "expires_at": { "$ref": "#/$defs/timestamp" }
+      },
+      "additionalProperties": false
+    },
+    "environment": {
+      "type": "object",
+      "required": ["runtime_root", "isolation_mode", "repository", "state_dir"],
+      "properties": {
+        "runtime_root": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "isolation_mode": {
+          "type": "string",
+          "enum": ["isolated-worktree", "disposable-temp", "read-only"]
+        },
+        "repository": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "state_dir": { "type": "string", "minLength": 1, "maxLength": 512 }
+      },
+      "additionalProperties": false
+    },
+    "lifetime": {
+      "type": "object",
+      "required": ["kind"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["terminal", "run", "session"]
+        }
+      },
+      "additionalProperties": false
+    },
+    "approvalBinding": {
+      "type": "object",
+      "required": [
+        "actor",
+        "session_id",
+        "run_id",
+        "tool",
+        "bound_arguments_sha256",
+        "lifetime",
+        "required_terminal_outcome"
+      ],
+      "properties": {
+        "actor": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "session_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "run_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "tool": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "bound_arguments_sha256": { "$ref": "#/$defs/hash" },
+        "lifetime": { "$ref": "#/$defs/lifetime" },
+        "required_terminal_outcome": {
+          "type": ["string", "null"],
+          "enum": ["success", "failure", "partial", "timeout", "cancelled", "held", null]
+        }
+      },
+      "additionalProperties": false
+    },
+    "delegation": {
+      "type": "object",
+      "required": ["parent_envelope_ref", "depth"],
+      "properties": {
+        "parent_envelope_ref": {
+          "oneOf": [
+            { "$ref": "#/$defs/envelopeId" },
+            { "type": "null" }
+          ]
+        },
+        "depth": { "type": "integer", "minimum": 0, "maximum": 8 }
+      },
+      "additionalProperties": false
+    },
+    "integrationRefs": {
+      "type": "object",
+      "required": [
+        "permission_rung_ref",
+        "skillspector_finding_refs",
+        "mcp_finding_refs",
+        "provenance_evidence_refs"
+      ],
+      "properties": {
+        "permission_rung_ref": { "type": ["string", "null"] },
+        "skillspector_finding_refs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "mcp_finding_refs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        },
+        "provenance_evidence_refs": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "enforcementEvidence": {
+      "type": "object",
+      "required": ["kind", "evidence_ref", "sha256"],
+      "properties": {
+        "kind": {
+          "type": "string",
+          "enum": ["fixture", "ledger", "receipt"]
+        },
+        "evidence_ref": { "type": "string", "minLength": 1, "maxLength": 512 },
+        "sha256": { "$ref": "#/$defs/hash" }
+      },
+      "additionalProperties": false
+    }
+  }
+}

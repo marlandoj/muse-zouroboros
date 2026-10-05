@@ -1,0 +1,135 @@
+[
+  {
+    "id": "plan",
+    "persona": "claude-code",
+    "task": "You are coordinating the resolution of 11 open P0 launch blockers for the Verdant Goods Co. website (verdantgoods.com). The production codebase is at /home/workspace/verdant-goods-store/. The site is an Express + React (Vite) SPA.\n\nThe 11 open P0s are:\n- P0-01: Fabricated reviews (identical 3 fake reviews on every product page — FTC Section 5 risk)\n- P0-02: Review count shows '(24 Reviews)' but was already removed in quick wins — VERIFY this is gone\n- P0-03: Drug-territory product claims ('Accelerates healing', 'Reduces fine lines', etc.)\n- P0-06: No CCPA/GDPR disclosures in privacy policy\n- P0-07: Cookie consent is decorative (stores flag but gates nothing)\n- P0-08: No return/refund or shipping policy pages\n- P0-10: Fake checkout collects PII with setTimeout simulation\n- P0-11: Zero first-party analytics (no GA4/GTM)\n- P0-12: Zero ecommerce event tracking\n- P0-13: No Content-Security-Policy header (already partially addressed in server/index.ts)\n- P0-14: No conversion/ad pixels\n\nCreate a structured execution plan assigning each P0 to the right specialist. Output the plan as a numbered checklist with file paths, estimated effort, and acceptance criteria for each fix.",
+    "priority": "critical",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "planning",
+      "priority": "critical",
+      "tags": ["p0-plan", "launch-blockers"]
+    }
+  },
+  {
+    "id": "legal-reviews-claims",
+    "persona": "claude-code",
+    "task": "You are the Legal Compliance Checker for Verdant Goods Co.. The codebase is at /home/workspace/verdant-goods-store/.\n\nResolve P0-01 (fabricated reviews) and P0-03 (drug-territory product claims):\n\n**P0-01 — Fabricated Reviews:**\n- Find all hardcoded fake reviews in the codebase (James M., Sarah L., Michael K.) across product pages\n- Remove ALL fabricated review content entirely\n- Replace with a 'No reviews yet — be the first to share your experience' placeholder\n- Ensure no fake star ratings remain that imply real reviews\n\n**P0-03 — Drug-Territory Claims:**\n- Search ALL .tsx files for FDA/FTC violating claims: 'accelerates healing', 'reduces fine lines', 'soothes inflammation', 'promotes growth', 'healing salve', 'anti-aging', 'treats', 'cures', 'prevents'\n- Rewrite each claim to compliant cosmetic language (structure-function claims only)\n- Examples: 'Accelerates healing' → 'Helps maintain skin's natural moisture barrier'; 'Reduces fine lines' → 'Supports the appearance of smooth, hydrated skin'; 'All-Purpose Healing Salve' → 'All-Purpose Skin Balm'\n- Document every change made with before/after\n\nUse edit_file_llm or edit_file to make changes. Read each file before editing. Output a summary of all files changed and claims rewritten.",
+    "priority": "critical",
+    "dependsOn": ["plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "compliance",
+      "priority": "critical",
+      "tags": ["reviews", "claims", "ftc", "fda", "legal"]
+    }
+  },
+  {
+    "id": "legal-policies",
+    "persona": "claude-code",
+    "task": "You are the Legal Compliance Checker for Verdant Goods Co.. The codebase is at /home/workspace/verdant-goods-store/.\n\nResolve P0-06 (CCPA/GDPR disclosures) and P0-08 (return/refund/shipping policy):\n\n**P0-06 — CCPA/GDPR Disclosures:**\n- Read /home/workspace/verdant-goods-store/client/src/pages/PrivacyPolicy.tsx\n- Add the following required sections:\n  - Your Rights Under CCPA (right to know, delete, opt-out, non-discrimination)\n  - Your Rights Under GDPR (access, rectification, erasure, restrict processing, portability, object)\n  - Data Retention Policy (how long data is kept)\n  - Third-Party Disclosure (list categories: payment processors, analytics, shipping)\n  - How to Exercise Your Rights (email contact, response timeframe: 30 days CCPA, 1 month GDPR)\n  - California Shine the Light disclosure\n- Keep existing sections and styling intact. Match the existing prose style (formal but approachable).\n\n**P0-08 — Return/Refund & Shipping Policy:**\n- Create TWO new page components:\n  1. /home/workspace/verdant-goods-store/client/src/pages/ReturnPolicy.tsx\n  2. /home/workspace/verdant-goods-store/client/src/pages/ShippingPolicy.tsx\n- Use the same Layout wrapper and styling as PrivacyPolicy.tsx\n- Return Policy should include: 30-day return window, condition requirements, refund process, exchange option, contact email\n- Shipping Policy should include: processing time (2-3 business days), domestic shipping (USPS/UPS), free shipping over $75, international shipping (not available at launch), tracking info\n- Register both routes in /home/workspace/verdant-goods-store/client/src/App.tsx\n- Add links to both policies in the site footer (Layout.tsx)\n\nBusiness is based in Mesa, Arizona. Email: hello@verdantgoods.com. Read each file before editing. Output all files created/modified.",
+    "priority": "critical",
+    "dependsOn": ["plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "compliance",
+      "priority": "critical",
+      "tags": ["ccpa", "gdpr", "privacy", "returns", "shipping", "policy"]
+    }
+  },
+  {
+    "id": "frontend-cookie-checkout",
+    "persona": "claude-code",
+    "task": "You are the Frontend Developer for Verdant Goods Co.. The codebase is at /home/workspace/verdant-goods-store/.\n\nResolve P0-07 (decorative cookie consent) and P0-10 (fake checkout):\n\n**P0-07 — Cookie Consent:**\n- Find the CookieConsent component (search client/src/components/)\n- Currently it stores a localStorage flag but doesn't actually gate any tracking scripts\n- Since the site has NO analytics yet (P0-11/12 will add them), the cookie consent needs to:\n  1. Still show the banner on first visit\n  2. Store the user's preference (accept/decline) in localStorage\n  3. Export a helper function `hasConsent()` that other components can import to check consent before loading tracking scripts\n  4. Remove any text that claims tracking exists when it doesn't (e.g., 'We use cookies to track...' should be 'We use cookies to enhance your browsing experience')\n  5. Ensure the Decline button actually works and prevents future consent\n\n**P0-10 — Fake Checkout:**\n- Read /home/workspace/verdant-goods-store/client/src/pages/Checkout.tsx\n- The checkout currently collects full PII (name, email, address, card) then uses setTimeout to fake an order\n- Replace the entire checkout flow with a 'Coming Soon' holding page that:\n  1. Shows a clear message: 'Online ordering is coming soon'\n  2. Removes ALL form fields that collect PII (name, address, payment)\n  3. Keeps the cart summary/total visible (read-only)\n  4. Adds an email signup field: 'Get notified when we launch' (just stores in localStorage for now)\n  5. Links to the contact page for wholesale/bulk orders\n  6. Maintains the existing DEMO MODE banner from QW-3\n- This is safer than trying to build real payment processing right now\n\nRead each file before editing. Output all changes made.",
+    "priority": "critical",
+    "dependsOn": ["plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "frontend",
+      "priority": "critical",
+      "tags": ["cookie-consent", "checkout", "pii", "privacy"]
+    }
+  },
+  {
+    "id": "analytics-setup",
+    "persona": "hermes",
+    "task": "You are the Analytics Reporter for Verdant Goods Co.. The codebase is at /home/workspace/verdant-goods-store/.\n\nResolve P0-11 (zero analytics) and P0-12 (zero ecommerce tracking):\n\n**P0-11 — First-Party Analytics:**\n- The site already has Umami analytics referenced in comments but not configured\n- Create an analytics integration using a privacy-friendly approach:\n  1. Create /home/workspace/verdant-goods-store/client/src/lib/analytics.ts with:\n     - A generic analytics interface that supports multiple providers\n     - Page view tracking (fires on route change)\n     - Event tracking function: `trackEvent(category, action, label?, value?)`\n     - Consent check: import and use the `hasConsent()` function from CookieConsent before firing any events\n  2. Add the analytics provider script tag to /home/workspace/verdant-goods-store/client/index.html with a placeholder comment for GA4/Umami config\n  3. Wire up page view tracking in the App.tsx router\n\n**P0-12 — Ecommerce Event Tracking:**\n- Add ecommerce event helpers to the analytics module:\n  - `trackProductView(product)` — fires on ProductDetail page load\n  - `trackAddToCart(product, quantity)` — fires when item added to cart\n  - `trackBeginCheckout(cart)` — fires on checkout page load\n  - `trackPurchase(order)` — placeholder for when real payments exist\n- Wire these into the existing components:\n  - ProductDetail.tsx: track view_item on mount\n  - Cart actions: track add_to_cart\n  - Checkout.tsx: track begin_checkout on mount\n- Use standard GA4 event naming conventions (view_item, add_to_cart, begin_checkout, purchase)\n- All events must check cookie consent before firing\n\nRead each file before editing. Create new files as needed. Output all files created/modified.",
+    "priority": "high",
+    "dependsOn": ["frontend-cookie-checkout"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "analytics",
+      "priority": "high",
+      "tags": ["ga4", "analytics", "ecommerce", "tracking", "events"]
+    }
+  },
+  {
+    "id": "devops-csp",
+    "persona": "claude-code",
+    "task": "You are the DevOps Automator for Verdant Goods Co.. The codebase is at /home/workspace/verdant-goods-store/.\n\nResolve P0-13 (Content-Security-Policy):\n\n- Read /home/workspace/verdant-goods-store/server/index.ts\n- The server already sets a CSP header. Review and strengthen it:\n  1. Verify the current CSP covers: default-src, script-src, style-src, font-src, img-src, connect-src, frame-ancestors\n  2. Add `form-action 'self'` to prevent form hijacking\n  3. Add `base-uri 'self'` to prevent base tag injection\n  4. Add `object-src 'none'` to block plugins\n  5. If analytics scripts will be added (GA4, Umami), ensure their domains are whitelisted in script-src and connect-src\n  6. Add placeholder domains for future analytics: https://www.googletagmanager.com, https://www.google-analytics.com, https://analytics.umami.is\n  7. Remove 'unsafe-eval' from script-src if possible (check if any dependencies need it)\n  8. Keep 'unsafe-inline' for style-src (Tailwind requires it) but add a comment explaining why\n\nAlso verify these security headers are set correctly:\n- X-Frame-Options: SAMEORIGIN\n- X-Content-Type-Options: nosniff\n- Referrer-Policy: strict-origin-when-cross-origin\n- Permissions-Policy: restrictive\n\nRead the file first, make targeted edits only. Output the final CSP header value.",
+    "priority": "high",
+    "dependsOn": ["plan"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "security",
+      "priority": "high",
+      "tags": ["csp", "security-headers", "devops"]
+    }
+  },
+  {
+    "id": "marketing-pixels",
+    "persona": "hermes",
+    "task": "You are the Marketing Growth Hacker for Verdant Goods Co.. The codebase is at /home/workspace/verdant-goods-store/.\n\nResolve P0-14 (no conversion/ad pixels):\n\n- Create a pixel/tag management module at /home/workspace/verdant-goods-store/client/src/lib/pixels.ts that:\n  1. Provides a consent-aware pixel loader framework\n  2. Supports Meta Pixel (Facebook), Google Ads, and TikTok Pixel\n  3. Each pixel has: init(), trackPageView(), trackEvent(name, params) methods\n  4. ALL pixel loading must check cookie consent first (import hasConsent from CookieConsent)\n  5. Uses placeholder IDs with clear comments: `PIXEL_ID: 'YOUR_META_PIXEL_ID'`, etc.\n  6. Pixel scripts are loaded dynamically (not in index.html) only after consent\n\n- Create /home/workspace/verdant-goods-store/client/src/lib/pixel-config.ts with:\n  ```\n  export const PIXEL_CONFIG = {\n    metaPixel: { enabled: false, id: 'YOUR_META_PIXEL_ID' },\n    googleAds: { enabled: false, id: 'YOUR_GOOGLE_ADS_ID' },\n    tiktokPixel: { enabled: false, id: 'YOUR_TIKTOK_PIXEL_ID' },\n  };\n  ```\n\n- Wire the pixel pageView calls into the analytics module created by the analytics-setup task\n- Add standard ecommerce events: ViewContent, AddToCart, InitiateCheckout, Purchase (matching each platform's naming)\n\nAll pixels are disabled by default (enabled: false). The business owner will add real IDs later. Read existing files before creating new ones. Output all files created.",
+    "priority": "high",
+    "dependsOn": ["analytics-setup"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "marketing",
+      "priority": "high",
+      "tags": ["pixels", "meta", "google-ads", "tiktok", "conversion-tracking"]
+    }
+  },
+  {
+    "id": "verify-p0-02",
+    "persona": "claude-code",
+    "task": "Verify that P0-02 (review count mismatch showing '24 Reviews') has been resolved. The codebase is at /home/workspace/verdant-goods-store/.\n\n1. Search all .tsx files for '24 Reviews', '24 reviews', 'Reviews)', 'review count'\n2. Search for any hardcoded review numbers\n3. Check ProductDetail.tsx specifically\n4. Report: CONFIRMED FIXED or STILL PRESENT (with file:line details)\n\nThis was supposedly fixed in QW-4 but needs verification.",
+    "priority": "high",
+    "dependsOn": ["legal-reviews-claims"],
+    "contextAccess": "read",
+    "memoryStrategy": "none",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "verification",
+      "priority": "high",
+      "tags": ["p0-02", "verification", "reviews"]
+    }
+  },
+  {
+    "id": "synthesis",
+    "persona": "claude-code",
+    "task": "You are the Senior Project Manager synthesizing the P0 resolution campaign for Verdant Goods Co.. The codebase is at /home/workspace/verdant-goods-store/.\n\nAll specialist tasks should now be complete. Your job:\n\n1. Read the output of every prior task in this swarm\n2. For each of the 11 P0s, determine: RESOLVED, PARTIALLY RESOLVED, or FAILED\n3. List any files that were created or modified\n4. Identify any remaining issues or follow-up work needed\n5. Check if the project builds cleanly: run `cd /home/workspace/verdant-goods-store && pnpm run build` and report success/failure\n6. If the build fails, identify the errors and attempt to fix them\n7. Write a summary report to /home/workspace/VGC_P0_Resolution_Report_2026-03-01.md with:\n   - Status of each P0\n   - Files changed\n   - Build status\n   - Remaining work\n   - Recommendation on production readiness\n\nOutput the final status of all 11 P0s.",
+    "priority": "critical",
+    "dependsOn": ["legal-reviews-claims", "legal-policies", "frontend-cookie-checkout", "analytics-setup", "devops-csp", "marketing-pixels", "verify-p0-02"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "synthesis",
+      "priority": "critical",
+      "tags": ["report", "synthesis", "p0-status", "build-verification"]
+    }
+  }
+]

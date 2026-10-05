@@ -1,0 +1,43 @@
+[
+  {
+    "id": "landscape-research",
+    "persona": "research-analyst",
+    "task": "Research the current landscape for the given topic. Identify 8-12 key players, emerging trends, and recent developments. For each player identified, provide: name, key differentiators, estimated market position, and target audience. Categorize by: Direct Competitors, Indirect Competitors, and Aspirational Leaders.",
+    "priority": "critical",
+    "contextAccess": "none",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "landscape-research",
+      "priority": "critical",
+      "tags": ["research", "competitors", "landscape"]
+    }
+  },
+  {
+    "id": "trend-analysis",
+    "persona": "data-scientist",
+    "task": "Analyze current trends and dynamics in the target domain. Cover: 1) Growth trajectories and adoption curves, 2) Technology shifts and disruptions, 3) Demographic and behavioral changes, 4) Regional variations. Identify 2-3 standout opportunities with strong growth catalysts.",
+    "priority": "high",
+    "contextAccess": "read",
+    "contextTags": ["landscape-research"],
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "trend-analysis",
+      "priority": "high",
+      "tags": ["trends", "analysis", "growth"]
+    }
+  },
+  {
+    "id": "risk-assessment",
+    "persona": "security-engineer",
+    "task": "Assess risks and challenges in the target domain. Analyze: 1) Regulatory and compliance concerns, 2) Technical debt and scalability risks, 3) Competitive threats, 4) Market timing and execution risks. Provide mitigation strategies for each.",
+    "priority": "critical",
+    "contextAccess": "read",
+    "contextTags": ["landscape-research"],
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "risk-assessment",
+      "priority": "critical",
+      "tags": ["risks", "mitigation", "assessment"]
+    }
+  }
+]

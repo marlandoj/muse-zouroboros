@@ -1,0 +1,101 @@
+[
+  {
+    "id": "task1",
+    "persona": "frontend-developer",
+    "task": "Analyze UI/UX of an e-commerce product page. List 3 findings about layout, accessibility, and user flow.",
+    "priority": "high",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": { "category": "ui-analysis", "priority": "high", "tags": ["ui", "ux"] }
+  },
+  {
+    "id": "task2",
+    "persona": "backend-architect",
+    "task": "Review backend architecture for high-traffic API. Identify 3 scalability improvements.",
+    "priority": "high",
+    "memoryStrategy": "hierarchical",
+    "contextAccess": "read",
+    "outputToMemory": true,
+    "memoryMetadata": { "category": "backend-review", "priority": "high", "tags": ["backend", "api"] }
+  },
+  {
+    "id": "task3",
+    "persona": "security-engineer",
+    "task": "Perform security audit of web application. Identify 3 vulnerabilities and fixes.",
+    "priority": "critical",
+    "memoryStrategy": "hierarchical",
+    "contextAccess": "read",
+    "outputToMemory": true,
+    "memoryMetadata": { "category": "security-audit", "priority": "critical", "tags": ["security"] }
+  },
+  {
+    "id": "task4",
+    "persona": "product-manager",
+    "task": "Define 3 user stories for e-commerce checkout based on customer pain points.",
+    "priority": "high",
+    "memoryStrategy": "hierarchical",
+    "contextAccess": "read",
+    "outputToMemory": true,
+    "memoryMetadata": { "category": "product-requirements", "priority": "high", "tags": ["product"] }
+  },
+  {
+    "id": "task5",
+    "persona": "qa-automation",
+    "task": "Design test automation strategy. Identify 3 critical test cases for regression.",
+    "priority": "medium",
+    "memoryStrategy": "hierarchical",
+    "contextAccess": "read",
+    "outputToMemory": true,
+    "memoryMetadata": { "category": "qa-strategy", "priority": "medium", "tags": ["qa"] }
+  },
+  {
+    "id": "task6",
+    "persona": "devops-automator",
+    "task": "Review CI/CD pipeline for deployment bottlenecks. Suggest 3 improvements.",
+    "priority": "high",
+    "memoryStrategy": "hierarchical",
+    "contextAccess": "read",
+    "outputToMemory": true,
+    "memoryMetadata": { "category": "devops-review", "priority": "high", "tags": ["devops", "ci-cd"] }
+  },
+  {
+    "id": "task7",
+    "persona": "database-optimization-specialist",
+    "task": "Analyze database query performance. Identify 3 optimization opportunities.",
+    "priority": "high",
+    "memoryStrategy": "hierarchical",
+    "contextAccess": "read",
+    "outputToMemory": true,
+    "memoryMetadata": { "category": "database-review", "priority": "high", "tags": ["database"] }
+  },
+  {
+    "id": "task8",
+    "persona": "api-integration-specialist",
+    "task": "Review third-party API integrations. Identify 3 reliability improvements.",
+    "priority": "medium",
+    "memoryStrategy": "hierarchical",
+    "contextAccess": "read",
+    "outputToMemory": true,
+    "memoryMetadata": { "category": "api-integration", "priority": "medium", "tags": ["api"] }
+  },
+  {
+    "id": "task9",
+    "persona": "performance-engineer",
+    "task": "Analyze application performance metrics. Suggest 3 optimizations.",
+    "priority": "high",
+    "memoryStrategy": "hierarchical",
+    "contextAccess": "read",
+    "outputToMemory": true,
+    "memoryMetadata": { "category": "performance-review", "priority": "high", "tags": ["performance"] }
+  },
+  {
+    "id": "task10",
+    "persona": "technical-seo-strategist",
+    "task": "Review SEO implementation. Identify 3 technical SEO improvements.",
+    "priority": "medium",
+    "memoryStrategy": "hierarchical",
+    "contextAccess": "read",
+    "outputToMemory": true,
+    "memoryMetadata": { "category": "seo-review", "priority": "medium", "tags": ["seo"] }
+  }
+]

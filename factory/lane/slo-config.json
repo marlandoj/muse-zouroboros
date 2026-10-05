@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "slos": {
+    "cycle_time": { "enabled": true, "threshold": 24, "min_samples": 3, "window_days": 7 },
+    "yield_floor": { "enabled": true, "threshold": 0.5, "min_samples": 5, "window_days": 7 },
+    "auto_approval_error": { "enabled": true, "threshold": 0.1, "min_samples": 5, "window_days": 7 }
+  }
+}

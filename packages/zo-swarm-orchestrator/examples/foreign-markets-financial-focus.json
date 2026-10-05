@@ -1,0 +1,54 @@
+[
+  {
+    "id": "market-a-analysis",
+    "persona": "research-analyst",
+    "task": "Analyze Market A as a potential opportunity. Research: 1) Current market size and growth rate, 2) Key players and market share, 3) Barriers to entry, 4) Recent developments and news. Present data in a clear table format with an overall assessment (Strong/Moderate/Weak). Keep under 600 words.",
+    "priority": "critical",
+    "contextAccess": "none",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "market-analysis",
+      "priority": "critical",
+      "tags": ["market-a", "research"]
+    }
+  },
+  {
+    "id": "market-b-analysis",
+    "persona": "research-analyst",
+    "task": "Analyze Market B as a potential opportunity. Research: 1) Current market size and growth rate, 2) Key players and market share, 3) Barriers to entry, 4) Recent developments and news. Present data in a clear table format with an overall assessment (Strong/Moderate/Weak). Keep under 600 words.",
+    "priority": "critical",
+    "contextAccess": "none",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "market-analysis",
+      "priority": "critical",
+      "tags": ["market-b", "research"]
+    }
+  },
+  {
+    "id": "comparative-analysis",
+    "persona": "product-manager",
+    "task": "Compare the analyses of Market A and Market B. Evaluate: 1) Relative opportunity size, 2) Risk-adjusted attractiveness, 3) Resource requirements, 4) Time to impact. Provide a ranked recommendation with rationale. Keep under 600 words.",
+    "priority": "high",
+    "contextAccess": "read",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "comparative-analysis",
+      "priority": "high",
+      "tags": ["comparison", "recommendation"]
+    }
+  },
+  {
+    "id": "execution-plan",
+    "persona": "product-manager",
+    "task": "Based on all previous analyses, create a prioritized execution plan. Include: 1) Recommended market entry sequence, 2) Key milestones and timeline, 3) Resource allocation, 4) Risk mitigation steps. Format as an actionable roadmap. Keep under 600 words.",
+    "priority": "high",
+    "contextAccess": "read",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "execution-plan",
+      "priority": "high",
+      "tags": ["plan", "roadmap", "execution"]
+    }
+  }
+]

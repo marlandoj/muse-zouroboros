@@ -1,0 +1,63 @@
+{
+  "$schema": "harness-portability/v1",
+  "version": 1,
+  "detectionOrder": ["explicit", "environment", "process"],
+  "harnesses": {
+    "claude-code": {
+      "executorId": "claude-code",
+      "aliases": ["claude", "claude-code"],
+      "environmentSignals": ["CLAUDE_CODE_ENTRYPOINT", "CLAUDECODE"],
+      "processSignals": ["claude", "claude-code"],
+      "overlay": { "transport": "acp", "instructionFile": "CLAUDE.md" },
+      "tools": { "read": "Read", "write": "Edit", "shell": "Bash", "web": null, "mcp": "MCP" }
+    },
+    "codex": {
+      "executorId": "codex",
+      "aliases": ["codex", "codex-cli"],
+      "environmentSignals": ["CODEX_HOME", "CODEX_THREAD_ID"],
+      "processSignals": ["codex", "codex-cli"],
+      "overlay": { "transport": "acp", "instructionFile": "AGENTS.md" },
+      "tools": { "read": "exec_command", "write": "apply_patch", "shell": "exec_command", "web": null, "mcp": "MCP" }
+    },
+    "gemini": {
+      "executorId": "gemini",
+      "aliases": ["gemini", "gemini-cli"],
+      "environmentSignals": ["GEMINI_CLI", "GEMINI_SESSION_ID"],
+      "processSignals": ["gemini", "gemini-cli"],
+      "overlay": { "transport": "acp", "instructionFile": "GEMINI.md" },
+      "tools": { "read": "read_file", "write": "replace", "shell": "run_shell_command", "web": "google_web_search", "mcp": "MCP" }
+    },
+    "hermes": {
+      "executorId": "hermes",
+      "aliases": ["hermes", "hermes-agent"],
+      "environmentSignals": ["HERMES_AGENT", "HERMES_HOME"],
+      "processSignals": ["hermes", "hermes-agent"],
+      "overlay": { "transport": "acp", "instructionFile": "AGENTS.md" },
+      "tools": { "read": "read_file", "write": "write_file", "shell": "terminal", "web": "web_search", "mcp": "MCP" }
+    },
+    "kimi": {
+      "executorId": "kimi",
+      "aliases": ["kimi", "kimi-code"],
+      "environmentSignals": ["KIMI_DISABLE_TELEMETRY"],
+      "processSignals": ["kimi", "kimi-code", "kimi-bridge.sh"],
+      "overlay": { "transport": "acp", "instructionFile": "AGENTS.md" },
+      "tools": { "read": "Read", "write": "Edit", "shell": "Bash", "web": null, "mcp": "MCP" }
+    },
+    "opencode": {
+      "executorId": "opencode",
+      "aliases": ["opencode", "opencode-cli"],
+      "environmentSignals": ["OPENCODE_CONFIG_CONTENT"],
+      "processSignals": ["opencode"],
+      "overlay": { "transport": "acp", "instructionFile": "AGENTS.md" },
+      "tools": { "read": "read", "write": "edit", "shell": "bash", "web": "webfetch", "mcp": "MCP" }
+    },
+    "pi": {
+      "executorId": "pi",
+      "aliases": ["pi", "pi-coding-agent"],
+      "environmentSignals": ["PI_CODING_AGENT"],
+      "processSignals": ["pi", "pi-bridge.sh"],
+      "overlay": { "transport": "bridge", "instructionFile": "AGENTS.md" },
+      "tools": { "read": "read", "write": "edit", "shell": "bash", "web": null, "mcp": "MCP" }
+    }
+  }
+}

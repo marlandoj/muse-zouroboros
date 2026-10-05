@@ -1,0 +1,137 @@
+[
+  {
+    "id": "s2-image-optimization",
+    "persona": "claude-code",
+    "task": "TASK: Optimize all product images in /home/workspace/verdant-goods-store to WebP format with responsive sizes.\n\nCONTEXT: This is the Verdant Goods Co. e-commerce site (React SPA with Vite). Sprint 2 task S2-2.1.\n\nSTEPS:\n1. Navigate to /home/workspace/verdant-goods-store\n2. Find all product images in public/images/ directory\n3. Install 'sharp' if not already installed: cd /home/workspace/verdant-goods-store && pnpm add sharp\n4. Create a script at /home/workspace/verdant-goods-store/scripts/optimize-images.ts that:\n   - Reads all .jpg/.png files from public/images/products/\n   - Generates WebP versions at 400px and 800px widths (1x and 2x)\n   - Generates fallback JPEG at 800px\n   - Outputs to public/images/optimized/\n5. Run the script with: cd /home/workspace/verdant-goods-store && npx tsx scripts/optimize-images.ts\n6. Report: list all optimized files and size savings\n\nIMPORTANT: If images directory doesn't exist or is empty, check public/ for any image files and document what you find. Create the optimized directory structure regardless.",
+    "priority": "high",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "performance",
+      "priority": "high",
+      "tags": ["images", "webp", "optimization"]
+    }
+  },
+  {
+    "id": "s2-lazy-loading",
+    "persona": "claude-code",
+    "task": "TASK: Add loading='lazy' and width/height attributes to all <img> tags in the Verdant Goods Co. site.\n\nCONTEXT: React SPA at /home/workspace/verdant-goods-store. Sprint 2 task S2-2.2. Uses wouter for routing.\n\nSTEPS:\n1. Search all .tsx files in /home/workspace/verdant-goods-store/client/src/ for <img tags\n2. For each <img> tag found:\n   - Add width and height attributes (use appropriate dimensions based on context - product cards: 400x400, hero: 1920x600, thumbnails: 100x100)\n   - Add loading='lazy' for below-fold images\n   - Keep loading='eager' (or omit) for hero/LCP images\n3. Also update any <picture> elements if they exist\n4. Report: list all files modified and changes made\n\nDo NOT break existing functionality. Preserve all existing attributes on img tags.",
+    "priority": "high",
+    "dependsOn": ["s2-image-optimization"],
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "performance",
+      "priority": "high",
+      "tags": ["lazy-loading", "cls", "images"]
+    }
+  },
+  {
+    "id": "s2-code-splitting",
+    "persona": "claude-code",
+    "task": "TASK: Implement React.lazy() route-based code splitting in the Verdant Goods Co. site.\n\nCONTEXT: React SPA at /home/workspace/verdant-goods-store. Sprint 2 task S2-3.1. App.tsx uses wouter for routing with direct imports of all page components.\n\nSTEPS:\n1. Read /home/workspace/verdant-goods-store/client/src/App.tsx\n2. Replace all static page imports with React.lazy() dynamic imports:\n   - const Home = lazy(() => import('./pages/Home'));\n   - const Shop = lazy(() => import('./pages/Shop'));\n   - const ProductDetail = lazy(() => import('./pages/ProductDetail'));\n   - const About = lazy(() => import('./pages/About'));\n   - const Contact = lazy(() => import('./pages/Contact'));\n   - const Cart = lazy(() => import('./pages/Cart'));\n   - const Checkout = lazy(() => import('./pages/Checkout'));\n   - const FAQ = lazy(() => import('./pages/FAQ'));\n   - const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));\n   - const TermsOfService = lazy(() => import('./pages/TermsOfService'));\n   - const ShippingReturns = lazy(() => import('./pages/ShippingReturns'));\n   - const Ingredients = lazy(() => import('./pages/Ingredients'));\n   - const NotFound = lazy(() => import('./pages/NotFound'));\n3. Add import { lazy, Suspense } from 'react';\n4. Wrap the <Switch> in Router() with <Suspense fallback={<div className='min-h-screen flex items-center justify-center'><div className='animate-spin rounded-full h-8 w-8 border-b-2 border-stone-800'></div></div>}>\n5. Keep all other imports (HelmetProvider, ConsentBanner, etc.) as static imports\n6. Verify the file is syntactically correct\n7. Report the changes made",
+    "priority": "high",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "performance",
+      "priority": "high",
+      "tags": ["code-splitting", "lazy-loading", "bundle-size"]
+    }
+  },
+  {
+    "id": "s2-skip-to-content",
+    "persona": "claude-code",
+    "task": "TASK: Add a skip-to-content accessibility link to the Layout component.\n\nCONTEXT: React SPA at /home/workspace/verdant-goods-store. Sprint 2 task S2-4.1. The Layout component is at client/src/components/Layout.tsx.\n\nSTEPS:\n1. Read /home/workspace/verdant-goods-store/client/src/components/Layout.tsx\n2. Add a skip-to-content link as the FIRST child element inside the layout:\n   <a href='#main-content' className='sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:bg-stone-800 focus:text-white focus:px-4 focus:py-2 focus:rounded focus:text-sm focus:font-medium focus:shadow-lg'>Skip to main content</a>\n3. Add id='main-content' to the <main> element (or create a <main> wrapper if one doesn't exist)\n4. The sr-only class should already be available via Tailwind. If not, the styles are: position:absolute, width:1px, height:1px, overflow:hidden, clip:rect(0,0,0,0), white-space:nowrap, border-width:0\n5. Verify the file is syntactically correct\n6. Report the changes made",
+    "priority": "high",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "accessibility",
+      "priority": "high",
+      "tags": ["a11y", "skip-link", "keyboard-nav"]
+    }
+  },
+  {
+    "id": "s2-aria-attributes",
+    "persona": "claude-code",
+    "task": "TASK: Add ARIA attributes to interactive elements across the Verdant Goods Co. site.\n\nCONTEXT: React SPA at /home/workspace/verdant-goods-store. Sprint 2 task S2-4.2.\n\nSTEPS:\n1. Search all .tsx files in /home/workspace/verdant-goods-store/client/src/ for:\n   - <button> tags without aria-label\n   - <input> tags without associated labels\n   - <nav> tags without aria-label\n   - Icon-only buttons (buttons containing only an SVG/icon component)\n2. For each issue found, add the appropriate ARIA attribute:\n   - Icon-only buttons: add aria-label describing the action\n   - Navigation: add aria-label='Main navigation', aria-label='Footer navigation', etc.\n   - Forms: ensure all inputs have htmlFor/id label associations or aria-label\n   - Modals/dialogs: add role='dialog', aria-modal='true', aria-labelledby\n3. Focus on these key files:\n   - Layout.tsx (header nav, mobile menu)\n   - ProductDetail.tsx (add-to-cart button, quantity controls)\n   - Cart.tsx (remove buttons, quantity buttons)\n   - Shop.tsx (filter controls)\n   - Contact.tsx (form inputs)\n   - Checkout.tsx (form inputs)\n4. Do NOT break existing functionality\n5. Report: list all files modified with specific changes",
+    "priority": "high",
+    "dependsOn": ["s2-skip-to-content"],
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "accessibility",
+      "priority": "high",
+      "tags": ["a11y", "aria", "screen-reader"]
+    }
+  },
+  {
+    "id": "s2-accessibility-page",
+    "persona": "claude-code",
+    "task": "TASK: Create an Accessibility Statement page for the Verdant Goods Co. site.\n\nCONTEXT: React SPA at /home/workspace/verdant-goods-store. Sprint 2 task S2-4.3. Uses wouter for routing, react-helmet-async for meta tags, and has a Layout component wrapping all pages.\n\nSTEPS:\n1. Read an existing page file for reference (e.g., /home/workspace/verdant-goods-store/client/src/pages/FAQ.tsx or About.tsx) to match the component pattern and styling\n2. Create /home/workspace/verdant-goods-store/client/src/pages/Accessibility.tsx with:\n   - Helmet tags: title='Accessibility Statement — Verdant Goods Co.', meta description\n   - Layout wrapper matching existing pages\n   - Sections: Our Commitment, Conformance Status (WCAG 2.1 AA), Accessibility Features, Feedback/Contact\n   - Contact email: hello@verdantgoods.com\n   - Match the styling of other informational pages (use prose, stone-50 bg, etc.)\n3. Add the route to App.tsx: <Route path='/accessibility' component={Accessibility} />\n   - Import it using lazy() to match the code-splitting pattern if already implemented, otherwise static import\n4. Add a link to 'Accessibility' in the footer (Layout.tsx) alongside Privacy Policy, Terms, etc.\n5. Report: files created and modified",
+    "priority": "medium",
+    "dependsOn": ["s2-skip-to-content"],
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "accessibility",
+      "priority": "medium",
+      "tags": ["a11y", "accessibility-statement", "legal"]
+    }
+  },
+  {
+    "id": "s2-ga4-ecommerce",
+    "persona": "claude-code",
+    "task": "TASK: Wire GA4 ecommerce events (view_item, add_to_cart, view_cart, purchase) in the Verdant Goods Co. site.\n\nCONTEXT: React SPA at /home/workspace/verdant-goods-store. Sprint 2 task S2-5.1. GA4 is already installed in index.html (from Sprint 1). The window.gtag function is available.\n\nSTEPS:\n1. Read /home/workspace/verdant-goods-store/client/src/pages/ProductDetail.tsx\n   - Add a useEffect that fires 'view_item' event on mount with: item_id, item_name, item_category, price, currency: 'USD'\n   - On the add-to-cart button click, fire 'add_to_cart' event with same item data + quantity\n\n2. Read /home/workspace/verdant-goods-store/client/src/pages/Cart.tsx\n   - Add a useEffect that fires 'view_cart' event on mount with: items list, cart value, currency: 'USD'\n\n3. Read /home/workspace/verdant-goods-store/client/src/pages/Checkout.tsx\n   - After successful form submission, fire 'purchase' event with: transaction_id (use nanoid), items, value, currency: 'USD'\n\n4. Pattern for all events:\n   if (typeof window !== 'undefined' && (window as any).gtag) {\n     (window as any).gtag('event', 'EVENT_NAME', { ...params });\n   }\n\n5. Do NOT break existing functionality\n6. Report: list all files modified with specific event implementations",
+    "priority": "high",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "analytics",
+      "priority": "high",
+      "tags": ["ga4", "ecommerce", "tracking"]
+    }
+  },
+  {
+    "id": "s2-utm-capture",
+    "persona": "claude-code",
+    "task": "TASK: Add UTM parameter capture for the SPA.\n\nCONTEXT: React SPA at /home/workspace/verdant-goods-store. Sprint 2 task S2-5.2. Uses wouter for routing. GA4 is installed.\n\nSTEPS:\n1. Create a custom hook at /home/workspace/verdant-goods-store/client/src/hooks/useUTMParams.ts:\n   - On mount, read URL search params for: utm_source, utm_medium, utm_campaign, utm_content, utm_term\n   - If any UTM param exists, fire a gtag event with the params\n   - Also store UTM params in sessionStorage for attribution across SPA navigation\n\n2. Add the hook to the Router component in App.tsx:\n   - Import and call useUTMParams() at the top of the Router function\n\n3. The hook implementation:\n   import { useEffect } from 'react';\n   export function useUTMParams() {\n     useEffect(() => {\n       const params = new URLSearchParams(window.location.search);\n       const utm = {\n         source: params.get('utm_source'),\n         medium: params.get('utm_medium'),\n         campaign: params.get('utm_campaign'),\n         content: params.get('utm_content'),\n         term: params.get('utm_term'),\n       };\n       if (Object.values(utm).some(v => v !== null)) {\n         sessionStorage.setItem('utm_params', JSON.stringify(utm));\n         if (typeof window !== 'undefined' && (window as any).gtag) {\n           (window as any).gtag('set', { ...utm });\n         }\n       }\n     }, []);\n   }\n\n4. Report: files created and modified",
+    "priority": "medium",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "analytics",
+      "priority": "medium",
+      "tags": ["utm", "attribution", "analytics"]
+    }
+  },
+  {
+    "id": "s2-ingredient-claims",
+    "persona": "claude-code",
+    "task": "TASK: Review and fix ingredient descriptions to remove efficacy claims.\n\nCONTEXT: React SPA at /home/workspace/verdant-goods-store. Sprint 2 task S2-5.4. FTC compliance requires no drug/efficacy claims in cosmetic product descriptions.\n\nSTEPS:\n1. Read /home/workspace/verdant-goods-store/client/src/lib/products.ts to find all product data\n2. Read /home/workspace/verdant-goods-store/client/src/pages/Ingredients.tsx for ingredient descriptions\n3. Search all .tsx files for these FTC-violation patterns:\n   - 'anti-inflammatory' -> replace with 'soothing'\n   - 'anti-aging' -> replace with 'for mature skin'\n   - 'reduces wrinkles' -> replace with 'supports skin appearance'\n   - 'heals' -> replace with 'conditions'\n   - 'treats' -> replace with 'helps maintain'\n   - 'nature\\'s retinol' -> replace with 'plant-derived ingredient'\n   - 'cures' -> remove entirely\n   - 'fights acne' -> replace with 'for blemish-prone skin'\n   - 'anti-bacterial' -> replace with 'naturally derived'\n4. Make all replacements, preserving the overall tone and meaning\n5. Report: list all files modified with before/after for each claim change",
+    "priority": "medium",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "compliance",
+      "priority": "medium",
+      "tags": ["ftc", "claims", "ingredients"]
+    }
+  },
+  {
+    "id": "s2-build-test",
+    "persona": "claude-code",
+    "task": "TASK: Build the Verdant Goods Co. site and verify all Sprint 2 changes compile without errors.\n\nCONTEXT: React SPA at /home/workspace/verdant-goods-store. This is the final validation step for Sprint 2.\n\nSTEPS:\n1. cd /home/workspace/verdant-goods-store\n2. Run: pnpm run check (TypeScript type checking)\n   - If there are errors, fix them\n3. Run: pnpm run build (Vite production build)\n   - If there are errors, fix them\n4. Check the dist/ output:\n   - List files in dist/\n   - Report total bundle size\n   - Check if code splitting produced multiple chunks (should see multiple .js files)\n5. If build succeeds, report:\n   - TypeScript check: PASS/FAIL\n   - Build: PASS/FAIL\n   - Bundle size breakdown\n   - Number of JS chunks (should be >5 with code splitting)\n   - Any warnings\n6. If build fails, fix the issues and rebuild\n\nIMPORTANT: Do not modify files unless they have build errors. This is a verification step.",
+    "priority": "critical",
+    "dependsOn": ["s2-code-splitting", "s2-lazy-loading", "s2-aria-attributes", "s2-accessibility-page", "s2-ga4-ecommerce", "s2-utm-capture", "s2-ingredient-claims"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "validation",
+      "priority": "critical",
+      "tags": ["build", "test", "verification"]
+    }
+  }
+]

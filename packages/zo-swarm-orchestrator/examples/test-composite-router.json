@@ -1,0 +1,54 @@
+[
+  {
+    "id": "trivial-auto",
+    "persona": "auto",
+    "task": "Summarize the purpose of this project in 2 sentences.",
+    "priority": "low",
+    "memoryStrategy": "none",
+    "outputToMemory": false,
+    "memoryMetadata": {
+      "category": "general",
+      "tags": ["trivial", "test"]
+    }
+  },
+  {
+    "id": "moderate-auto",
+    "persona": "auto",
+    "task": "Analyze the website at verdantgoods.com. Review the homepage design, check navigation structure, evaluate mobile responsiveness, and assess overall UX quality. Provide 3 key findings.",
+    "priority": "high",
+    "dependsOn": ["trivial-auto"],
+    "memoryStrategy": "none",
+    "outputToMemory": false,
+    "memoryMetadata": {
+      "category": "design",
+      "tags": ["ux", "analysis", "test"]
+    }
+  },
+  {
+    "id": "complex-auto",
+    "persona": "auto",
+    "task": "Perform a comprehensive security audit of verdantgoods.com. First, analyze the HTTPS configuration and security headers. Then check for CSP policy, HSTS headers, cookie security attributes. Next, review form handling for CSRF protection. Finally, assess third-party script risks and compare against OWASP top 10 best practices. Use curl to inspect headers. Provide severity-rated findings (P0-P3) with specific remediation steps for each issue found.",
+    "priority": "critical",
+    "dependsOn": ["trivial-auto"],
+    "memoryStrategy": "none",
+    "outputToMemory": false,
+    "memoryMetadata": {
+      "category": "security",
+      "tags": ["security", "audit", "test"]
+    }
+  },
+  {
+    "id": "synthesis-auto",
+    "persona": "auto",
+    "task": "Synthesize all prior findings into a brief 5-line summary report with the top 3 priorities.",
+    "priority": "high",
+    "dependsOn": ["moderate-auto", "complex-auto"],
+    "contextAccess": "read",
+    "memoryStrategy": "none",
+    "outputToMemory": false,
+    "memoryMetadata": {
+      "category": "synthesis",
+      "tags": ["report", "test"]
+    }
+  }
+]

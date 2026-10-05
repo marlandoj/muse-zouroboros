@@ -1,0 +1,37 @@
+Evaluation Report
+=================
+ID: eval-ecf1c6e3
+Artifact: /root/.swarm/results/
+Seed: inline
+Date: 2026-03-23T13:49:37.886Z
+
+Stage 1: Mechanical Verification
+  [PASS] Files exist: 62 files found
+Result: PASSED
+
+Stage 2: Semantic Evaluation
+AC Compliance:
+  [PASS] 3/3 tasks completed successfully (zero failures)
+    Evidence: summary.successful: 3, summary.failed: 0
+  [PASS] Routing episode saved to memory system
+    Evidence: Episode ID 956063d3-b7f0-4818-a395-bfa8da6a071f created
+  [PASS] Auto-procedure created from swarm run
+    Evidence: "Auto-procedure created: swarm.auto.system-health.unknown (3 steps)"
+  [PASS] Results JSON written to ~/.swarm/results/
+    Evidence: /root/.swarm/results/zouroboros-datagen_1774273731260.json exists
+  [PASS] At least 2 distinct executors used across the 3 tasks
+    Evidence: hermes (health-check reroute + memory-stats), gemini (skill-inventory), claude-code (health-check attempt 1)
+
+  AC Compliance: 100%
+  Goal Alignment: 1.00 / 1.00
+  Drift Score: 0.00 / 1.00
+  Overall Score: 1.00 / 1.00
+  Result: PASSED
+
+Stage 3: Not triggered
+  (Triggers: drift > 0.3, score 0.7-0.8, or --force-consensus)
+  Score 1.0 — no consensus needed.
+
+Final Decision: PASSED
+
+Evaluator: Alaric (manual semantic evaluation, 2026-03-23T13:55:00Z)

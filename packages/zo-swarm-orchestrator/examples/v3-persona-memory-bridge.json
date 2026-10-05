@@ -1,0 +1,13 @@
+[
+  {
+    "id": "task1",
+    "persona": "Alaric",
+    "task": "Draft a 3-step plan for integrating persona memory into swarm workflows.",
+    "priority": "high",
+    "contextAccess": "read",
+    "outputToMemory": true,
+    "memoryMetadata": {"category": "planning", "priority": "high", "tags": ["bridge", "persona-memory"]},
+    "promoteToPersonaMemory": true,
+    "promotionMetadata": {"entity": "decision", "category": "decision", "decay": "stable"}
+  }
+]

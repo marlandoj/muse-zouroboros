@@ -1,0 +1,60 @@
+[
+  {
+    "id": "heavy-analysis",
+    "persona": "claude-code",
+    "model": "swarm-heavy",
+    "task": "Read the file /home/workspace/Skills/zo-swarm-orchestrator/SKILL.md and provide a 3-sentence summary of the orchestrator's key capabilities.",
+    "priority": "high",
+    "timeoutSeconds": 120,
+    "memoryStrategy": "none",
+    "outputToMemory": false,
+    "memoryMetadata": {
+      "category": "test",
+      "tags": ["swarm-heavy", "analysis"]
+    }
+  },
+  {
+    "id": "heavy-codegen",
+    "persona": "gemini",
+    "model": "swarm-heavy",
+    "task": "Write a short TypeScript function called healthCheck() that returns { status: 'ok', timestamp: Date.now(), executor: 'swarm-heavy' }. Output only the function code.",
+    "priority": "high",
+    "timeoutSeconds": 60,
+    "memoryStrategy": "none",
+    "outputToMemory": false,
+    "memoryMetadata": {
+      "category": "test",
+      "tags": ["swarm-heavy", "codegen"]
+    }
+  },
+  {
+    "id": "heavy-research",
+    "persona": "hermes",
+    "model": "swarm-heavy",
+    "task": "List 3 benefits of DAG-based task orchestration for multi-agent AI systems. Keep the response to 5 sentences maximum.",
+    "priority": "medium",
+    "timeoutSeconds": 120,
+    "memoryStrategy": "none",
+    "outputToMemory": false,
+    "memoryMetadata": {
+      "category": "test",
+      "tags": ["swarm-heavy", "research"]
+    }
+  },
+  {
+    "id": "heavy-synthesis",
+    "persona": "codex",
+    "model": "swarm-heavy",
+    "task": "Combine the findings: summarize the orchestrator capabilities, the health check function, and the DAG benefits into a single 3-line test report confirming all executors responded.",
+    "priority": "high",
+    "dependsOn": ["heavy-analysis", "heavy-codegen", "heavy-research"],
+    "contextAccess": "read",
+    "timeoutSeconds": 60,
+    "memoryStrategy": "none",
+    "outputToMemory": false,
+    "memoryMetadata": {
+      "category": "test",
+      "tags": ["swarm-heavy", "synthesis"]
+    }
+  }
+]

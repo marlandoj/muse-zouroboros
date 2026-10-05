@@ -1,0 +1,70 @@
+{
+  "version": 1,
+  "retired": true,
+  "project_id": "9d99d755-62cc-4523-8977-98d63d17bce5",
+  "project_name": "ZouroBench Results Explorer",
+  "intake_project_id": "b621d7a1-bb3d-4df9-ae11-3034789e204c",
+  "factory_ready_label_id": "f4a73851-6c6b-4a19-b397-c2bd62eeb694",
+  "tickets": [
+    {
+      "identifier": "ZOU-829",
+      "stable_key": "ZBRE-001",
+      "prerequisites": []
+    },
+    {
+      "identifier": "ZOU-830",
+      "stable_key": "ZBRE-002",
+      "prerequisites": ["ZOU-829"]
+    },
+    {
+      "identifier": "ZOU-831",
+      "stable_key": "ZBRE-003",
+      "prerequisites": ["ZOU-829"]
+    },
+    {
+      "identifier": "ZOU-832",
+      "stable_key": "ZBRE-004",
+      "prerequisites": ["ZOU-831"]
+    },
+    {
+      "identifier": "ZOU-833",
+      "stable_key": "ZBRE-005",
+      "prerequisites": ["ZOU-832"]
+    },
+    {
+      "identifier": "ZOU-834",
+      "stable_key": "ZBRE-006",
+      "prerequisites": ["ZOU-832"]
+    },
+    {
+      "identifier": "ZOU-835",
+      "stable_key": "ZBRE-007",
+      "prerequisites": ["ZOU-829", "ZOU-831", "ZOU-832"]
+    },
+    {
+      "identifier": "ZOU-836",
+      "stable_key": "ZBRE-008",
+      "prerequisites": ["ZOU-835"]
+    },
+    {
+      "identifier": "ZOU-837",
+      "stable_key": "ZBRE-009",
+      "prerequisites": ["ZOU-829", "ZOU-831", "ZOU-832"]
+    },
+    {
+      "identifier": "ZOU-838",
+      "stable_key": "ZBRE-010",
+      "prerequisites": ["ZOU-830", "ZOU-831", "ZOU-832"]
+    },
+    {
+      "identifier": "ZOU-839",
+      "stable_key": "ZBRE-011",
+      "prerequisites": ["ZOU-833", "ZOU-834", "ZOU-835", "ZOU-836", "ZOU-837", "ZOU-838"]
+    },
+    {
+      "identifier": "ZOU-840",
+      "stable_key": "ZBRE-012",
+      "prerequisites": ["ZOU-839"]
+    }
+  ]
+}

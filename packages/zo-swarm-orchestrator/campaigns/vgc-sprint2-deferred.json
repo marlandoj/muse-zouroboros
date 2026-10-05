@@ -1,0 +1,56 @@
+[
+  {
+    "id": "s2-compression-middleware",
+    "persona": "claude-code",
+    "task": "TASK: Add server-side compression middleware to the Verdant Goods Co. Express server.\n\nCONTEXT: Express server at /home/workspace/verdant-goods-store/server/index.ts. Sprint 2 task S2-3.3. The server currently serves static files and API routes with NO response compression.\n\nSTEPS:\n1. cd /home/workspace/verdant-goods-store && pnpm add compression && pnpm add -D @types/compression\n2. Read /home/workspace/verdant-goods-store/server/index.ts\n3. Add `import compression from 'compression';` at the top imports\n4. Add `app.use(compression());` BEFORE the security headers middleware and BEFORE static file serving. This ensures all responses (HTML, JS, CSS, JSON) are gzip/brotli compressed.\n5. Verify the file is syntactically valid TypeScript\n6. Report: the exact lines added and their position in the file\n\nIMPORTANT:\n- compression() must come BEFORE express.static() to compress static assets\n- compression() must come BEFORE the security headers middleware\n- Do NOT remove or modify any existing middleware\n- The compression package supports gzip and deflate by default\n- Keep the import style consistent with existing imports (named imports from packages)",
+    "priority": "high",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "performance",
+      "priority": "high",
+      "tags": ["compression", "gzip", "server", "middleware"]
+    }
+  },
+  {
+    "id": "s2-unused-dependencies",
+    "persona": "claude-code",
+    "task": "TASK: Audit and identify unused dependencies in the Verdant Goods Co. store project.\n\nCONTEXT: React SPA at /home/workspace/verdant-goods-store. Sprint 2 task S2-3.2. The package.json has many dependencies including 20+ Radix UI packages. We need to find which are actually imported in the codebase.\n\nSTEPS:\n1. Read /home/workspace/verdant-goods-store/package.json to get the full dependency list\n2. For EACH dependency in 'dependencies' and 'devDependencies', search the codebase to see if it's actually imported:\n   - Search all .ts/.tsx/.js files in client/src/ and server/ for import statements referencing each package\n   - Check vite.config.ts, tsconfig.json, and other config files for references\n   - A dependency is 'used' if ANY file imports from it (directly or via a re-export)\n3. Categorize results:\n   - UNUSED: No imports found anywhere in source code or configs\n   - USED: At least one import found\n   - CONFIG-ONLY: Referenced only in config files (vite.config, tsconfig, etc.)\n4. For Radix UI packages specifically: check if they're used directly OR via shadcn/ui component wrappers in client/src/components/ui/\n5. Output a clear report:\n   - List of UNUSED packages with their sizes (run `pnpm list --depth=0` to get versions)\n   - Estimated size savings from removing unused packages\n   - Recommended `pnpm remove` command for safe removal\n   - Any packages that are borderline (imported but possibly dead code)\n\nIMPORTANT:\n- Do NOT actually remove any packages — this is an AUDIT only\n- Be thorough: check for dynamic imports, re-exports, and indirect usage\n- Some devDependencies (typescript, vite, esbuild, prettier) are build tools — mark them as USED even without direct imports\n- Check for packages used only in scripts (like tsx used in build commands)",
+    "priority": "medium",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "performance",
+      "priority": "medium",
+      "tags": ["dependencies", "audit", "bundle-size", "cleanup"]
+    }
+  },
+  {
+    "id": "s2-webp-conversion",
+    "persona": "claude-code",
+    "task": "TASK: Create a WebP image conversion pipeline for the Verdant Goods Co. store.\n\nCONTEXT: React SPA at /home/workspace/verdant-goods-store. Sprint 2 task S2-2.1. There are 91 images (45MB total) in client/public/images/. The site currently serves only JPG/PNG originals with no optimized formats.\n\nSTEPS:\n1. cd /home/workspace/verdant-goods-store && pnpm add -D sharp\n2. Create a build script at /home/workspace/verdant-goods-store/scripts/optimize-images.ts:\n   - Read all .jpg/.png/.jpeg files from client/public/images/\n   - For each image, generate:\n     a) WebP at original width, quality 80 -> client/public/images/optimized/{name}.webp\n     b) WebP at 400px width, quality 80 -> client/public/images/optimized/{name}-400w.webp\n     c) WebP at 800px width, quality 80 -> client/public/images/optimized/{name}-800w.webp\n   - Skip files that already exist in optimized/ and are newer than the source\n   - Print summary: total files processed, total size before/after, savings percentage\n3. Create the output directory: mkdir -p client/public/images/optimized\n4. Run the script: cd /home/workspace/verdant-goods-store && npx tsx scripts/optimize-images.ts\n5. Create a reusable React component at /home/workspace/verdant-goods-store/client/src/components/OptimizedImage.tsx:\n   ```tsx\n   interface OptimizedImageProps {\n     src: string;  // original image path like /images/product-beard-oil.jpg\n     alt: string;\n     width?: number;\n     height?: number;\n     className?: string;\n     loading?: 'lazy' | 'eager';\n     sizes?: string;\n   }\n   ```\n   The component should:\n   - Render a <picture> element with WebP <source> and JPG/PNG <img> fallback\n   - Use srcSet with 400w and 800w variants when available\n   - Default sizes to '(max-width: 400px) 400px, 800px'\n   - Pass through all other props (className, loading, width, height, alt)\n6. Report:\n   - Total images processed\n   - Size savings (before/after)\n   - The OptimizedImage component API\n   - Instructions for using the component in existing pages\n\nIMPORTANT:\n- Do NOT modify any existing page files — just create the script and component\n- The script should be idempotent (safe to re-run)\n- Handle errors gracefully (skip corrupt images, report them)\n- Use sharp's .webp({ quality: 80 }) for good quality/size balance\n- The optimized/ directory structure should be flat (no subdirectories)",
+    "priority": "high",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "performance",
+      "priority": "high",
+      "tags": ["images", "webp", "optimization", "sharp", "pipeline"]
+    }
+  },
+  {
+    "id": "s2-deferred-build-test",
+    "persona": "claude-code",
+    "task": "TASK: Build the Verdant Goods Co. site and verify all deferred Sprint 2 changes compile without errors.\n\nCONTEXT: React SPA at /home/workspace/verdant-goods-store. This validates the 3 deferred items: S2-3.3 (compression), S2-3.2 (dependency audit), S2-2.1 (WebP conversion).\n\nSTEPS:\n1. cd /home/workspace/verdant-goods-store\n2. Run: pnpm run check (TypeScript type checking)\n   - If there are type errors related to compression or sharp, fix them\n3. Run: pnpm run build (Vite production build)\n   - If there are build errors, fix them\n4. Check the dist/ output:\n   - Verify server bundle includes compression middleware\n   - Verify OptimizedImage component is available in client chunks\n   - List total bundle sizes\n5. Check if the image optimization script ran successfully:\n   - Count files in client/public/images/optimized/\n   - Report total optimized image size vs originals\n6. Report:\n   - TypeScript check: PASS/FAIL\n   - Build: PASS/FAIL  \n   - Server bundle includes compression: YES/NO\n   - Optimized images generated: count and total size\n   - Any warnings or issues found\n\nIMPORTANT: If the dependency audit task identified unused packages, do NOT remove them during build verification. Only verify current code compiles.",
+    "priority": "critical",
+    "dependsOn": ["s2-compression-middleware", "s2-unused-dependencies", "s2-webp-conversion"],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "validation",
+      "priority": "critical",
+      "tags": ["build", "test", "verification"]
+    }
+  }
+]

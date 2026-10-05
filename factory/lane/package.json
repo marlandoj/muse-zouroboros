@@ -1,0 +1,60 @@
+{
+  "name": "zouroboros-factory",
+  "version": "0.1.0",
+  "description": "Governed software-factory conveyor for Zouroboros",
+  "type": "module",
+  "engines": {
+    "bun": ">=1.1.0"
+  },
+  "bin": {
+    "zouroboros-factory": "./scripts/factory-package-cli.ts"
+  },
+  "files": [
+    "scripts/",
+    "contracts/",
+    "fixtures/",
+    "scenarios/",
+    "templates/",
+    "config/factory-state-owners-v1.json",
+    "config/repository-validation-routes.json",
+    "MVP_PATH.md",
+    "OPERATORS_MANUAL.md",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "FACTORY_STATE_MODE=test bun test ./scripts/factory-package-cli.test.ts ./scripts/approval-ledger.test.ts",
+    "test:elevated": "FACTORY_STATE_MODE=test bun test ./scripts/elevated-task*.test.ts",
+    "package-check": "bun scripts/factory-package-cli.ts package-check",
+    "smoke": "bun scripts/factory-package-cli.ts smoke --root ../..",
+    "prepack": "bun run typecheck && bun run package-check"
+  },
+  "dependencies": {
+    "@zouroboros/capability-runtime": "workspace:*",
+    "@zouroboros/hetzner-exec": "workspace:*",
+    "@zouroboros/modal-exec": "workspace:*",
+    "zouroboros-core": "workspace:*",
+    "zouroboros-selfheal": "workspace:*",
+    "zouroboros-swarm": "workspace:*",
+    "zouroboros-workflow": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.9.0"
+  },
+  "keywords": [
+    "zouroboros",
+    "software-factory",
+    "agent-orchestration",
+    "governance",
+    "conveyor"
+  ],
+  "license": "MIT",
+  "author": "marlandoj.zo.computer",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/marlandoj/zouroboros.git",
+    "directory": "Projects/zouroboros-software-factory"
+  }
+}

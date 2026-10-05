@@ -1,0 +1,6 @@
+name: wayfinder
+version: "0.1.0"
+description: "Wayfinder prompt-time skill suggestion. Shadow mode logs the would-be pick; live mode appends one suggestion line to the turn's user message. Never blocks."
+author: "Marlandoj"
+hooks:
+  - pre_llm_call

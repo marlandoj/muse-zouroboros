@@ -1,0 +1,2445 @@
+{
+  "personas": [
+    {
+      "id": "research-analyst",
+      "name": "Research Analyst",
+      "expertise": [
+        "data gathering",
+        "synthesis",
+        "trend analysis",
+        "market research"
+      ],
+      "best_for": [
+        "competitive analysis",
+        "industry trends",
+        "deep research",
+        "literature review"
+      ]
+    },
+    {
+      "id": "frontend-developer",
+      "name": "Frontend Developer",
+      "expertise": [
+        "UI/UX",
+        "accessibility",
+        "responsive design",
+        "performance optimization"
+      ],
+      "best_for": [
+        "website review",
+        "UI audits",
+        "component design",
+        "frontend architecture"
+      ]
+    },
+    {
+      "id": "backend-architect",
+      "name": "Backend Architect",
+      "expertise": [
+        "system design",
+        "API design",
+        "database optimization",
+        "scalability"
+      ],
+      "best_for": [
+        "architecture review",
+        "API planning",
+        "infrastructure design",
+        "performance tuning"
+      ]
+    },
+    {
+      "id": "security-engineer",
+      "name": "Security Engineer",
+      "expertise": [
+        "security auditing",
+        "threat modeling",
+        "vulnerability assessment",
+        "compliance"
+      ],
+      "best_for": [
+        "security review",
+        "penetration testing",
+        "compliance checks",
+        "incident response"
+      ]
+    },
+    {
+      "id": "product-manager",
+      "name": "Product Manager",
+      "expertise": [
+        "product strategy",
+        "user stories",
+        "roadmap planning",
+        "stakeholder management"
+      ],
+      "best_for": [
+        "feature prioritization",
+        "requirements gathering",
+        "go-to-market",
+        "product review"
+      ]
+    },
+    {
+      "id": "data-scientist",
+      "name": "Data Scientist",
+      "expertise": [
+        "data analysis",
+        "statistical modeling",
+        "ML pipelines",
+        "visualization"
+      ],
+      "best_for": [
+        "data exploration",
+        "model evaluation",
+        "metric design",
+        "experiment analysis"
+      ]
+    },
+    {
+      "id": "devops-engineer",
+      "name": "DevOps Engineer",
+      "expertise": [
+        "CI/CD",
+        "infrastructure",
+        "monitoring",
+        "containerization"
+      ],
+      "best_for": [
+        "deployment review",
+        "infrastructure audit",
+        "observability",
+        "automation"
+      ]
+    },
+    {
+      "id": "technical-writer",
+      "name": "Technical Writer",
+      "expertise": [
+        "documentation",
+        "API docs",
+        "user guides",
+        "content strategy"
+      ],
+      "best_for": [
+        "docs review",
+        "README writing",
+        "API documentation",
+        "knowledge base"
+      ]
+    },
+    {
+      "id": "claude-code",
+      "name": "Claude Code",
+      "expertise": [
+        "software engineering",
+        "code implementation",
+        "bug fixing",
+        "refactoring",
+        "testing",
+        "code review"
+      ],
+      "best_for": [
+        "feature implementation",
+        "codebase refactoring",
+        "test writing",
+        "bug diagnosis",
+        "PR review",
+        "architecture analysis"
+      ],
+      "executor": "local",
+      "bridge": "Skills/zo-swarm-executors/bridges/claude-code-bridge.sh"
+    },
+    {
+      "id": "hermes",
+      "name": "Hermes Agent",
+      "expertise": [
+        "autonomous research",
+        "multi-tool investigation",
+        "web scraping",
+        "long-running tasks"
+      ],
+      "best_for": [
+        "deep research",
+        "autonomous investigation",
+        "web data gathering",
+        "multi-step analysis"
+      ],
+      "executor": "local",
+      "bridge": "Skills/zo-swarm-executors/bridges/hermes-bridge.sh"
+    },
+    {
+      "id": "gemini",
+      "name": "Gemini CLI",
+      "expertise": [
+        "code generation",
+        "reasoning",
+        "multimodal analysis",
+        "large-context processing",
+        "code review",
+        "research"
+      ],
+      "best_for": [
+        "large-context code analysis",
+        "multimodal tasks",
+        "alternative perspective review",
+        "cross-validation",
+        "rapid prototyping"
+      ],
+      "executor": "local",
+      "bridge": "Skills/zo-swarm-executors/bridges/gemini-bridge.sh"
+    },
+    {
+      "id": "codex",
+      "name": "Codex CLI",
+      "expertise": [
+        "code generation",
+        "shell commands",
+        "file editing",
+        "debugging",
+        "rapid prototyping",
+        "code review"
+      ],
+      "best_for": [
+        "fast code tasks",
+        "shell automation",
+        "quick analysis",
+        "rapid iteration",
+        "speed-critical swarm tasks"
+      ],
+      "executor": "local",
+      "bridge": "Skills/zo-swarm-executors/bridges/codex-bridge.sh"
+    },
+    {
+      "id": "kimi",
+      "name": "Kimi Code CLI",
+      "expertise": [
+        "code generation",
+        "large-context analysis",
+        "multimodal coding",
+        "debugging",
+        "code review",
+        "memory retrieval",
+        "MCP tool orchestration"
+      ],
+      "best_for": [
+        "large-context repository analysis",
+        "long-running implementation",
+        "multimodal coding tasks",
+        "workspace-memory retrieval",
+        "authenticated Zo tool use",
+        "independent Moonshot-model review"
+      ],
+      "executor": "local",
+      "bridge": "packages/swarm/src/executor/bridges/kimi-bridge.sh"
+    },
+    {
+      "id": "pi",
+      "name": "Pi Coding Agent",
+      "expertise": [
+        "code generation",
+        "debugging",
+        "refactoring",
+        "testing",
+        "shell commands",
+        "multi-provider execution",
+        "memory retrieval",
+        "MCP tool orchestration"
+      ],
+      "best_for": [
+        "fast repository-aware implementation",
+        "minimal-harness model comparisons",
+        "focused code review",
+        "ephemeral coding tasks",
+        "workspace-memory retrieval",
+        "authenticated Zo tool use"
+      ],
+      "executor": "local",
+      "bridge": "packages/swarm/src/executor/bridges/pi-bridge.sh"
+    },
+    {
+      "id": "gamedev-all-out-game-director",
+      "name": "GameDev \u00b7 All Out Game Director",
+      "expertise": [
+        "All Out game direction",
+        "gameplay vision",
+        "production constraints",
+        "release coordination"
+      ],
+      "best_for": [
+        "All Out project direction",
+        "scope decisions",
+        "gameplay coherence",
+        "cross-discipline review"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 All Out Game Director"
+      }
+    },
+    {
+      "id": "gamedev-all-out-csl-engineer",
+      "name": "GameDev \u00b7 All Out CSL Engineer",
+      "expertise": [
+        "CSL engineering",
+        "All Out runtime systems",
+        "gameplay scripting",
+        "platform integration"
+      ],
+      "best_for": [
+        "All Out CSL implementation",
+        "runtime debugging",
+        "platform APIs",
+        "gameplay systems"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 All Out CSL Engineer"
+      }
+    },
+    {
+      "id": "gamedev-all-out-technical-art-ux",
+      "name": "GameDev \u00b7 All Out Technical Art & UX",
+      "expertise": [
+        "All Out technical art",
+        "game UX",
+        "asset pipelines",
+        "platform performance"
+      ],
+      "best_for": [
+        "All Out visual systems",
+        "interaction design",
+        "asset optimization",
+        "device UX"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 All Out Technical Art & UX"
+      }
+    },
+    {
+      "id": "gamedev-all-out-qa-release",
+      "name": "GameDev \u00b7 All Out QA & Release",
+      "expertise": [
+        "All Out QA",
+        "release validation",
+        "compatibility testing",
+        "defect triage"
+      ],
+      "best_for": [
+        "All Out release gates",
+        "regression testing",
+        "device validation",
+        "launch readiness"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 All Out QA & Release"
+      }
+    },
+    {
+      "id": "gamedev-game-audio-designer",
+      "name": "GameDev \u00b7 Game Audio Designer",
+      "expertise": [
+        "interactive audio",
+        "sound design",
+        "music systems",
+        "audio optimization"
+      ],
+      "best_for": [
+        "game audio direction",
+        "adaptive sound",
+        "mix review",
+        "audio accessibility"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 Game Audio Designer"
+      }
+    },
+    {
+      "id": "gamedev-game-designer",
+      "name": "GameDev \u00b7 Game Designer",
+      "expertise": [
+        "game mechanics",
+        "systems design",
+        "progression",
+        "economy balancing"
+      ],
+      "best_for": [
+        "core loops",
+        "mechanic specifications",
+        "progression design",
+        "playtest analysis"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 Game Designer"
+      }
+    },
+    {
+      "id": "gamedev-godot-gameplay-scripter",
+      "name": "GameDev \u00b7 Godot Gameplay Scripter",
+      "expertise": [
+        "Godot",
+        "GDScript",
+        "gameplay architecture",
+        "runtime debugging"
+      ],
+      "best_for": [
+        "Godot gameplay implementation",
+        "scene systems",
+        "signals",
+        "performance validation"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 Godot Gameplay Scripter"
+      }
+    },
+    {
+      "id": "gamedev-godot-shader-developer",
+      "name": "GameDev \u00b7 Godot Shader Developer",
+      "expertise": [
+        "Godot shaders",
+        "rendering",
+        "visual effects",
+        "GPU optimization"
+      ],
+      "best_for": [
+        "Godot materials",
+        "canvas and spatial shaders",
+        "render profiling",
+        "visual fallbacks"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 Godot Shader Developer"
+      }
+    },
+    {
+      "id": "gamedev-level-designer",
+      "name": "GameDev \u00b7 Level Designer",
+      "expertise": [
+        "level design",
+        "encounter design",
+        "spatial progression",
+        "player guidance"
+      ],
+      "best_for": [
+        "blockouts",
+        "world flow",
+        "difficulty pacing",
+        "traversal review"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 Level Designer"
+      }
+    },
+    {
+      "id": "gamedev-narrative-designer",
+      "name": "GameDev \u00b7 Narrative Designer",
+      "expertise": [
+        "interactive narrative",
+        "dialogue systems",
+        "worldbuilding",
+        "quest structure"
+      ],
+      "best_for": [
+        "story architecture",
+        "branching dialogue",
+        "quest writing",
+        "narrative continuity"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 Narrative Designer"
+      }
+    },
+    {
+      "id": "gamedev-roblox-avatar-creator",
+      "name": "GameDev \u00b7 Roblox Avatar Creator",
+      "expertise": [
+        "Roblox avatars",
+        "UGC pipelines",
+        "rigging",
+        "avatar optimization"
+      ],
+      "best_for": [
+        "avatar assets",
+        "accessory workflows",
+        "rig validation",
+        "Roblox appearance systems"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 Roblox Avatar Creator"
+      }
+    },
+    {
+      "id": "gamedev-roblox-experience-designer",
+      "name": "GameDev \u00b7 Roblox Experience Designer",
+      "expertise": [
+        "Roblox experience design",
+        "social gameplay",
+        "retention loops",
+        "platform UX"
+      ],
+      "best_for": [
+        "Roblox game direction",
+        "experience flow",
+        "engagement design",
+        "platform fit"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 Roblox Experience Designer"
+      }
+    },
+    {
+      "id": "gamedev-roblox-systems-scripter",
+      "name": "GameDev \u00b7 Roblox Systems Scripter",
+      "expertise": [
+        "Roblox Luau",
+        "server authority",
+        "DataStore systems",
+        "networking"
+      ],
+      "best_for": [
+        "Roblox gameplay systems",
+        "client-server code",
+        "persistence",
+        "runtime security"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 Roblox Systems Scripter"
+      }
+    },
+    {
+      "id": "gamedev-unity-multiplayer-engineer",
+      "name": "GameDev \u00b7 Unity Multiplayer Engineer",
+      "expertise": [
+        "Unity multiplayer",
+        "network authority",
+        "prediction",
+        "session systems"
+      ],
+      "best_for": [
+        "Unity networking",
+        "replication",
+        "reconciliation",
+        "multiplayer profiling"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 Unity Multiplayer Engineer"
+      }
+    },
+    {
+      "id": "gamedev-unity-shader-graph-artist",
+      "name": "GameDev \u00b7 Unity Shader Graph Artist",
+      "expertise": [
+        "Unity Shader Graph",
+        "URP and HDRP",
+        "materials",
+        "shader optimization"
+      ],
+      "best_for": [
+        "Unity materials",
+        "visual effects",
+        "shader variants",
+        "rendering quality tiers"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 Unity Shader Graph Artist"
+      }
+    },
+    {
+      "id": "gamedev-unreal-multiplayer-architect",
+      "name": "GameDev \u00b7 Unreal Multiplayer Architect",
+      "expertise": [
+        "Unreal multiplayer",
+        "replication",
+        "network prediction",
+        "session architecture"
+      ],
+      "best_for": [
+        "Unreal network architecture",
+        "authority boundaries",
+        "replication graphs",
+        "latency testing"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 Unreal Multiplayer Architect"
+      }
+    },
+    {
+      "id": "gamedev-unity-editor-tool-developer",
+      "name": "GameDev \u00b7 Unity Editor Tool Developer",
+      "expertise": [
+        "Unity editor tooling",
+        "asset automation",
+        "custom inspectors",
+        "build validation"
+      ],
+      "best_for": [
+        "Unity EditorWindow tools",
+        "asset processors",
+        "authoring workflows",
+        "batch-mode automation"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 Unity Editor Tool Developer"
+      }
+    },
+    {
+      "id": "gamedev-unreal-systems-engineer",
+      "name": "GameDev \u00b7 Unreal Systems Engineer",
+      "expertise": [
+        "Unreal C++",
+        "Blueprint APIs",
+        "gameplay systems",
+        "engine lifecycle"
+      ],
+      "best_for": [
+        "Unreal implementation",
+        "module architecture",
+        "asset loading",
+        "runtime profiling"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 Unreal Systems Engineer"
+      }
+    },
+    {
+      "id": "gamedev-unity-architect",
+      "name": "GameDev \u00b7 Unity Architect",
+      "expertise": [
+        "Unity architecture",
+        "C#",
+        "scene lifecycle",
+        "package boundaries"
+      ],
+      "best_for": [
+        "Unity system design",
+        "module boundaries",
+        "initialization",
+        "testable gameplay architecture"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 Unity Architect"
+      }
+    },
+    {
+      "id": "gamedev-unreal-world-builder",
+      "name": "GameDev \u00b7 Unreal World Builder",
+      "expertise": [
+        "Unreal environments",
+        "World Partition",
+        "landscape",
+        "streaming"
+      ],
+      "best_for": [
+        "open worlds",
+        "environment blockouts",
+        "HLOD and streaming",
+        "world performance"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 Unreal World Builder"
+      }
+    },
+    {
+      "id": "gamedev-unreal-technical-artist",
+      "name": "GameDev \u00b7 Unreal Technical Artist",
+      "expertise": [
+        "Unreal technical art",
+        "materials",
+        "Niagara",
+        "asset pipelines"
+      ],
+      "best_for": [
+        "Unreal visual systems",
+        "artist tooling",
+        "asset validation",
+        "render profiling"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 Unreal Technical Artist"
+      }
+    },
+    {
+      "id": "gamedev-technical-artist",
+      "name": "GameDev \u00b7 Technical Artist",
+      "expertise": [
+        "technical art",
+        "asset pipelines",
+        "shaders",
+        "visual optimization"
+      ],
+      "best_for": [
+        "cross-engine art pipelines",
+        "asset budgets",
+        "VFX integration",
+        "performance review"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 Technical Artist"
+      }
+    },
+    {
+      "id": "gamedev-threejs-designer",
+      "name": "GameDev \u00b7 Three.js Designer",
+      "expertise": [
+        "Three.js game design",
+        "browser-native interaction",
+        "camera and spatial readability",
+        "cross-device UX"
+      ],
+      "best_for": [
+        "Three.js gameplay concepts",
+        "responsive control design",
+        "browser delivery constraints",
+        "playtest-ready design specifications"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 Three.js Designer"
+      }
+    },
+    {
+      "id": "gamedev-threejs-engineer",
+      "name": "GameDev \u00b7 Three.js Engineer",
+      "expertise": [
+        "Three.js",
+        "TypeScript",
+        "WebGL and WebGPU",
+        "browser performance"
+      ],
+      "best_for": [
+        "Three.js gameplay implementation",
+        "render-loop lifecycle",
+        "resource disposal and recovery",
+        "real-browser validation"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 Three.js Engineer"
+      }
+    },
+    {
+      "id": "gamedev-threejs-artist",
+      "name": "GameDev \u00b7 Three.js Artist",
+      "expertise": [
+        "Three.js technical art",
+        "glTF asset pipelines",
+        "PBR materials",
+        "web asset optimization"
+      ],
+      "best_for": [
+        "Three.js visual direction",
+        "DCC-to-runtime assets",
+        "texture and mesh compression",
+        "browser GPU budgets"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 Three.js Artist"
+      }
+    },
+    {
+      "id": "gamedev-threejs-architect",
+      "name": "GameDev \u00b7 Three.js Architect",
+      "expertise": [
+        "Three.js architecture",
+        "simulation and rendering boundaries",
+        "asset and dependency strategy",
+        "browser delivery systems"
+      ],
+      "best_for": [
+        "Three.js system design",
+        "module and lifecycle boundaries",
+        "performance budgets",
+        "testable browser-game architecture"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev \u00b7 Three.js Architect"
+      }
+    },
+    {
+      "id": "opencode",
+      "name": "OpenCode",
+      "expertise": [
+        "code generation",
+        "debugging",
+        "refactoring",
+        "testing",
+        "shell commands",
+        "multi-provider execution",
+        "memory retrieval",
+        "MCP tool orchestration"
+      ],
+      "best_for": [
+        "fast repository-aware implementation",
+        "minimal-harness model comparisons",
+        "focused code review",
+        "ephemeral coding tasks",
+        "workspace-memory retrieval",
+        "authenticated Zo tool use"
+      ],
+      "executor": "local",
+      "bridge": "Skills/zo-swarm-executors/bridges/opencode-bridge.sh",
+      "role": "Multi-provider coding executor for independent implementation passes.",
+      "capabilities": [
+        "multi-provider coding",
+        "independent implementation"
+      ]
+    }
+  ],
+  "schemaVersion": 2,
+  "platformRegistry": {
+    "source": "zo.list_personas",
+    "observedAt": "2026-08-18T19:45:34.622Z",
+    "identityKey": "id"
+  },
+  "platform_personas": [
+    {
+      "slug": "zo-alaric-9fa5bf37",
+      "id": "9fa5bf37-8fdb-4172-80f0-1bc48eda8911",
+      "name": "Alaric",
+      "model": "byok:63a73cf2-224a-4641-8dcb-c3313270d08a",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Alaric work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-frontend-developer-2bf315cc",
+      "id": "2bf315cc-df19-4ab8-a756-b9521f954c38",
+      "name": "Frontend Developer",
+      "model": "byok:63a73cf2-224a-4641-8dcb-c3313270d08a",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Frontend Developer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-backend-architect-3d488f60",
+      "id": "3d488f60-69f6-4101-82d6-a244afd631a7",
+      "name": "Backend Architect",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Backend Architect work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-reality-checker-e53dd88d",
+      "id": "e53dd88d-cbab-463d-8412-120106fb8e65",
+      "name": "Reality Checker",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Reality Checker work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-ui-designer-6b24a919",
+      "id": "6b24a919-6b96-4cd1-8387-b966635272e9",
+      "name": "UI Designer",
+      "model": "byok:d5720b35-e912-47bd-bdfc-a532851ed10b",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for UI Designer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-brand-guardian-31145e35",
+      "id": "31145e35-d391-4bef-9521-d7f9b88edc83",
+      "name": "Brand Guardian",
+      "model": "byok:63a73cf2-224a-4641-8dcb-c3313270d08a",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Brand Guardian work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-architectux-3b0e29ac",
+      "id": "3b0e29ac-952a-49bc-8424-ce22804dc5aa",
+      "name": "ArchitectUX",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for ArchitectUX work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-ux-researcher-f0750dce",
+      "id": "f0750dce-3ab5-433e-b711-98af5c757562",
+      "name": "UX Researcher",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for UX Researcher work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-visual-storyteller-4dfb3c27",
+      "id": "4dfb3c27-303b-47c9-8a02-2aac865b677b",
+      "name": "Visual Storyteller",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Visual Storyteller work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-whimsy-injector-5efeef48",
+      "id": "5efeef48-8e19-4333-ab23-5b76c63966a5",
+      "name": "Whimsy Injector",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Whimsy Injector work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-ai-engineer-3a3ac067",
+      "id": "3a3ac067-dab7-428d-9c7e-9d900587b375",
+      "name": "AI Engineer",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for AI Engineer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-devops-automator-58353f73",
+      "id": "58353f73-66e0-4d05-983f-d083f750fc61",
+      "name": "DevOps Automator",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for DevOps Automator work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-mobile-app-builder-b8c64600",
+      "id": "b8c64600-9c6e-43ad-88cf-2d7d5f6b650c",
+      "name": "Mobile App Builder",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Mobile App Builder work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-rapid-prototyper-1c39b0ef",
+      "id": "1c39b0ef-60d9-4884-886f-db412ecce60b",
+      "name": "Rapid Prototyper",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Rapid Prototyper work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-senior-developer-bd109505",
+      "id": "bd109505-7bdd-4c9b-a68a-53e0f1af3431",
+      "name": "Senior Developer",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Senior Developer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-app-store-optimizer-7187316e",
+      "id": "7187316e-a6ba-4e38-a928-78322cd1b5dd",
+      "name": "App Store Optimizer",
+      "model": "byok:878cb55f-1c3f-4941-8323-414cab73d923",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for App Store Optimizer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-marketing-content-creator-644b9189",
+      "id": "644b9189-032d-4407-adc3-f0473e7bcb58",
+      "name": "Marketing Content Creator",
+      "model": "byok:878cb55f-1c3f-4941-8323-414cab73d923",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Marketing Content Creator work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-marketing-growth-hacker-9b81ccc3",
+      "id": "9b81ccc3-d431-4780-a4aa-c78c3a76330d",
+      "name": "Marketing Growth Hacker",
+      "model": "byok:878cb55f-1c3f-4941-8323-414cab73d923",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Marketing Growth Hacker work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-marketing-instagram-curator-7b8db980",
+      "id": "7b8db980-78d6-411d-ab2d-5e3f9ca935f2",
+      "name": "Marketing Instagram Curator",
+      "model": "byok:878cb55f-1c3f-4941-8323-414cab73d923",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Marketing Instagram Curator work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-marketing-reddit-community-builder-75d1df62",
+      "id": "75d1df62-06e6-44cc-977d-ed40fdafb0b9",
+      "name": "Marketing Reddit Community Builder",
+      "model": "byok:878cb55f-1c3f-4941-8323-414cab73d923",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Marketing Reddit Community Builder work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-marketing-tiktok-strategist-49b4ce78",
+      "id": "49b4ce78-4181-45b3-a187-ba177097527e",
+      "name": "Marketing TikTok Strategist",
+      "model": "byok:878cb55f-1c3f-4941-8323-414cab73d923",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Marketing TikTok Strategist work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-marketing-twitter-engager-619f9e48",
+      "id": "619f9e48-1ebc-4498-9c0b-1eaa5a306f94",
+      "name": "Marketing Twitter Engager",
+      "model": "byok:878cb55f-1c3f-4941-8323-414cab73d923",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Marketing Twitter Engager work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-product-feedback-synthesizer-7b456517",
+      "id": "7b456517-1224-4d45-9d55-0eef999e9242",
+      "name": "Product Feedback Synthesizer",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Product Feedback Synthesizer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-product-sprint-prioritizer-824ed8f6",
+      "id": "824ed8f6-d829-4420-a12a-1e1c1a37e298",
+      "name": "Product Sprint Prioritizer",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Product Sprint Prioritizer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-product-trend-researcher-bd283abb",
+      "id": "bd283abb-798f-4915-a6ba-cae6f0b805b2",
+      "name": "Product Trend Researcher",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Product Trend Researcher work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-experiment-tracker-9898f4d1",
+      "id": "9898f4d1-12fb-42c8-8a94-a30ac104a3fc",
+      "name": "Experiment Tracker",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Experiment Tracker work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-project-shepherd-c2feb790",
+      "id": "c2feb790-da7b-4c4d-9d25-c7dee681cfb2",
+      "name": "Project Shepherd",
+      "model": "byok:7a1019e0-667b-4240-9c8a-61f88aec1971",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Project Shepherd work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-studio-operations-953d5eb8",
+      "id": "953d5eb8-1cb7-4b38-b571-8a4a77b57875",
+      "name": "Studio Operations",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Studio Operations work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-studio-producer-b5a1e048",
+      "id": "b5a1e048-73e8-40ff-9759-1832bf7eb87f",
+      "name": "Studio Producer",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Studio Producer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-senior-project-manager-81f61fcc",
+      "id": "81f61fcc-d823-4f75-b799-26653bd1acc6",
+      "name": "Senior Project Manager",
+      "model": "byok:d5720b35-e912-47bd-bdfc-a532851ed10b",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Senior Project Manager work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-terminal-integration-specialist-adef56b5",
+      "id": "adef56b5-9c7f-43df-82a4-11f5248887e4",
+      "name": "Terminal Integration Specialist",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Terminal Integration Specialist work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-agents-orchestrator-2cdd72f5",
+      "id": "2cdd72f5-2f5c-4428-a948-08b8634a9387",
+      "name": "Agents Orchestrator",
+      "model": "byok:878cb55f-1c3f-4941-8323-414cab73d923",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Agents Orchestrator work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-data-analytics-reporter-8317888a",
+      "id": "8317888a-1cba-4298-9715-7096e7cb6b44",
+      "name": "Data Analytics Reporter",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Data Analytics Reporter work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-lsp-index-engineer-931d1b3c",
+      "id": "931d1b3c-88fb-49e3-8097-80f31b2f2ba7",
+      "name": "LSP Index Engineer",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for LSP Index Engineer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-executive-summary-generator-1526b870",
+      "id": "1526b870-9759-41fb-b578-b57deab75430",
+      "name": "Executive Summary Generator",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Executive Summary Generator work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-finance-tracker-775023b6",
+      "id": "775023b6-93de-4b9d-acc3-7412b2140388",
+      "name": "Finance Tracker",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Finance Tracker work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-infrastructure-maintainer-b365263e",
+      "id": "b365263e-de4c-4669-a5b5-eda772376ab0",
+      "name": "Infrastructure Maintainer",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Infrastructure Maintainer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-legal-advisor-2d95abd1",
+      "id": "2d95abd1-5270-4bc2-9551-0d515508b196",
+      "name": "Legal Advisor",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Legal Advisor work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-support-responder-454dde48",
+      "id": "454dde48-82aa-4de6-a6cd-06cb415c549a",
+      "name": "Support Responder",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Support Responder work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-api-tester-a47ad44b",
+      "id": "a47ad44b-b769-4710-bbfc-e1d7b678c935",
+      "name": "API Tester",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for API Tester work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-evidence-collector-05ffcba2",
+      "id": "05ffcba2-2b6c-47d3-9ca9-af8c72642ab0",
+      "name": "Evidence Collector",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Evidence Collector work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-performance-benchmarker-18531155",
+      "id": "18531155-0d01-46ca-9ab7-fbb6a9cf3972",
+      "name": "Performance Benchmarker",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Performance Benchmarker work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-testing-reality-checker-4e65d3d6",
+      "id": "4e65d3d6-f2cc-4b96-8635-2ec6d1f93e72",
+      "name": "Testing Reality Checker",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Testing Reality Checker work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-test-results-analyzer-9c594bf9",
+      "id": "9c594bf9-943d-4c2b-adcd-ddfd98641ed8",
+      "name": "Test Results Analyzer",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Test Results Analyzer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-tool-evaluator-d343b69f",
+      "id": "d343b69f-ad9d-4513-8708-393ebfdb2b72",
+      "name": "Tool Evaluator",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Tool Evaluator work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-workflow-optimizer-e35449fe",
+      "id": "e35449fe-b118-4f61-bde6-9215e160738e",
+      "name": "Workflow Optimizer",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Workflow Optimizer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-marketing-social-media-strategist-8c72c7e9",
+      "id": "8c72c7e9-2c7c-4f10-b53e-ab8286e2442f",
+      "name": "Marketing Social Media Strategist",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Marketing Social Media Strategist work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-technical-writer-9d2956cd",
+      "id": "9d2956cd-9b61-4e18-be3c-938c998f8879",
+      "name": "Technical Writer",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Technical Writer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-powershell-expert-afb3ce5d",
+      "id": "afb3ce5d-942a-4e29-8960-a0c669c9f30b",
+      "name": "PowerShell Expert",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for PowerShell Expert work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-security-engineer-24d59321",
+      "id": "24d59321-ea8b-4cee-a732-b45412dc1bbb",
+      "name": "Security Engineer",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Security Engineer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-n8n-workflow-engineer-9d3a0c19",
+      "id": "9d3a0c19-2543-40ad-a183-39c1c95ffba0",
+      "name": "N8N Workflow Engineer",
+      "model": "byok:d5720b35-e912-47bd-bdfc-a532851ed10b",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for N8N Workflow Engineer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-financial-advisor-b787f782",
+      "id": "b787f782-1d1a-413e-934e-6ead95381bd8",
+      "name": "Financial-Advisor",
+      "model": "byok:63a73cf2-224a-4641-8dcb-c3313270d08a",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Financial-Advisor work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-content-strategist-fb2cb01c",
+      "id": "fb2cb01c-0f21-4d5d-9b1f-de008dc4bacc",
+      "name": "content-strategist",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for content-strategist work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-zo-reporting-a7c871bc",
+      "id": "a7c871bc-4a53-41be-8435-10315ed4fdc5",
+      "name": "Zo Reporting",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Zo Reporting work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-hermes-dbe6c73c",
+      "id": "dbe6c73c-69e7-41e2-b42a-194f64a1e976",
+      "name": "Hermes",
+      "model": "byok:63a73cf2-224a-4641-8dcb-c3313270d08a",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Hermes work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-gemini-cli-5840f80f",
+      "id": "5840f80f-d2f2-4e2c-8cf4-0e1cf88d3c97",
+      "name": "Gemini CLI",
+      "model": "byok:6d900f59-b287-4c06-a10a-8da3efc7b09b",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Gemini CLI work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-codex-cli-beb55a68",
+      "id": "beb55a68-6918-4245-b20b-2b8b143113e1",
+      "name": "Codex CLI",
+      "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Codex CLI work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-memory-manager-3be5c105",
+      "id": "3be5c105-730c-45b9-968c-94aa464e2990",
+      "name": "Memory Manager",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Memory Manager work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-zouroboros-engineer-f188bdf4",
+      "id": "f188bdf4-ef18-40de-909c-170baae37608",
+      "name": "Zouroboros Engineer",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Zouroboros Engineer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-video-producer-a610972e",
+      "id": "a610972e-fb54-43f5-8383-a7b91a4fbd42",
+      "name": "Video Producer",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Video Producer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-alaric-fast-a686c117",
+      "id": "a686c117-9d81-4ffe-8b69-ce566bd3995d",
+      "name": "Alaric \u00b7 Fast",
+      "model": "byok:461d8d6f-9616-4391-960e-3caea2a27829",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Alaric \u00b7 Fast work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-alaric-light-0c6c5c34",
+      "id": "0c6c5c34-c4e3-4591-ad0c-8df8f65fcb81",
+      "name": "Alaric \u00b7 Light",
+      "model": "byok:63a73cf2-224a-4641-8dcb-c3313270d08a",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Alaric \u00b7 Light work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-alaric-deep-7c1544eb",
+      "id": "7c1544eb-3d24-419c-897a-5163d3d32c05",
+      "name": "Alaric \u00b7 Deep",
+      "model": "byok:b74479bc-ec30-494d-a8c8-b2ff6218e1c0",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Alaric \u00b7 Deep work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-alaric-voice-fe5d7648",
+      "id": "fe5d7648-140a-4277-a7d4-7d8d7bf4aee8",
+      "name": "Alaric Voice",
+      "model": "byok:463350ac-4a49-4ceb-8653-042ecffa513f",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Alaric Voice work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-restricted-persona-1-55e6f73a",
+      "id": "55e6f73a-3254-4246-9e2c-e2d55a60b11d",
+      "name": "Restricted Persona 1",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Restricted platform persona; public name intentionally omitted.",
+      "redacted": true,
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-restricted-persona-2-c24fd600",
+      "id": "c24fd600-3688-4bfc-9e5b-511a7640a70e",
+      "name": "Restricted Persona 2",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Restricted platform persona; public name intentionally omitted.",
+      "redacted": true,
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-restricted-persona-3-c7c6ac54",
+      "id": "c7c6ac54-e7bd-44bd-800e-2f14f2b979ca",
+      "name": "Restricted Persona 3",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Restricted platform persona; public name intentionally omitted.",
+      "redacted": true,
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-sage-430d27cd",
+      "id": "430d27cd-483c-41d1-9088-c758fcd610aa",
+      "name": "Sage",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Sage work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-ember-0bf07a32",
+      "id": "0bf07a32-1880-434a-9ad4-26a341b041f7",
+      "name": "Ember",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Ember work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-orion-34e1e995",
+      "id": "34e1e995-18cc-4a7b-83f6-8c1e95fada1e",
+      "name": "Orion",
+      "model": null,
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Orion work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-claude-code-c9fef4df",
+      "id": "c9fef4df-091b-4e41-a51a-23479d9cf3eb",
+      "name": "Claude Code",
+      "model": "byok:63a73cf2-224a-4641-8dcb-c3313270d08a",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Claude Code work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-financial-research-assistant-e026212c",
+      "id": "e026212c-716e-48de-b1ec-684907b91898",
+      "name": "Financial-Research-Assistant",
+      "model": "byok:461d8d6f-9616-4391-960e-3caea2a27829",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Financial-Research-Assistant work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-consensus-engineer-52ff8f9e",
+      "id": "52ff8f9e-64e5-489c-ae70-e65e859ce971",
+      "name": "Consensus Engineer",
+      "model": "byok:463350ac-4a49-4ceb-8653-042ecffa513f",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Consensus Engineer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-alaric-ext-311d1136",
+      "id": "311d1136-38c8-4265-bf1e-6e91700f065f",
+      "name": "Alaric \u00b7 Ext",
+      "model": "byok:12c6d41a-a8b4-45e3-b495-7df391f190ce",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Alaric \u00b7 Ext work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-seo-aeo-engineer-a88c3993",
+      "id": "a88c3993-93e3-4e87-b959-91ea62526f57",
+      "name": "SEO/AEO Engineer",
+      "model": "byok:63a73cf2-224a-4641-8dcb-c3313270d08a",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for SEO/AEO Engineer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-opencode-cli-7d225e52",
+      "id": "7d225e52-d78a-4093-9c48-5b8a587a97dd",
+      "name": "OpenCode CLI",
+      "model": "byok:bb3d131d-749f-423b-a285-9f9efd103926",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for OpenCode CLI work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-kimi-code-cli-ea391a28",
+      "id": "ea391a28-5104-495b-a8bd-bc2621b89b9d",
+      "name": "Kimi Code CLI",
+      "model": "byok:73ae74c2-26d1-561e-91af-2cf47a33f4dd",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Kimi Code CLI work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-pi-coding-agent-201450ad",
+      "id": "201450ad-225e-46b4-87d3-c9407323c48f",
+      "name": "Pi Coding Agent",
+      "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
+      "scopes": [
+        "all"
+      ],
+      "purpose": "Platform persona for Pi Coding Agent work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-alaric-consult-77bfa6fa",
+      "id": "77bfa6fa-5249-41a9-961f-37749db877a0",
+      "name": "Alaric \u00b7 Consult",
+      "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
+      "scopes": [],
+      "purpose": "Platform persona for Alaric \u00b7 Consult work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-all-out-game-director-781113cb",
+      "id": "781113cb-3102-4aff-8c48-59f282af4d41",
+      "name": "GameDev \u00b7 All Out Game Director",
+      "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
+      "scopes": [
+        "files:read",
+        "files:write",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 All Out Game Director work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-all-out-csl-engineer-14fb53cf",
+      "id": "14fb53cf-8bb2-42b4-88c2-7ac1dae30d8a",
+      "name": "GameDev \u00b7 All Out CSL Engineer",
+      "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
+      "scopes": [
+        "device:use",
+        "files:read",
+        "files:write",
+        "shell:execute",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 All Out CSL Engineer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-all-out-technical-art-ux-21d4701a",
+      "id": "21d4701a-726a-4102-a09d-69d7ca11d618",
+      "name": "GameDev \u00b7 All Out Technical Art & UX",
+      "model": "byok:ef1faca8-a70d-46d3-88d3-b78f96635885",
+      "scopes": [
+        "device:use",
+        "files:read",
+        "files:write",
+        "media:generate",
+        "shell:execute",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 All Out Technical Art & UX work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-all-out-qa-release-c1d4e886",
+      "id": "c1d4e886-c4bc-4662-acf2-8a197663b5b9",
+      "name": "GameDev \u00b7 All Out QA & Release",
+      "model": "byok:ef1faca8-a70d-46d3-88d3-b78f96635885",
+      "scopes": [
+        "device:use",
+        "files:read",
+        "files:write",
+        "shell:execute",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 All Out QA & Release work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-game-audio-designer-854bfeaa",
+      "id": "854bfeaa-c28e-4d8c-9d93-e6a6eafc41e8",
+      "name": "GameDev \u00b7 Game Audio Designer",
+      "model": "byok:ef1faca8-a70d-46d3-88d3-b78f96635885",
+      "scopes": [
+        "files:read",
+        "files:write",
+        "media:generate",
+        "media:transcribe",
+        "shell:execute",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 Game Audio Designer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-game-designer-906afdd6",
+      "id": "906afdd6-e37f-4a4c-a827-e5f1fd3e757a",
+      "name": "GameDev \u00b7 Game Designer",
+      "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
+      "scopes": [
+        "files:read",
+        "files:write",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 Game Designer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-godot-gameplay-scripter-d3bd91c2",
+      "id": "d3bd91c2-7ffd-4bba-8579-7597f496c4f9",
+      "name": "GameDev \u00b7 Godot Gameplay Scripter",
+      "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
+      "scopes": [
+        "device:use",
+        "files:read",
+        "files:write",
+        "shell:execute",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 Godot Gameplay Scripter work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-godot-shader-developer-7a5c4e0b",
+      "id": "7a5c4e0b-0266-4880-a05b-3d428f3ad49c",
+      "name": "GameDev \u00b7 Godot Shader Developer",
+      "model": "byok:ef1faca8-a70d-46d3-88d3-b78f96635885",
+      "scopes": [
+        "device:use",
+        "files:read",
+        "files:write",
+        "media:generate",
+        "shell:execute",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 Godot Shader Developer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-level-designer-eadf9e3a",
+      "id": "eadf9e3a-498b-42d2-828b-bcb64e9c82e6",
+      "name": "GameDev \u00b7 Level Designer",
+      "model": "byok:ef1faca8-a70d-46d3-88d3-b78f96635885",
+      "scopes": [
+        "device:use",
+        "files:read",
+        "files:write",
+        "media:generate",
+        "shell:execute",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 Level Designer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-narrative-designer-b13bd4e1",
+      "id": "b13bd4e1-52c6-4ab9-aa33-0972b6fcac8d",
+      "name": "GameDev \u00b7 Narrative Designer",
+      "model": "byok:ef1faca8-a70d-46d3-88d3-b78f96635885",
+      "scopes": [
+        "files:read",
+        "files:write",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 Narrative Designer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-roblox-avatar-creator-a459a190",
+      "id": "a459a190-95a2-425f-9859-337f047f34be",
+      "name": "GameDev \u00b7 Roblox Avatar Creator",
+      "model": "byok:ef1faca8-a70d-46d3-88d3-b78f96635885",
+      "scopes": [
+        "device:use",
+        "files:read",
+        "files:write",
+        "media:generate",
+        "shell:execute",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 Roblox Avatar Creator work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-roblox-experience-designer-de93d485",
+      "id": "de93d485-2103-4bd2-848a-6a590a485e83",
+      "name": "GameDev \u00b7 Roblox Experience Designer",
+      "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
+      "scopes": [
+        "files:read",
+        "files:write",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 Roblox Experience Designer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-roblox-systems-scripter-a620b95f",
+      "id": "a620b95f-fefb-43de-8fb5-3f9e4f9e0ebc",
+      "name": "GameDev \u00b7 Roblox Systems Scripter",
+      "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
+      "scopes": [
+        "device:use",
+        "files:read",
+        "files:write",
+        "shell:execute",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 Roblox Systems Scripter work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-unity-multiplayer-engineer-22c282ab",
+      "id": "22c282ab-074a-44bb-9386-fc227a817950",
+      "name": "GameDev \u00b7 Unity Multiplayer Engineer",
+      "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
+      "scopes": [
+        "device:use",
+        "files:read",
+        "files:write",
+        "shell:execute",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 Unity Multiplayer Engineer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-unity-shader-graph-artist-856fd9d0",
+      "id": "856fd9d0-ab0f-4e28-ace4-da0ed12cc2ca",
+      "name": "GameDev \u00b7 Unity Shader Graph Artist",
+      "model": "byok:ef1faca8-a70d-46d3-88d3-b78f96635885",
+      "scopes": [
+        "device:use",
+        "files:read",
+        "files:write",
+        "media:generate",
+        "shell:execute",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 Unity Shader Graph Artist work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-unreal-multiplayer-architect-0cd917f5",
+      "id": "0cd917f5-bb29-43aa-bd5e-a3ab7ce29a4f",
+      "name": "GameDev \u00b7 Unreal Multiplayer Architect",
+      "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
+      "scopes": [
+        "device:use",
+        "files:read",
+        "files:write",
+        "shell:execute",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 Unreal Multiplayer Architect work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-unity-editor-tool-developer-8da1cee5",
+      "id": "8da1cee5-959d-4b9b-bba8-532c93e22954",
+      "name": "GameDev \u00b7 Unity Editor Tool Developer",
+      "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
+      "scopes": [
+        "device:use",
+        "files:read",
+        "files:write",
+        "shell:execute",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 Unity Editor Tool Developer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-unreal-systems-engineer-b696b696",
+      "id": "b696b696-82c4-4d36-ae9c-fcc87e2bd98f",
+      "name": "GameDev \u00b7 Unreal Systems Engineer",
+      "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
+      "scopes": [
+        "device:use",
+        "files:read",
+        "files:write",
+        "shell:execute",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 Unreal Systems Engineer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-unity-architect-b4d9de41",
+      "id": "b4d9de41-db00-4957-8837-7d09c3a9fcdb",
+      "name": "GameDev \u00b7 Unity Architect",
+      "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
+      "scopes": [
+        "device:use",
+        "files:read",
+        "files:write",
+        "shell:execute",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 Unity Architect work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-unreal-world-builder-8fdf579c",
+      "id": "8fdf579c-a91b-48b6-8ec8-441fa72e6338",
+      "name": "GameDev \u00b7 Unreal World Builder",
+      "model": "byok:ef1faca8-a70d-46d3-88d3-b78f96635885",
+      "scopes": [
+        "device:use",
+        "files:read",
+        "files:write",
+        "media:generate",
+        "shell:execute",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 Unreal World Builder work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-unreal-technical-artist-443246ef",
+      "id": "443246ef-37d2-4b1e-af4b-5ad0d5efd7c0",
+      "name": "GameDev \u00b7 Unreal Technical Artist",
+      "model": "byok:ef1faca8-a70d-46d3-88d3-b78f96635885",
+      "scopes": [
+        "device:use",
+        "files:read",
+        "files:write",
+        "media:generate",
+        "shell:execute",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 Unreal Technical Artist work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-technical-artist-202e23cb",
+      "id": "202e23cb-8c21-4321-bcfa-0534286aca87",
+      "name": "GameDev \u00b7 Technical Artist",
+      "model": "byok:ef1faca8-a70d-46d3-88d3-b78f96635885",
+      "scopes": [
+        "device:use",
+        "files:read",
+        "files:write",
+        "media:generate",
+        "shell:execute",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 Technical Artist work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-11T18:09:58.744Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-three-js-designer-98d2de05",
+      "id": "98d2de05-132d-42ff-a59b-ab834c5e3f6f",
+      "name": "GameDev \u00b7 Three.js Designer",
+      "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
+      "scopes": [
+        "files:read",
+        "files:write",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 Three.js Designer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-18T19:45:34.622Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-three-js-engineer-9add3761",
+      "id": "9add3761-5b4a-4698-9494-063b525e0245",
+      "name": "GameDev \u00b7 Three.js Engineer",
+      "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
+      "scopes": [
+        "device:use",
+        "files:read",
+        "files:write",
+        "shell:execute",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 Three.js Engineer work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-18T19:45:34.622Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-three-js-artist-8554e4a2",
+      "id": "8554e4a2-39f3-4e4c-a03f-bc001dec7689",
+      "name": "GameDev \u00b7 Three.js Artist",
+      "model": "byok:ef1faca8-a70d-46d3-88d3-b78f96635885",
+      "scopes": [
+        "device:use",
+        "files:read",
+        "files:write",
+        "media:generate",
+        "shell:execute",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 Three.js Artist work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-18T19:45:34.622Z"
+      }
+    },
+    {
+      "slug": "zo-gamedev-three-js-architect-d34189f6",
+      "id": "d34189f6-19c7-454f-b960-b3a815a27496",
+      "name": "GameDev \u00b7 Three.js Architect",
+      "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
+      "scopes": [
+        "device:use",
+        "files:read",
+        "files:write",
+        "shell:execute",
+        "web:browse",
+        "web:search"
+      ],
+      "purpose": "Platform persona for GameDev \u00b7 Three.js Architect work.",
+      "provenance": {
+        "source": "zo.list_personas",
+        "observedAt": "2026-08-18T19:45:34.622Z"
+      }
+    }
+  ]
+}

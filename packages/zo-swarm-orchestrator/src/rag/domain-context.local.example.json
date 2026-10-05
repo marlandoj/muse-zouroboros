@@ -1,0 +1,9 @@
+{
+  "_comment": "Copy to domain-context.local.json (gitignored). Adds keyword arrays for vertical domain detection in swarm enrichment.",
+  "replaceDefaults": false,
+  "domainKeywords": {
+    "commerce-a": ["your-brand", "skincare", "beauty", "shopify", "product listing"],
+    "trading-a": ["your-firm", "trading", "alpaca", "backtest", "strategy", "portfolio", "crypto"],
+    "advisory-a": ["your-advisory", "wealth", "client"]
+  }
+}

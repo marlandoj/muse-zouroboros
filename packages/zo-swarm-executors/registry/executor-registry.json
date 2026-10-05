@@ -1,0 +1,937 @@
+{
+  "$schema": "executor-registry/v1",
+  "description": "Canonical supported CLI executor registry; services and deferred entries are not active CLI executors",
+  "executors": [
+    {
+      "id": "claude-code",
+      "name": "Claude Code",
+      "executor": "local",
+      "transport": "acp",
+      "bridge": "packages/swarm/src/executor/bridges/claude-code-bridge.sh",
+      "description": "Claude Code CLI in one-shot mode \u2014 full codebase context, file editing, terminal access",
+      "expertise": [
+        "code-generation",
+        "code-review",
+        "debugging",
+        "refactoring",
+        "architecture",
+        "testing",
+        "documentation"
+      ],
+      "best_for": [
+        "Complex multi-file code changes",
+        "Codebase-aware analysis requiring file reads",
+        "Tasks needing terminal command execution",
+        "Git operations and repository management"
+      ],
+      "config": {
+        "defaultTimeout": 600,
+        "model": "swarm-failover",
+        "envVars": {
+          "CLAUDE_CODE_BIN": "Path to claude binary (auto-detected if omitted)",
+          "CLAUDE_CODE_MODEL": "Override model selection",
+          "CLAUDE_CODE_TIMEOUT": "Timeout in seconds (default: 600)"
+        }
+      },
+      "capabilities": {
+        "fileRead": true,
+        "fileWrite": true,
+        "shellExec": true,
+        "webResearch": false,
+        "imageGen": false,
+        "mcp": true,
+        "streaming": true
+      },
+      "healthCheck": {
+        "command": "command -v claude || test -x /root/.local/bin/claude",
+        "expectedPattern": "claude",
+        "description": "Verify Claude Code CLI is installed"
+      },
+      "acp": {
+        "adapterBin": "claude-agent-acp",
+        "modelSelection": {
+          "method": "env",
+          "envVar": "ANTHROPIC_MODEL"
+        }
+      },
+      "sdk": {
+        "ragCorpus": "claude-code-sdk",
+        "package": "@anthropic-ai/claude-agent-sdk",
+        "version": "0.3.220",
+        "runtimeVersion": "2.1.220",
+        "language": "typescript",
+        "sourceType": "official-sdk",
+        "reference": "packages/swarm/docs/executors/identities/claude-code.md",
+        "surfaces": [
+          "query-stream",
+          "sessions",
+          "mcp-servers",
+          "custom-tools",
+          "permissions",
+          "hooks",
+          "subagents",
+          "structured-output"
+        ],
+        "runtimeStatus": "indexed-reference",
+        "promotionRequired": true
+      },
+      "modelRouter": {
+        "defaultModel": "claude-opus-5",
+        "fallbackModel": "claude-haiku-4-5-20251001",
+        "acceptedPrefixes": [
+          "claude"
+        ],
+        "stripPrefixes": [
+          "cc/"
+        ],
+        "tierMap": {
+          "trivial": "claude-haiku-4-5-20251001",
+          "simple": "claude-haiku-4-5-20251001",
+          "moderate": "claude-opus-5",
+          "complex": "claude-fable-5-1",
+          "light": "claude-haiku-4-5-20251001",
+          "mid": "claude-opus-5",
+          "heavy": "claude-fable-5-1",
+          "failover": "claude-haiku-4-5-20251001",
+          "swarm-light": "claude-haiku-4-5-20251001",
+          "swarm-mid": "claude-opus-5",
+          "swarm-heavy": "claude-fable-5-1",
+          "swarm-failover": "claude-haiku-4-5-20251001"
+        }
+      },
+      "modelFamilies": [
+        {
+          "name": "anthropic-claude",
+          "sourcePrefixes": [
+            "anthropic/claude-"
+          ],
+          "stripPrefix": "anthropic/"
+        }
+      ],
+      "modelPins": {
+        "heavy": "claude-fable-5-1",
+        "mid": "claude-opus-5",
+        "light": "claude-haiku-4-5-20251001"
+      }
+    },
+    {
+      "id": "hermes",
+      "name": "Hermes Agent",
+      "executor": "local",
+      "transport": "acp",
+      "bridge": "packages/swarm/src/executor/bridges/hermes-bridge.sh",
+      "description": "Hermes AI agent with tool-calling, web search, and multi-modal capabilities",
+      "expertise": [
+        "web-research",
+        "web-scraping",
+        "data-analysis",
+        "image-generation",
+        "multi-modal",
+        "tool-orchestration",
+        "audit",
+        "review",
+        "security",
+        "summarize",
+        "investigate"
+      ],
+      "best_for": [
+        "Web research and content extraction",
+        "Tasks requiring external API tools",
+        "Image generation and analysis",
+        "Multi-step tool-calling workflows",
+        "Security audits and vulnerability assessment",
+        "Content review and quality analysis",
+        "Data gathering and summarization"
+      ],
+      "config": {
+        "defaultTimeout": 300,
+        "model": "swarm-failover",
+        "envVars": {
+          "HERMES_PROJECT_DIR": "Path to hermes-agent project (default: /home/zouroboros/hermes-agent)",
+          "HERMES_VENV": "Path to venv activate script (default: $HERMES_PROJECT_DIR/.venv/bin/activate)",
+          "HERMES_TIMEOUT": "Timeout in seconds (default: 300)",
+          "HERMES_PROVIDER": "Optional provider override; defaults to the Hermes config",
+          "SWARM_FALLBACK_PROVIDERS": "Optional comma-separated provider fallback chain",
+          "KIMI_API_KEY": "Required when using the kimi-coding provider",
+          "OPENROUTER_API_KEY": "Required when using the openrouter provider"
+        }
+      },
+      "capabilities": {
+        "fileRead": true,
+        "fileWrite": true,
+        "shellExec": true,
+        "webResearch": true,
+        "imageGen": true,
+        "mcp": true,
+        "streaming": true
+      },
+      "healthCheck": {
+        "command": "hermes acp --check",
+        "expectedPattern": "Hermes ACP check OK",
+        "description": "Verify Hermes native ACP dependencies and adapter imports"
+      },
+      "acp": {
+        "adapterBin": "hermes",
+        "adapterArgs": [
+          "acp",
+          "--accept-hooks"
+        ],
+        "extraEnv": {
+          "HERMES_AUTH_STORE_READ_ONLY": "1"
+        },
+        "mcpConfig": {
+          "configPath": ".mcp.json",
+          "includeShared": true,
+          "includeZo": true,
+          "includeMemoryBriefing": true
+        },
+        "modelSelection": {
+          "method": "extension",
+          "extensionMethod": "session/set_model",
+          "category": "model",
+          "providerSeparator": ":"
+        },
+        "endpointClass": "hermes-provider"
+      },
+      "transportFallback": {
+        "envVar": "HERMES_ACP_ENABLED",
+        "equals": "0",
+        "transport": "bridge"
+      },
+      "sdk": {
+        "ragCorpus": "hermes-sdk",
+        "package": "hermes-agent",
+        "version": "0.19.0",
+        "runtimeVersion": "0.19.0",
+        "sourceRevision": "live-git",
+        "language": "python",
+        "sourceType": "runtime-source",
+        "reference": "packages/swarm/docs/executors/identities/hermes-agent.md",
+        "surfaces": [
+          "native-acp",
+          "agent-loop",
+          "toolsets",
+          "mcp-transport",
+          "provider-routing",
+          "delegation",
+          "session-memory",
+          "scheduled-tasks"
+        ],
+        "runtimeStatus": "production-runtime",
+        "promotionRequired": false
+      },
+      "modelFamilies": [
+        {
+          "name": "openrouter-agentic",
+          "sourcePrefixes": [
+            "anthropic/claude-",
+            "openai/gpt-",
+            "google/gemini-",
+            "x-ai/",
+            "z-ai/"
+          ]
+        }
+      ],
+      "modelRouter": {
+        "passthrough": true,
+        "fallbackModel": "claude-haiku-4-5-20251001",
+        "defaultModel": "claude-opus-5",
+        "tierMap": {
+          "mid": "claude-opus-5",
+          "light": "claude-haiku-4-5-20251001",
+          "moderate": "claude-opus-5",
+          "complex": "claude-fable-5-1",
+          "simple": "claude-haiku-4-5-20251001",
+          "trivial": "claude-haiku-4-5-20251001",
+          "heavy": "claude-fable-5-1"
+        }
+      }
+    },
+    {
+      "id": "gemini",
+      "name": "Gemini CLI",
+      "executor": "local",
+      "transport": "acp",
+      "bridge": "packages/swarm/src/executor/bridges/gemini-bridge.sh",
+      "description": "Google Gemini CLI with persistent daemon \u2014 large-context reasoning, multimodal analysis, code generation. Daemon eliminates ~10s Node.js startup overhead per call.",
+      "expertise": [
+        "code-generation",
+        "code-review",
+        "reasoning",
+        "multimodal",
+        "large-context",
+        "research",
+        "prototyping",
+        "analysis",
+        "audit",
+        "evaluate",
+        "summarize",
+        "compare"
+      ],
+      "best_for": [
+        "Large-context code analysis (1M+ token window)",
+        "Multimodal tasks involving images and documents",
+        "Cross-validation and alternative perspective review",
+        "Rapid prototyping and code generation",
+        "Research synthesis across large corpora",
+        "Comprehensive audit and evaluation tasks",
+        "Summarization and comparison of complex findings"
+      ],
+      "config": {
+        "defaultTimeout": 300,
+        "model": "gemini-3.5-flash-lite",
+        "envVars": {
+          "GEMINI_MODEL": "Override model (e.g., gemini-3.8-flash for complex tasks)",
+          "GEMINI_TIMEOUT": "Timeout in seconds (default: 300)",
+          "GEMINI_NO_DAEMON": "Set to '1' to skip daemon and use direct CLI"
+        }
+      },
+      "daemon": {
+        "script": "Skills/zo-swarm-executors/scripts/gemini-daemon.ts",
+        "socket": "/tmp/gemini-daemon.sock",
+        "pidFile": "/tmp/gemini-daemon.pid",
+        "logFile": "/dev/shm/gemini-daemon.log",
+        "maxConcurrent": 4,
+        "idleTimeout": "30min",
+        "description": "Persistent HTTP daemon on Unix socket. Bridge auto-detects and routes through daemon. Falls back to direct CLI if daemon is down."
+      },
+      "warmUp": {
+        "script": "Skills/zo-swarm-executors/scripts/gemini-warmup.ts",
+        "hook": "Skills/zo-swarm-executors/scripts/pre-swarm-hook.sh",
+        "recommended": "Run before swarm execution \u2014 starts daemon automatically (~12s \u2192 ~2s per call)"
+      },
+      "capabilities": {
+        "fileRead": true,
+        "fileWrite": true,
+        "shellExec": true,
+        "webResearch": true,
+        "imageGen": false,
+        "mcp": true,
+        "streaming": true
+      },
+      "healthCheck": {
+        "command": "command -v gemini",
+        "expectedPattern": "gemini",
+        "description": "Verify Gemini CLI is installed"
+      },
+      "acp": {
+        "adapterBin": "gemini",
+        "adapterArgs": [
+          "--acp"
+        ],
+        "mcpConfig": {
+          "configPath": ".mcp.json",
+          "includeShared": true,
+          "includeZo": false,
+          "includeMemoryBriefing": true
+        },
+        "modelSelection": {
+          "method": "env",
+          "envVar": "GEMINI_MODEL"
+        }
+      },
+      "sdk": {
+        "ragCorpus": "gemini-cli-sdk",
+        "package": "@google/gemini-cli-core",
+        "version": "0.50.0",
+        "runtimeVersion": "0.50.0",
+        "language": "typescript",
+        "sourceType": "official-runtime-core",
+        "reference": "packages/swarm/docs/executors/identities/gemini-cli.md",
+        "surfaces": [
+          "agent-session",
+          "content-generator",
+          "tool-registry",
+          "mcp-client",
+          "policy-engine",
+          "scheduler",
+          "hooks",
+          "skills",
+          "sandbox"
+        ],
+        "runtimeStatus": "production-runtime",
+        "promotionRequired": false
+      },
+      "modelRouter": {
+        "defaultModel": "gemini-3.5-flash-lite",
+        "fallbackModel": "gemini-3.5-flash-lite",
+        "acceptedPrefixes": [
+          "gemini",
+          "models/"
+        ],
+        "stripPrefixes": [
+          "gc/"
+        ],
+        "tierMap": {
+          "trivial": "gemini-3.5-flash-lite",
+          "simple": "gemini-3.5-flash-lite",
+          "moderate": "gemini-3.8-flash",
+          "complex": "gemini-3.8-flash",
+          "light": "gemini-3.5-flash-lite",
+          "mid": "gemini-3.8-flash",
+          "heavy": "gemini-3.8-flash",
+          "failover": "gemini-3.5-flash-lite",
+          "swarm-light": "gemini-3.5-flash-lite",
+          "swarm-mid": "gemini-3.8-flash",
+          "swarm-heavy": "gemini-3.8-flash",
+          "swarm-failover": "gemini-3.5-flash-lite"
+        }
+      },
+      "modelFamilies": [
+        {
+          "name": "google-gemini",
+          "sourcePrefixes": [
+            "google/gemini-"
+          ],
+          "stripPrefix": "google/"
+        }
+      ]
+    },
+    {
+      "id": "codex",
+      "name": "Codex CLI",
+      "executor": "local",
+      "transport": "acp",
+      "bridge": "packages/swarm/src/executor/bridges/codex-bridge.sh",
+      "description": "OpenAI Codex CLI (Rust) \u2014 fastest local executor (~3s per call). Code generation, shell commands, file editing with full sandbox support.",
+      "expertise": [
+        "code-generation",
+        "code-review",
+        "shell-commands",
+        "file-editing",
+        "debugging",
+        "refactoring",
+        "rapid-prototyping"
+      ],
+      "best_for": [
+        "Fast code generation and editing tasks",
+        "Shell command execution and automation",
+        "Quick analysis where speed matters most",
+        "Rapid prototyping and iteration",
+        "Tasks that don't require web access or tools"
+      ],
+      "config": {
+        "defaultTimeout": 600,
+        "model": "swarm-failover",
+        "envVars": {
+          "CODEX_MODEL": "Override model (e.g., gpt-5.6-terra, gpt-6-astra)",
+          "CODEX_TIMEOUT": "Timeout in seconds (default: 300)"
+        }
+      },
+      "capabilities": {
+        "fileRead": true,
+        "fileWrite": true,
+        "shellExec": true,
+        "webResearch": false,
+        "imageGen": false,
+        "mcp": true,
+        "streaming": true
+      },
+      "healthCheck": {
+        "command": "command -v codex",
+        "expectedPattern": "codex",
+        "description": "Verify Codex CLI is installed"
+      },
+      "acp": {
+        "adapterBin": "codex-acp",
+        "modelSelection": {
+          "method": "env",
+          "envVar": "CODEX_MODEL"
+        }
+      },
+      "sdk": {
+        "ragCorpus": "codex-sdk",
+        "package": "@openai/codex-sdk",
+        "version": "0.144.0",
+        "runtimeVersion": "0.144.0",
+        "language": "typescript",
+        "sourceType": "official-sdk",
+        "reference": "packages/swarm/docs/executors/identities/codex.md",
+        "surfaces": [
+          "threads",
+          "streaming-events",
+          "structured-output",
+          "image-input",
+          "session-resume",
+          "working-directory",
+          "environment-isolation",
+          "config-overrides"
+        ],
+        "runtimeStatus": "indexed-reference",
+        "promotionRequired": true
+      },
+      "modelFamilies": [
+        {
+          "name": "openai-coding",
+          "sourcePrefixes": [
+            "openai/gpt-"
+          ]
+        }
+      ],
+      "modelRouter": {
+        "acceptedPrefixes": [
+          "gpt-",
+          "o"
+        ],
+        "fallbackModel": "gpt-5.6-luna",
+        "defaultModel": "gpt-5.6-terra",
+        "tierMap": {
+          "light": "gpt-5.6-luna",
+          "mid": "gpt-5.6-terra",
+          "heavy": "gpt-6-astra",
+          "swarm-mid": "gpt-5.6-terra",
+          "simple": "gpt-5.6-luna",
+          "trivial": "gpt-5.6-luna",
+          "moderate": "gpt-5.6-terra",
+          "complex": "gpt-6-astra",
+          "failover": "gpt-5.6-luna",
+          "swarm-light": "gpt-5.6-luna",
+          "swarm-heavy": "gpt-6-astra",
+          "swarm-failover": "gpt-5.6-luna"
+        }
+      }
+    },
+    {
+      "id": "opencode",
+      "name": "OpenCode CLI",
+      "executor": "local",
+      "transport": "acp",
+      "description": "Vendor-neutral OpenCode ACP executor with task-scoped provider and model selection",
+      "expertise": [
+        "code-generation",
+        "code-review",
+        "debugging",
+        "refactoring",
+        "testing",
+        "shell-commands",
+        "file-editing",
+        "vendor-neutral",
+        "multi-provider"
+      ],
+      "best_for": [
+        "Model-comparison tasks requiring one neutral harness",
+        "Repository-aware implementation across independent providers",
+        "Task-scoped provider and model pinning",
+        "Cross-provider failover without changing global configuration"
+      ],
+      "config": {
+        "defaultTimeout": 600,
+        "model": "synthetic-direct/hf:zai-org/GLM-5.3-Flash",
+        "envVars": {
+          "SWARM_OPENCODE_ENABLED": "Set to 1 to include OpenCode in automatic swarm routing",
+          "SF_OPENCODE_ENABLED": "Set to 1 to include OpenCode in the Software Factory chain"
+        }
+      },
+      "capabilities": {
+        "fileRead": true,
+        "fileWrite": true,
+        "shellExec": true,
+        "webResearch": true,
+        "imageGen": false,
+        "mcp": true,
+        "streaming": true
+      },
+      "healthCheck": {
+        "command": "opencode --version",
+        "expectedPattern": "1.",
+        "description": "Verify OpenCode CLI and native ACP command are installed"
+      },
+      "acp": {
+        "adapterBin": "opencode",
+        "adapterArgs": [
+          "acp",
+          "--pure"
+        ],
+        "modelSelection": {
+          "method": "session-config",
+          "configId": "model",
+          "category": "model",
+          "providerSeparator": "/"
+        },
+        "endpointClass": "opencode-provider",
+        "providerTemplates": {
+          "opencode": {
+            "endpointClass": "opencode-zen",
+            "credentialEnv": "OPENCODE_API_KEY"
+          },
+          "synthetic-direct": {
+            "endpointClass": "synthetic-direct",
+            "credentialEnv": "SYNTHETIC_API_KEY",
+            "launchConfig": {
+              "envVar": "OPENCODE_CONFIG_CONTENT",
+              "value": {
+                "provider": {
+                  "synthetic-direct": {
+                    "name": "Synthetic.new",
+                    "npm": "@ai-sdk/openai-compatible",
+                    "env": [
+                      "SYNTHETIC_API_KEY"
+                    ],
+                    "options": {
+                      "baseURL": "https://api.synthetic.new/openai/v1",
+                      "apiKey": "{env:SYNTHETIC_API_KEY}"
+                    },
+                    "models": {
+                      "hf:zai-org/GLM-5.3-Flash": {
+                        "name": "GLM-5.3-Flash",
+                        "family": "glm",
+                        "tool_call": true
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "xai": {
+            "endpointClass": "xai-direct",
+            "credentialEnv": "XAI_API_KEY"
+          },
+          "openrouter": {
+            "endpointClass": "openrouter-gateway",
+            "credentialEnv": "OPENROUTER_API_KEY"
+          },
+          "deepseek": {
+            "endpointClass": "deepseek-direct",
+            "credentialEnv": "DEEPSEEK_API_KEY"
+          }
+        },
+        "mcpConfig": {
+          "configPath": ".mcp.json",
+          "includeShared": true,
+          "includeZo": true,
+          "includeMemoryBriefing": true
+        }
+      },
+      "modelRouter": {
+        "defaultModel": "synthetic-direct/hf:zai-org/GLM-5.3-Flash",
+        "fallbackModel": "synthetic-direct/hf:zai-org/GLM-5.3-Flash",
+        "passthrough": true,
+        "rejectPrefixes": [
+          "byok:"
+        ],
+        "tierMap": {
+          "trivial": "synthetic-direct/hf:zai-org/GLM-5.3-Flash",
+          "simple": "synthetic-direct/hf:zai-org/GLM-5.3-Flash",
+          "moderate": "synthetic-direct/hf:zai-org/GLM-5.3-Flash",
+          "complex": "synthetic-direct/hf:zai-org/GLM-5.3-Flash",
+          "light": "synthetic-direct/hf:zai-org/GLM-5.3-Flash",
+          "mid": "synthetic-direct/hf:zai-org/GLM-5.3-Flash",
+          "heavy": "synthetic-direct/hf:zai-org/GLM-5.3-Flash",
+          "failover": "synthetic-direct/hf:zai-org/GLM-5.3-Flash",
+          "swarm-light": "synthetic-direct/hf:zai-org/GLM-5.3-Flash",
+          "swarm-mid": "synthetic-direct/hf:zai-org/GLM-5.3-Flash",
+          "swarm-heavy": "synthetic-direct/hf:zai-org/GLM-5.3-Flash",
+          "swarm-failover": "synthetic-direct/hf:zai-org/GLM-5.3-Flash"
+        }
+      },
+      "sdk": {
+        "ragCorpus": "opencode-sdk",
+        "package": "@opencode-ai/sdk",
+        "version": "1.18.4",
+        "runtimeVersion": "1.18.4",
+        "language": "typescript",
+        "sourceType": "official-sdk",
+        "reference": "packages/swarm/docs/executors/identities/opencode.md",
+        "surfaces": [
+          "client-server",
+          "sessions",
+          "messages",
+          "tools",
+          "files",
+          "events",
+          "providers",
+          "projects"
+        ],
+        "runtimeStatus": "production-runtime",
+        "promotionRequired": false
+      },
+      "rollout": {
+        "autoRoutingEnv": "SWARM_OPENCODE_ENABLED",
+        "factoryRoutingEnv": "SF_OPENCODE_ENABLED"
+      },
+      "modelFamilies": [
+        {
+          "name": "openrouter-agentic",
+          "sourcePrefixes": [
+            "anthropic/",
+            "google/",
+            "openai/",
+            "x-ai/",
+            "z-ai/",
+            "moonshotai/",
+            "deepseek/",
+            "meta-llama/"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "kimi",
+      "name": "Kimi Code CLI",
+      "executor": "local",
+      "bridge": "packages/swarm/src/executor/bridges/kimi-bridge.sh",
+      "description": "Moonshot AI Kimi Code CLI with native ACP, large-context coding, multimodal input, MCP forwarding, and a one-shot bridge fallback",
+      "expertise": [
+        "code-generation",
+        "code-review",
+        "debugging",
+        "refactoring",
+        "testing",
+        "large-context",
+        "multimodal",
+        "web-research",
+        "mcp"
+      ],
+      "best_for": [
+        "Large-context repository analysis",
+        "Long-running implementation and debugging tasks",
+        "Multimodal coding tasks",
+        "ACP sessions that need task-scoped MCP servers",
+        "Independent Moonshot-model review"
+      ],
+      "config": {
+        "defaultTimeout": 600,
+        "model": "kimi-k3",
+        "envVars": {
+          "KIMI_MODEL_API_KEY": "Optional explicit Kimi-compatible provider key",
+          "KIMI_MODEL_BASE_URL": "Optional OpenAI-compatible provider base URL",
+          "OPENROUTER_API_KEY": "Preferred fallback for the default OpenRouter Kimi K3 endpoint",
+          "KIMI_API_KEY": "Optional direct Kimi key when no explicit model key or OpenRouter key is configured",
+          "KIMI_MODEL_NAME": "Optional Kimi model override (default: moonshotai/kimi-k3)",
+          "KIMI_TIMEOUT": "Bridge timeout in seconds (default: 600)"
+        }
+      },
+      "healthCheck": {
+        "command": "kimi --version",
+        "expectedPattern": "0.",
+        "description": "Verify the official Kimi Code CLI is installed"
+      },
+      "transport": "acp",
+      "acp": {
+        "adapterBin": "bash",
+        "adapterArgs": [
+          "packages/swarm/src/executor/bridges/kimi-bridge.sh",
+          "--acp"
+        ],
+        "mcpConfig": {
+          "configPath": ".mcp.json",
+          "includeShared": true,
+          "includeZo": true,
+          "includeMemoryBriefing": true
+        },
+        "modelSelection": {
+          "method": "session-config",
+          "configId": "model",
+          "category": "model"
+        },
+        "endpointClass": "kimi-compatible"
+      },
+      "modelRouter": {
+        "defaultModel": "kimi-k3",
+        "fallbackModel": "kimi-k3",
+        "acceptedPrefixes": [
+          "kimi-",
+          "synthetic/",
+          "hf:moonshotai/",
+          "moonshotai/"
+        ],
+        "tierMap": {
+          "trivial": "kimi-k3",
+          "simple": "kimi-k3",
+          "moderate": "kimi-k3",
+          "complex": "kimi-k3",
+          "light": "kimi-k3",
+          "mid": "kimi-k3",
+          "heavy": "kimi-k3",
+          "failover": "kimi-k3",
+          "swarm-light": "kimi-k3",
+          "swarm-mid": "kimi-k3",
+          "swarm-heavy": "kimi-k3",
+          "swarm-failover": "kimi-k3"
+        }
+      },
+      "sdk": {
+        "ragCorpus": "kimi-sdk",
+        "package": "kimi-sdk",
+        "version": "0.2.1",
+        "runtimeVersion": "0.30.0",
+        "language": "python",
+        "sourceType": "official-sdk",
+        "reference": "packages/swarm/docs/executors/identities/kimi.md",
+        "surfaces": [
+          "async-generation",
+          "streaming",
+          "typed-toolsets",
+          "step-agent-loop",
+          "multimodal-content",
+          "file-upload",
+          "usage-accounting"
+        ],
+        "runtimeStatus": "indexed-reference",
+        "promotionRequired": true
+      },
+      "capabilities": {
+        "fileRead": true,
+        "fileWrite": true,
+        "shellExec": true,
+        "webResearch": true,
+        "imageGen": false,
+        "mcp": true,
+        "streaming": true
+      },
+      "modelFamilies": [
+        {
+          "name": "moonshot-kimi",
+          "sourcePrefixes": [
+            "moonshotai/"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pi",
+      "name": "Pi Coding Agent",
+      "executor": "local",
+      "bridge": "packages/swarm/src/executor/bridges/pi-bridge.sh",
+      "description": "Model-neutral Pi coding agent in isolated noninteractive bridge mode with shared memory MCPs, authenticated Zo tools, memory briefings, and task-scoped model selection",
+      "expertise": [
+        "code-generation",
+        "code-review",
+        "debugging",
+        "refactoring",
+        "testing",
+        "shell-commands",
+        "file-editing",
+        "rapid-prototyping",
+        "multi-provider",
+        "memory",
+        "mcp"
+      ],
+      "best_for": [
+        "Fast repository-aware implementation",
+        "Minimal-harness model comparisons",
+        "Focused code review and debugging",
+        "Ephemeral tasks that should not persist a session",
+        "Cross-provider coding tasks",
+        "Tasks that need workspace memory or authenticated Zo tools"
+      ],
+      "config": {
+        "defaultTimeout": 600,
+        "model": "openrouter/moonshotai/kimi-k3",
+        "envVars": {
+          "PI_MODEL": "Optional provider/model override (default: openrouter/moonshotai/kimi-k3)",
+          "PI_TIMEOUT": "Bridge timeout in seconds (default: 600)",
+          "PI_MCP_CONFIG_PATH": "Optional shared MCP config override (default: nearest .mcp.json)",
+          "PI_MCP_EXTENSION_PATH": "Optional pi-mcp-adapter entrypoint override",
+          "OPENROUTER_API_KEY": "Required for the default OpenRouter Kimi K3 route",
+          "KIMI_API_KEY": "Required only when explicitly routing Pi through kimi-coding",
+          "MEMORY_GATE_URL": "Optional memory-gate endpoint override"
+        }
+      },
+      "healthCheck": {
+        "command": "pi --version",
+        "expectedPattern": "0.",
+        "description": "Verify the official Pi coding agent is installed"
+      },
+      "transport": "bridge",
+      "modelRouter": {
+        "defaultModel": "openrouter/moonshotai/kimi-k3",
+        "fallbackModel": "openrouter/moonshotai/kimi-k3",
+        "passthrough": true,
+        "rejectPrefixes": [
+          "byok:"
+        ],
+        "tierMap": {
+          "trivial": "openrouter/moonshotai/kimi-k3",
+          "simple": "openrouter/moonshotai/kimi-k3",
+          "moderate": "openrouter/moonshotai/kimi-k3",
+          "complex": "openrouter/moonshotai/kimi-k3",
+          "light": "openrouter/moonshotai/kimi-k3",
+          "mid": "openrouter/moonshotai/kimi-k3",
+          "heavy": "openrouter/moonshotai/kimi-k3",
+          "failover": "openrouter/moonshotai/kimi-k3",
+          "swarm-light": "openrouter/moonshotai/kimi-k3",
+          "swarm-mid": "openrouter/moonshotai/kimi-k3",
+          "swarm-heavy": "openrouter/moonshotai/kimi-k3",
+          "swarm-failover": "openrouter/moonshotai/kimi-k3"
+        }
+      },
+      "sdk": {
+        "ragCorpus": "pi-sdk",
+        "package": "@earendil-works/pi-coding-agent",
+        "version": "0.82.1",
+        "runtimeVersion": "0.73.1",
+        "language": "typescript",
+        "sourceType": "runtime-package",
+        "reference": "packages/swarm/docs/executors/identities/pi.md",
+        "surfaces": [
+          "agent-sessions",
+          "model-runtime",
+          "custom-tools",
+          "extensions",
+          "skills",
+          "context-files",
+          "event-streaming",
+          "print-mode",
+          "json-rpc"
+        ],
+        "runtimeStatus": "indexed-reference",
+        "promotionRequired": true
+      },
+      "capabilities": {
+        "fileRead": true,
+        "fileWrite": true,
+        "shellExec": true,
+        "webResearch": true,
+        "imageGen": false,
+        "mcp": true,
+        "streaming": false
+      },
+      "modelFamilies": [
+        {
+          "name": "openrouter-kimi",
+          "sourcePrefixes": [
+            "moonshotai/"
+          ]
+        }
+      ]
+    }
+  ],
+  "deferredExecutors": [],
+  "services": [
+    {
+      "id": "mimir",
+      "name": "Mimir Memory Sage",
+      "executor": "local",
+      "description": "Mimir 2nd Brain memory sage \u2014 queries the memory gate for historical context, synthesis, and institutional knowledge. Used as a DAG node to inject context into downstream tasks.",
+      "expertise": [
+        "memory",
+        "context",
+        "recall",
+        "history",
+        "synthesis",
+        "knowledge",
+        "institutional-memory"
+      ],
+      "best_for": [
+        "Injecting historical context into DAG tasks",
+        "Cross-session project recall",
+        "Institutional knowledge validation",
+        "Eval judge for semantic drift detection"
+      ],
+      "config": {
+        "defaultTimeout": 15,
+        "envVars": {
+          "MIMIR_GATE_URL": "Memory gate daemon URL (default: http://localhost:7820)"
+        }
+      },
+      "healthCheck": {
+        "command": "curl -sf http://localhost:7820/health | grep -q mimir",
+        "expectedPattern": "mimir",
+        "description": "Verify memory gate is running and mimir backend is configured"
+      },
+      "transport": "mimir"
+    }
+  ]
+}

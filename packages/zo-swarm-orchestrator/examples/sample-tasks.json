@@ -1,0 +1,14 @@
+[
+  {
+    "id": "test-agent-1",
+    "persona": "frontend-developer",
+    "task": "Analyze the performance of a simple React component. Provide 3 optimization tips in 2 sentences each.",
+    "priority": "medium"
+  },
+  {
+    "id": "test-agent-2", 
+    "persona": "security-engineer",
+    "task": "List 3 security headers every website should have. Explain each in one sentence.",
+    "priority": "medium"
+  }
+]

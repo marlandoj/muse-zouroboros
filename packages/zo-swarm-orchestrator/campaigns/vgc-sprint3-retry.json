@@ -1,0 +1,185 @@
+[
+  {
+    "id": "s3-cart-toast",
+    "persona": "claude-code",
+    "task": "TASK: Add an add-to-cart confirmation toast notification to the Verdant Goods Co. store.\n\nCONTEXT: React SPA at /home/workspace/verdant-goods-store. Sprint 3 task S3-2.5. The app already uses `sonner` for toasts (imported in App.tsx as `<Toaster />`). The cart logic is in client/src/contexts/CartContext.tsx. The `addToCart` function in CartContext does not currently show any feedback.\n\nThe ProductDetail page has an 'Add to Cart' button that calls `addToCart(product, quantity)`. The Shop page has product cards but they link to product detail pages.\n\nSTEPS:\n1. Read /home/workspace/verdant-goods-store/client/src/contexts/CartContext.tsx\n2. Read /home/workspace/verdant-goods-store/client/src/pages/ProductDetail.tsx to see how addToCart is called\n3. Modify the `addToCart` function in CartContext.tsx to trigger a sonner toast after adding the item:\n   - Import `toast` from 'sonner' at the top of CartContext.tsx\n   - After the setItems call in addToCart, call:\n     ```\n     toast(`${product.name} added to cart`, {\n       description: `Quantity: ${quantity}`,\n       action: {\n         label: 'View Cart',\n         onClick: () => window.location.href = '/cart',\n       },\n       duration: 3000,\n     });\n     ```\n4. Run: cd /home/workspace/verdant-goods-store && pnpm run check && pnpm run build\n5. Report: what was changed, build status\n\nIMPORTANT:\n- Use sonner's `toast()` function, NOT react-hot-toast or any other library\n- The toast should auto-dismiss after 3 seconds\n- Include a 'View Cart' action button in the toast\n- The toast should show the product name\n- Do NOT modify the Toaster component props in App.tsx\n- Keep it minimal - no thumbnail image in the toast (sonner doesn't support that easily)\n- Build must pass",
+    "priority": "low",
+    "timeoutSeconds": 300,
+    "expectedMutations": [
+      {
+        "file": "/home/workspace/verdant-goods-store/client/src/contexts/CartContext.tsx",
+        "contains": "toast"
+      }
+    ],
+    "memoryStrategy": "none",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "ux",
+      "priority": "low",
+      "tags": [
+        "toast",
+        "cart",
+        "feedback"
+      ]
+    }
+  },
+  {
+    "id": "s3-newsletter-cta",
+    "persona": "claude-code",
+    "task": "TASK: Improve the newsletter CTA value proposition in the Verdant Goods Co. store footer.\n\nCONTEXT: React SPA at /home/workspace/verdant-goods-store. Sprint 3 task S3-4.1. The current newsletter section in the footer (Layout.tsx) has:\n- Title: \"Join the Ritual\"\n- Description: \"Receive grooming tips and early access to new batches.\"\n\nThis is generic and doesn't give a compelling reason to subscribe.\n\nSTEPS:\n1. Read /home/workspace/verdant-goods-store/client/src/components/Layout.tsx\n2. Find the newsletter section in the footer (it's the last column in the grid, with heading \"Join the Ritual\")\n3. Update the copy to be more compelling:\n   - Keep the heading \"Join the Ritual\" (it fits the brand)\n   - Change the description to: \"Get 10% off your first order, ancestral skincare tips, and early access to new small-batch releases. Monthly wisdom, never spam.\"\n   - This adds: a concrete incentive (10% off), specific value (ancestral skincare tips), frequency expectation (monthly), and anti-spam assurance\n4. Do NOT change the NewsletterForm component, the form functionality, or the privacy policy link\n5. Do NOT change any styling or layout\n6. Run: cd /home/workspace/verdant-goods-store && pnpm run check && pnpm run build\n7. Report: exact text changed, build status\n\nIMPORTANT:\n- Only change the <p> tag text between the h4 heading and the <NewsletterForm /> component\n- Keep the consent/privacy text below the form as-is\n- Build must pass",
+    "priority": "medium",
+    "timeoutSeconds": 180,
+    "expectedMutations": [
+      {
+        "file": "/home/workspace/verdant-goods-store/client/src/components/Layout.tsx",
+        "contains": "10% off"
+      }
+    ],
+    "memoryStrategy": "none",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "marketing",
+      "priority": "medium",
+      "tags": [
+        "newsletter",
+        "cta",
+        "copy"
+      ]
+    }
+  },
+  {
+    "id": "s3-sentry-setup",
+    "persona": "claude-code",
+    "task": "TASK: Add Sentry error monitoring to the Verdant Goods Co. store (client-side only for now).\n\nCONTEXT: React SPA at /home/workspace/verdant-goods-store. Sprint 3 task S3-5.1. No error monitoring currently exists. The app uses React 19, Vite 7, and is deployed as a static SPA with an Express server.\n\nSTEPS:\n1. Install Sentry: cd /home/workspace/verdant-goods-store && pnpm add @sentry/react\n2. Read /home/workspace/verdant-goods-store/client/src/main.tsx\n3. Add Sentry initialization in main.tsx BEFORE ReactDOM.createRoot:\n   ```typescript\n   import * as Sentry from '@sentry/react';\n   \n   if (import.meta.env.VITE_SENTRY_DSN) {\n     Sentry.init({\n       dsn: import.meta.env.VITE_SENTRY_DSN,\n       environment: import.meta.env.MODE,\n       integrations: [\n         Sentry.browserTracingIntegration(),\n         Sentry.replayIntegration({ maskAllText: false, blockAllMedia: false }),\n       ],\n       tracesSampleRate: 0.1,\n       replaysSessionSampleRate: 0.1,\n       replaysOnErrorSampleRate: 1.0,\n     });\n   }\n   ```\n4. Read /home/workspace/verdant-goods-store/client/src/components/ErrorBoundary.tsx\n5. Wrap the ErrorBoundary component with Sentry.withErrorBoundary or integrate Sentry.captureException in the componentDidCatch:\n   - In the catch handler, add: `Sentry.captureException(error, { extra: { componentStack: errorInfo?.componentStack } });`\n   - Import Sentry at the top of ErrorBoundary.tsx\n6. Add Vite source map upload plugin:\n   - pnpm add -D @sentry/vite-plugin\n   - Read /home/workspace/verdant-goods-store/vite.config.ts\n   - Add the sentryVitePlugin to the plugins array (conditionally, only when SENTRY_AUTH_TOKEN env is set):\n     ```typescript\n     import { sentryVitePlugin } from '@sentry/vite-plugin';\n     // In plugins array, at the end:\n     ...(process.env.SENTRY_AUTH_TOKEN ? [sentryVitePlugin({\n       org: process.env.SENTRY_ORG || 'verdant-goods',\n       project: process.env.SENTRY_PROJECT || 'verdant-goods-store',\n       authToken: process.env.SENTRY_AUTH_TOKEN,\n     })] : []),\n     ```\n   - Also add `build: { sourcemap: true }` if not already present (merge with existing build config)\n7. Run: cd /home/workspace/verdant-goods-store && pnpm run check && pnpm run build\n8. Report: files modified, build status, instructions for user to set VITE_SENTRY_DSN\n\nIMPORTANT:\n- Sentry init is gated behind VITE_SENTRY_DSN env var - it does nothing if not set\n- Source map plugin is gated behind SENTRY_AUTH_TOKEN - build works fine without it\n- Do NOT add sentry to the server/index.ts (server-side monitoring deferred)\n- tracesSampleRate 0.1 = 10% of transactions (cost-conscious)\n- Build MUST pass even without Sentry DSN configured",
+    "priority": "high",
+    "timeoutSeconds": 600,
+    "expectedMutations": [
+      {
+        "file": "/home/workspace/verdant-goods-store/client/src/main.tsx",
+        "contains": "Sentry"
+      },
+      {
+        "file": "/home/workspace/verdant-goods-store/package.json",
+        "contains": "@sentry/react"
+      }
+    ],
+    "memoryStrategy": "none",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "infrastructure",
+      "priority": "high",
+      "tags": [
+        "sentry",
+        "monitoring",
+        "error-tracking"
+      ]
+    }
+  },
+  {
+    "id": "s3-uptime-monitor",
+    "persona": "claude-code",
+    "task": "TASK: Set up uptime monitoring for the Verdant Goods Co. store using a Zo scheduled agent.\n\nCONTEXT: Sprint 3 task S3-5.3. The production site is at https://verdantgoods.com. We need to monitor homepage, /shop, /api/csrf-token (as a health check endpoint), and /sitemap.xml. Since we can't install external services easily, we'll create a monitoring script + Zo agent.\n\nSTEPS:\n1. Create a monitoring script at /home/workspace/Scripts/vgc-uptime-check.sh:\n   ```bash\n   #!/usr/bin/env bash\n   set -euo pipefail\n   \n   ENDPOINTS=(\n     \"https://verdantgoods.com|Homepage\"\n     \"https://verdantgoods.com/shop|Shop\"\n     \"https://verdantgoods.com/api/csrf-token|API Health\"\n     \"https://verdantgoods.com/sitemap.xml|Sitemap\"\n   )\n   \n   FAILURES=\"\"\n   RESULTS=\"\"\n   \n   for entry in \"${ENDPOINTS[@]}\"; do\n     url=\"${entry%%|*}\"\n     name=\"${entry##*|}\"\n     \n     status=$(curl -s -o /dev/null -w '%{http_code}' --connect-timeout 10 --max-time 30 \"$url\" || echo \"000\")\n     time=$(curl -s -o /dev/null -w '%{time_total}' --connect-timeout 10 --max-time 30 \"$url\" 2>/dev/null || echo \"0\")\n     \n     if [ \"$status\" -ge 200 ] && [ \"$status\" -lt 400 ]; then\n       RESULTS=\"$RESULTS\\n OK | $name | ${status} | ${time}s\"\n     else\n       RESULTS=\"$RESULTS\\n FAIL | $name | ${status} | ${time}s\"\n       FAILURES=\"$FAILURES $name($status)\"\n     fi\n   done\n   \n   echo -e \"VGC Uptime Check - $(date -u +'%Y-%m-%d %H:%M UTC')\\n$RESULTS\"\n   \n   if [ -n \"$FAILURES\" ]; then\n     echo \"\\nFAILURES DETECTED:$FAILURES\"\n     exit 1\n   fi\n   \n   echo \"\\nAll endpoints healthy.\"\n   ```\n2. Make it executable: chmod +x /home/workspace/Scripts/vgc-uptime-check.sh\n3. Test the script: bash /home/workspace/Scripts/vgc-uptime-check.sh\n4. Report: script output showing all endpoints checked, their status codes and response times\n\nIMPORTANT:\n- The script should exit 0 on all-healthy, exit 1 on any failure\n- Use curl with connect-timeout and max-time to avoid hangs\n- Do NOT create a Zo agent (the user will configure alerts separately)\n- Just create and test the monitoring script",
+    "priority": "medium",
+    "timeoutSeconds": 180,
+    "expectedMutations": [
+      {
+        "file": "/home/workspace/Scripts/vgc-uptime-check.sh",
+        "contains": "verdantgoods"
+      }
+    ],
+    "memoryStrategy": "none",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "infrastructure",
+      "priority": "medium",
+      "tags": [
+        "uptime",
+        "monitoring",
+        "health-check"
+      ]
+    }
+  },
+  {
+    "id": "s3-security-audit-script",
+    "persona": "claude-code",
+    "task": "TASK: Create an automated weekly security header audit script for the Verdant Goods Co. store.\n\nCONTEXT: Sprint 3 task S3-5.4. The site is at https://verdantgoods.com. The server already sets security headers (CSP, HSTS, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, X-XSS-Protection, Permissions-Policy) in server/index.ts.\n\nSTEPS:\n1. Create a script at /home/workspace/Scripts/vgc-security-headers-audit.sh:\n   ```bash\n   #!/usr/bin/env bash\n   set -euo pipefail\n   \n   URL=\"https://verdantgoods.com\"\n   REPORT_DIR=\"/home/workspace/Reports/security-headers\"\n   mkdir -p \"$REPORT_DIR\"\n   DATE=$(date -u +'%Y-%m-%d')\n   REPORT=\"$REPORT_DIR/audit-$DATE.md\"\n   \n   echo \"# Security Headers Audit - $DATE\" > \"$REPORT\"\n   echo \"\" >> \"$REPORT\"\n   echo \"**URL:** $URL\" >> \"$REPORT\"\n   echo \"\" >> \"$REPORT\"\n   \n   HEADERS=$(curl -sI --connect-timeout 10 --max-time 30 \"$URL\")\n   \n   REQUIRED_HEADERS=(\n     \"strict-transport-security\"\n     \"content-security-policy\"\n     \"x-frame-options\"\n     \"x-content-type-options\"\n     \"referrer-policy\"\n     \"x-xss-protection\"\n     \"permissions-policy\"\n   )\n   \n   PASS=0\n   FAIL=0\n   \n   echo \"| Header | Status | Value |\" >> \"$REPORT\"\n   echo \"|--------|--------|-------|\" >> \"$REPORT\"\n   \n   for header in \"${REQUIRED_HEADERS[@]}\"; do\n     value=$(echo \"$HEADERS\" | grep -i \"^$header:\" | head -1 | sed 's/^[^:]*: //' | tr -d '\\r')\n     if [ -n \"$value\" ]; then\n       echo \"| $header | PASS | $value |\" >> \"$REPORT\"\n       ((PASS++))\n     else\n       echo \"| $header | **MISSING** | - |\" >> \"$REPORT\"\n       ((FAIL++))\n     fi\n   done\n   \n   echo \"\" >> \"$REPORT\"\n   echo \"## Summary\" >> \"$REPORT\"\n   echo \"- **Passed:** $PASS/${#REQUIRED_HEADERS[@]}\" >> \"$REPORT\"\n   echo \"- **Missing:** $FAIL/${#REQUIRED_HEADERS[@]}\" >> \"$REPORT\"\n   \n   # Check for x-powered-by (should be absent)\n   if echo \"$HEADERS\" | grep -qi \"^x-powered-by:\"; then\n     echo \"- **WARNING:** X-Powered-By header is exposed (should be removed)\" >> \"$REPORT\"\n   else\n     echo \"- X-Powered-By correctly hidden\" >> \"$REPORT\"\n   fi\n   \n   echo \"\" >> \"$REPORT\"\n   echo \"Report saved to: $REPORT\"\n   cat \"$REPORT\"\n   \n   if [ $FAIL -gt 0 ]; then\n     exit 1\n   fi\n   ```\n2. Make it executable: chmod +x /home/workspace/Scripts/vgc-security-headers-audit.sh\n3. Test the script: bash /home/workspace/Scripts/vgc-security-headers-audit.sh\n4. Report: full audit results\n\nIMPORTANT:\n- The script should output a markdown report AND save it to Reports/security-headers/\n- Exit 0 if all headers present, exit 1 if any missing\n- Do NOT create a Zo agent for scheduling (user will configure separately)\n- Just create and test the script",
+    "priority": "low",
+    "timeoutSeconds": 180,
+    "expectedMutations": [
+      {
+        "file": "/home/workspace/Scripts/vgc-security-headers-audit.sh",
+        "contains": "strict-transport-security"
+      }
+    ],
+    "memoryStrategy": "none",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "security",
+      "priority": "low",
+      "tags": [
+        "security-headers",
+        "audit",
+        "monitoring"
+      ]
+    }
+  },
+  {
+    "id": "s3-clarity-setup",
+    "persona": "claude-code",
+    "task": "TASK: Add Microsoft Clarity session recording to the Verdant Goods Co. store, gated behind cookie consent.\n\nCONTEXT: React SPA at /home/workspace/verdant-goods-store. Sprint 3 task S3-3.3. The app already has a cookie consent system. The ConsentBanner component is at client/src/components/ConsentBanner.tsx. The app uses Consent Mode v2.\n\nSTEPS:\n1. Read /home/workspace/verdant-goods-store/client/src/components/ConsentBanner.tsx to understand the consent system\n2. Read /home/workspace/verdant-goods-store/client/index.html\n3. Read /home/workspace/verdant-goods-store/client/src/main.tsx\n4. Add Clarity initialization that respects cookie consent. Create a new component at /home/workspace/verdant-goods-store/client/src/components/ClarityAnalytics.tsx:\n   ```typescript\n   import { useEffect } from 'react';\n   \n   declare global {\n     interface Window {\n       clarity: (...args: any[]) => void;\n     }\n   }\n   \n   export function ClarityAnalytics() {\n     useEffect(() => {\n       const clarityId = import.meta.env.VITE_CLARITY_ID;\n       if (!clarityId) return;\n       \n       // Check if analytics consent was given\n       const consent = localStorage.getItem('cookie-consent');\n       if (!consent) return;\n       try {\n         const parsed = JSON.parse(consent);\n         if (!parsed.analytics) return;\n       } catch { return; }\n       \n       // Load Clarity script\n       const script = document.createElement('script');\n       script.type = 'text/javascript';\n       script.async = true;\n       script.innerHTML = `\n         (function(c,l,a,r,i,t,y){\n           c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};\n           t=l.createElement(r);t.async=1;t.src=\"https://www.clarity.ms/tag/\"+i;\n           y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);\n         })(window, document, \"clarity\", \"script\", \"${clarityId}\");\n       `;\n       document.head.appendChild(script);\n       \n       // Mask sensitive form inputs\n       const maskInterval = setInterval(() => {\n         if (window.clarity) {\n           window.clarity('set', 'mask', 'input[type=\"password\"], input[type=\"email\"], input[name=\"name\"], input[name=\"cardNumber\"]');\n           clearInterval(maskInterval);\n         }\n       }, 1000);\n       \n       return () => {\n         clearInterval(maskInterval);\n         // Don't remove the script on unmount - Clarity handles its own lifecycle\n       };\n     }, []);\n     \n     return null;\n   }\n   ```\n5. Read /home/workspace/verdant-goods-store/client/src/App.tsx\n6. Add the ClarityAnalytics component to App.tsx, inside the providers but outside the Router:\n   - Import: `import { ClarityAnalytics } from './components/ClarityAnalytics';`\n   - Place `<ClarityAnalytics />` after `<ConsentBanner />`\n7. Run: cd /home/workspace/verdant-goods-store && pnpm run check && pnpm run build\n8. Report: files created/modified, build status, instructions for user to set VITE_CLARITY_ID\n\nIMPORTANT:\n- Clarity is ONLY loaded when analytics consent is granted via cookie banner\n- If VITE_CLARITY_ID is not set, nothing loads (no errors)\n- Mask sensitive form fields (checkout inputs, email, name)\n- Do NOT add the script directly to index.html - use the React component approach for consent gating\n- Build must pass",
+    "priority": "low",
+    "timeoutSeconds": 300,
+    "expectedMutations": [
+      {
+        "file": "/home/workspace/verdant-goods-store/client/src/components/ClarityAnalytics.tsx",
+        "contains": "clarity"
+      },
+      {
+        "file": "/home/workspace/verdant-goods-store/client/src/App.tsx",
+        "contains": "ClarityAnalytics"
+      }
+    ],
+    "memoryStrategy": "none",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "analytics",
+      "priority": "low",
+      "tags": [
+        "clarity",
+        "session-recording",
+        "heatmaps"
+      ]
+    }
+  },
+  {
+    "id": "s3-final-build-deploy",
+    "persona": "claude-code",
+    "task": "TASK: Run the final build and deploy the Verdant Goods Co. store with all Sprint 3 changes.\n\nCONTEXT: React SPA at /home/workspace/verdant-goods-store. All Sprint 3 code changes should now be applied. Need to: verify TypeScript, build, and restart the production service.\n\nSTEPS:\n1. cd /home/workspace/verdant-goods-store\n2. Run TypeScript check: pnpm run check\n   - If errors, fix them (read the error messages, find the files, fix the issues)\n   - Re-run check until 0 errors\n3. Run production build: pnpm run build\n   - If errors, fix them\n   - Re-run build until success\n4. List the dist/ output to verify:\n   - ls -la dist/\n   - ls -la dist/public/\n   - Report total dist size\n5. After successful build, deploy by restarting the Zo service:\n   - Create a file at /home/workspace/verdant-goods-store/.deploy-marker with content: timestamp and 'Sprint 3 deployment'\n   - The service (svc_p0qfXv2iDcI) runs `node dist/index.js` from /home/workspace/verdant-goods-store\n   - The service will pick up the new dist/ on next restart\n6. Verify the production site is accessible:\n   - curl -s -o /dev/null -w '%{http_code}' https://verdantgoods.com\n   - curl -s -o /dev/null -w '%{http_code}' https://verdantgoods.com/shop\n7. Report:\n   - TypeScript check: PASS/FAIL\n   - Build: PASS/FAIL\n   - Bundle sizes (main JS chunk, CSS)\n   - Deployment status\n   - Any warnings\n\nIMPORTANT:\n- Fix ALL TypeScript errors before building\n- Fix ALL build errors\n- Do NOT modify business logic - only fix compilation issues\n- If a Sprint 3 change introduced a type error, fix it minimally\n- Report the final dist/ sizes for comparison with previous sprints",
+    "priority": "critical",
+    "dependsOn": [
+      "s3-newsletter-cta",
+      "s3-cart-toast",
+      "s3-sentry-setup",
+      "s3-clarity-setup"
+    ],
+    "timeoutSeconds": 600,
+    "expectedMutations": [
+      {
+        "file": "/home/workspace/verdant-goods-store/.deploy-marker",
+        "contains": "Sprint 3"
+      }
+    ],
+    "contextAccess": "read",
+    "memoryStrategy": "hierarchical",
+    "outputToMemory": true,
+    "memoryMetadata": {
+      "category": "validation",
+      "priority": "critical",
+      "tags": [
+        "build",
+        "deploy",
+        "verification"
+      ]
+    }
+  }
+]

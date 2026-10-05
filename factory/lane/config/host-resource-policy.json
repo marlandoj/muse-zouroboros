@@ -1,0 +1,1 @@
+{"enabled":true,"executor_cpu_set":"0-1","executor_memory_limit_mib":2048,"executor_nice":10,"executor_process_limit":256,"max_concurrent_executor_trees":1,"min_available_memory_mib":1024,"version":1}

@@ -1,0 +1,135 @@
+# Seed Specification
+# Generated: 2026-07-01
+# ID: seed-sf001-conveyor
+
+id: "seed-sf001-conveyor"
+created: "2026-07-01T17:15:00Z"
+status: approved
+
+goal: "Build the autonomous intake loop (conveyor): a scheduled puller that queries a dedicated Linear project for factory-ready tickets, validates ticket contracts, routes each through the swarm decision gate, executes (DIRECT or full swarm), and ships staged commits / shadow PRs for operator approval — with zero unsafe auto-executions during a ≥1 week shadow validation."
+
+constraints:
+  - "Linear project within a ticket team (named later); puller queries project + 'factory-ready' label"
+  - "Ticket contract: title, acceptance_criteria, target_repo, archetype, repro/area — all mandatory; missing fields bounce to 'needs-triage' with a comment (fail-loud, never silent drop)"
+  - "Decision-gate routing: DIRECT → execute directly; SWARM/FORCE → full pipeline (interview → seed → eval → approve → execute → post-flight → gap audit); SUGGEST → operator judgment (default: proceed direct with note)"
+  - "Two-phase shadow: Phase A dry-run (48–72h, staged commits, no PR) → Phase B shadow PRs (≥4 days, real PRs tagged 'factory-shadow', no auto-merge, no auto-advance); total ≥1 week"
+  - "Zero unsafe auto-executions: no pushes to protected branches, no merges, no deploys — only staged commits (Phase A) or PRs for operator review (Phase B)"
+  - "Poller: hourly scheduled agent, Haiku 4.5 (byok:00000000-0000-4000-8000-000000000001), ≤20 in-flight tickets cap"
+  - "Linear API: GraphQL direct via LINEAR_API_KEY env var (not Bearer), endpoint https://api.linear.app/graphql"
+  - "Swarm execution via /zo/ask API with model_name byok:00000000-0000-4000-8000-00000000000e; ZO_CLIENT_IDENTITY_TOKEN auto-available"
+  - "Concurrency cap: ≤20 child Zo invocations in flight (per zo-ask-api guidance)"
+
+acceptance_criteria:
+  - "Puller queries Linear project for tickets with 'factory-ready' label and returns them as a typed queue"
+  - "Ticket contract validator rejects tickets missing required fields and posts a comment routing them to 'needs-triage' state — zero silent drops"
+  - "Decision gate (swarm-decision-gate.ts) routes each ticket: DIRECT/SWARM/FORCE/SUGGEST with correct exit codes"
+  - "DIRECT tickets execute without swarm overhead; SWARM/FORCE tickets run the full pipeline (interview → seed → eval → execute → post-flight → gap audit)"
+  - "Shadow state machine transitions: idle → dry-run (staged commits, no PR) → shadow-pr (real PRs, factory-shadow tag, no merge) → live; transitions are file-backed and observable"
+  - "≥1 week of shadow operation completes with 0 unsafe auto-executions (verified via audit log)"
+  - "Scheduled agent registered: hourly, Haiku 4.5, [SYS] prefix, ≤20 in-flight cap enforced"
+  - "All new code passes tsc --noEmit with zero errors"
+
+ontology:
+  name: "IntakeConveyor"
+  description: "The autonomous intake loop domain model — the set of entities the conveyor creates, reads, and mutates as it pulls work from Linear and ships it through the pipeline."
+  fields:
+    - name: id
+      type: string
+      description: "Unique identifier (UUID)"
+    - name: IntakeTicket
+      type: "object"
+      description: "A Linear issue pulled from the factory project. Fields: linear_id, title, acceptance_criteria, target_repo, archetype, repro, area, state (factory-ready|needs-triage|in-progress|done|failed)"
+    - name: IntakeRun
+      type: "object"
+      description: "One poller cycle. Fields: run_id, started_at, completed_at, tickets_pulled, tickets_validated, tickets_dispatched, tickets_direct, tickets_swarm, errors[]"
+    - name: PipelineExecution
+      type: "object"
+      description: "One ticket's journey through the pipeline. Fields: execution_id, ticket_id, gate_decision (DIRECT|SWARM|FORCE_SWARM|SUGGEST), seed_path, stage (interview|seed|eval|approved|executing|post-flight|gap-audit|complete|failed), branch_name, pr_number, shadow_phase (dry-run|shadow-pr|live)"
+    - name: ShadowState
+      type: "object"
+      description: "Global shadow-phase tracker. Fields: current_phase (idle|dry-run|shadow-pr|live), phase_started_at, dry_run_started_at, shadow_pr_started_at, transition_log[]"
+
+evaluation_principles:
+  - name: correctness
+    description: "Does the conveyor pull, validate, route, and ship exactly as specified — with correct gate decisions and zero misroutes?"
+    weight: 0.35
+  - name: safety
+    description: "Are there zero unsafe auto-executions? No pushes to protected branches, no merges, no deploys during shadow?"
+    weight: 0.30
+  - name: observability
+    description: "Is every run, execution, and shadow-phase transition file-backed and auditable? Can an operator reconstruct what happened from logs alone?"
+    weight: 0.20
+  - name: completeness
+    description: "Are all 8 acceptance criteria met, with all 7 implementation tasks shipped and wired?"
+    weight: 0.15
+
+exit_conditions:
+  - name: all_ac_met
+    description: "All 8 acceptance criteria satisfied with file evidence"
+    criteria: "AC compliance = 100%"
+  - name: shadow_validated
+    description: "≥1 week of shadow operation with 0 unsafe auto-executions verified via audit log"
+    criteria: "Audit log shows 0 unsafe_auto_execution entries across dry-run + shadow-pr phases"
+  - name: tsc_clean
+    description: "All new TypeScript compiles with zero errors"
+    criteria: "tsc --noEmit exit code 0"
+
+# Implementation tasks with DAG dependencies
+tasks:
+  - id: T1
+    name: "Linear puller"
+    description: "GraphQL query script that fetches factory-ready tickets from the dedicated Linear project. Returns typed IntakeTicket[]. Uses LINEAR_API_KEY (not Bearer). Handles pagination, rate limits, and empty-result fail-loud."
+    file: "scripts/linear-puller.ts"
+    deps: []
+    wave: 1
+
+  - id: T2
+    name: "Ticket contract validator"
+    description: "Validates required fields (title, acceptance_criteria, target_repo, archetype, repro/area). Missing fields → post Linear comment + move ticket to 'needs-triage' state. Never silent drop."
+    file: "scripts/ticket-contract.ts"
+    deps: []
+    wave: 1
+
+  - id: T3
+    name: "Decision-gate dispatcher"
+    description: "For each valid ticket, run swarm-decision-gate.ts --json with the ticket title+description. Parse JSON output (not exit code alone) for 'decision' field: DIRECT → execute directly; SWARM (exit 0, override=null, score>0.45) → full pipeline; FORCE_SWARM (exit 0, override!=null) → full pipeline; SUGGEST (exit 3) → operator judgment (default: proceed direct with note)."
+    file: "scripts/dispatcher.ts"
+    deps: ["T1", "T2"]
+    wave: 2
+
+  - id: T4
+    name: "Swarm execution wrapper"
+    description: "For SWARM/FORCE tickets: call /zo/ask with a self-contained prompt (ticket context + repo + AC + archetype), model_name byok:00000000-0000-4000-8000-00000000000e. Child does interview → seed → eval → execute → post-flight → gap audit. Collects result + branch name. For DIRECT: execute inline. Writes PipelineExecution record."
+    file: "scripts/swarm-exec.ts"
+    deps: ["T3"]
+    wave: 3
+
+  - id: T5
+    name: "Shadow-state machine"
+    description: "File-backed state machine: idle → dry-run (staged commits, no PR) → shadow-pr (real PRs, factory-shadow tag, no merge) → live. Transitions logged to shadow-transition.log. Enforces: no pushes to protected branches, no merges, no deploys during shadow."
+    file: "scripts/shadow-state.ts"
+    deps: ["T4"]
+    wave: 4
+
+  - id: T6
+    name: "Scheduled agent registration"
+    description: "Register hourly [SYS] scheduled agent (Haiku 4.5 byok:00000000-0000-4000-8000-000000000001, [SYS] prefix per naming convention) that invokes the puller → validator → dispatcher → executor chain. Enforces ≤20 in-flight cap. Creates the automation via create_agent."
+    file: "scripts/register-conveyor-agent.ts"
+    deps: ["T1", "T2", "T3", "T4", "T5"]
+    wave: 5
+
+  - id: T7
+    name: "Shadow validation harness"
+    description: "Instrumentation + metrics capture for the ≥1 week shadow: per-run log (IntakeRun), per-execution log (PipelineExecution), unsafe-auto-execution audit log. Generates the shadow-validation report proving 0 unsafe auto-executions."
+    file: "scripts/shadow-validate.ts"
+    deps: ["T5", "T6"]
+    wave: 6
+
+# DAG summary (no file conflicts in parallel waves)
+dag:
+  wave_1: ["T1", "T2"]  # parallel, no shared files
+  wave_2: ["T3"]        # needs T1+T2
+  wave_3: ["T4"]        # needs T3
+  wave_4: ["T5"]        # needs T4
+  wave_5: ["T6"]        # needs T1-T5
+  wave_6: ["T7"]        # needs T5+T6
