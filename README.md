@@ -61,7 +61,7 @@ This is a working system extracted from a live setup, not a polished product. So
 No. Muse stays exactly what it is — your assistant, your front door. The workshop only does building work when Muse hands it over. If you never build software with AI, you'll never notice it's there.
 
 **Do I need to pay for anything extra?**
-To start, one thing: an OpenAI API key, which powers the memory's understanding (and there's a free fallback mode without it). The swarm itself runs on AI coding subscriptions you already pay for — that's the point. It puts them to work together instead of letting each one sit idle.
+To start, one thing: an OpenAI API key, which powers the memory's understanding (and there's a free fallback mode without it). The swarm itself runs on AI coding subscriptions you already pay for — that's the point. It puts them to work together instead of letting each one sit idle. The full breakdown — which keys exist, how to get each one, what they cost, and how to tell they're working — is in docs/api-keys.md.
 
 **What if I only have one AI coding tool installed?**
 Two is the practical minimum, so that when one fails or is slow, there's somewhere else for the work to go. You don't need all eight — install the ones you actually use.

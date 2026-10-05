@@ -22,7 +22,8 @@ bun $M hybrid "memory alive"
 
 You should see the fact you just stored come back in the hybrid results. If
 `OPENAI_API_KEY` isn't set, you'll see a note that it's running FTS5-only —
-that's fine, keyword search works.
+that's fine, keyword search works. (If you expected full mode, see
+`docs/api-keys.md` — Troubleshooting.)
 
 ## Wire the MCP server into one harness
 

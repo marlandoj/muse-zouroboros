@@ -39,6 +39,10 @@ Without it, memory runs FTS5-only — fully usable, just keyword-based.
 
 Optional: `ANTHROPIC_API_KEY` if you want the Anthropic generation route.
 
+New to API keys? Read `docs/api-keys.md` first — it covers which keys you
+actually need, how to obtain each one, what they cost, and how to tell
+they're working.
+
 **Key hygiene (do this now, thank yourself later):**
 
 ```bash
