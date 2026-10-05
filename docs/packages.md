@@ -119,6 +119,17 @@ worktree, one gate), seed examples, contracts, and the lane scripts.
   Linear-native event loops are built but deliberately disabled. Full guide:
   `docs/factory.md`.
 
+## Consensus panel — the reviewers
+
+Not a separate package: the panel's code ships inside `factory/lane`
+(`factory-diversity-review`, `factory-review-gate`, and the consensus
+scripts), because that's where it runs — reviewing finished tickets before
+they become pull requests. It gets its own guide because it deserves one:
+`docs/consensus-panel.md` covers the personas, shadow vs. enforce modes,
+the `FACTORY_REVIEW_GATE_MODE` switch, what enforcement does and doesn't
+authorize, and the qualification checklist for flipping it. The retired
+model-quorum gate was deliberately excluded.
+
 ## What's deliberately not here
 
 - **The Command Center web UI** (Terminal/Chat/Swarm Campaign/Console). It's

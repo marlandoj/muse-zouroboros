@@ -51,6 +51,24 @@ builds and verifies; Muse surfaces the PR. What Muse needs: Linear access,
 the contract schema, and the repo + base commit for the seed. Sketches and
 one-offs stay in chat — the factory is for work with acceptance criteria.
 
+## Meet the review panel
+
+Every ticket that finishes building goes before the consensus panel before
+it can become a pull request: a Zouroboros Engineer, a Testing Reality
+Checker, plus an AI Engineer and/or Security Engineer when the ticket
+calls for them. It runs in **shadow mode** — verdicts recorded, nothing
+blocked, you make the calls.
+
+```bash
+bash ../scripts/panel-report.sh   # verdicts so far, from the walkthrough folder
+```
+
+Read the verdicts on your first tickets, especially the would-have-held
+ones. The full guide — what each persona watches for, what enforce mode
+does and doesn't do, and the checklist for when enforcement is responsible
+— is in `docs/consensus-panel.md`. Don't set `FACTORY_REVIEW_GATE_MODE`
+until you've read it.
+
 ## Prove it
 
 - [ ] `factory-mvp.ts smoke` green

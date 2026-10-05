@@ -26,6 +26,8 @@ Five working systems, each useful on its own, better together:
 
 **Prompt-time hooks.** Three small guardians that watch your AI tools as they work. One suggests the right skill for the job. One refuses to let an agent declare victory when the tests haven't passed since the last edit. One trims repeated output so long sessions don't drown in their own context. All three start in observation mode — they watch and report before they ever enforce.
 
+**A review panel.** Before the factory turns finished work into a pull request, specialist personas — a systems engineer, a testing skeptic, and as needed an AI engineer and a security engineer — review it. It starts in shadow mode: verdicts recorded, nothing blocked, you make the calls. There's a documented path to enforcement when the panel has earned your trust, and even then it can only hold work back, never approve a merge on its own.
+
 **Bridges to Muse.** Small connectors so Muse can check on the workshop ("is everything healthy?"), read the shared work memory, and file build tickets — without you leaving the chat.
 
 ## How the pieces fit together
