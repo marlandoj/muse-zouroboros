@@ -1,0 +1,318 @@
+{
+  "schemaVersion": 2,
+  "moa": {
+    "fallback": {
+      "proposers": [
+        {
+          "id": "hf:zai-org/GLM-5.2",
+          "name": "GLM-5.2",
+          "family": "glm",
+          "provider": "synthetic",
+          "role": "proposer"
+        },
+        {
+          "id": "hf:moonshotai/Kimi-K2.7-Code",
+          "name": "Kimi-K2.7-Code",
+          "family": "kimi",
+          "provider": "synthetic",
+          "role": "proposer"
+        },
+        {
+          "id": "hf:nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4",
+          "name": "Nvidia-Nemotron-3-Super-120B-A12B-NVFP4",
+          "family": "nvidia",
+          "provider": "synthetic",
+          "role": "proposer"
+        }
+      ],
+      "aggregator": {
+        "id": "hf:MiniMaxAI/MiniMax-M3",
+        "name": "Minimax-M3",
+        "family": "minimax",
+        "provider": "synthetic",
+        "role": "aggregator"
+      }
+    },
+    "effective": {
+      "source": "dynamic",
+      "proposers": [
+        {
+          "id": "or:moonshotai/kimi-k3",
+          "name": "Kimi-k3",
+          "family": "kimi",
+          "provider": "openrouter",
+          "role": "proposer"
+        },
+        {
+          "id": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
+          "name": "Codex GPT 5.6 Sol",
+          "family": "gpt",
+          "provider": "zo-byok",
+          "role": "proposer"
+        },
+        {
+          "id": "byok:63a73cf2-224a-4641-8dcb-c3313270d08a",
+          "name": "Claude Code Sonnet 4.6",
+          "family": "claude",
+          "provider": "zo-byok",
+          "role": "proposer"
+        }
+      ],
+      "aggregator": {
+        "id": "hf:zai-org/GLM-5.2",
+        "name": "GLM-5.2",
+        "family": "glm",
+        "provider": "synthetic",
+        "role": "aggregator"
+      }
+    },
+    "profiles": [
+      {
+        "profile": "flagship",
+        "roleProfile": "deep-reasoning",
+        "capabilityTier": "frontier",
+        "weightPolicy": "any",
+        "valid": true,
+        "persistedAt": "2026-08-04T22:44:04.340Z",
+        "proposers": [
+          {
+            "id": "or:moonshotai/kimi-k3",
+            "name": "Kimi-k3",
+            "family": "kimi",
+            "provider": "openrouter",
+            "role": "proposer"
+          },
+          {
+            "id": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
+            "name": "Codex GPT 5.6 Sol",
+            "family": "gpt",
+            "provider": "zo-byok",
+            "role": "proposer"
+          },
+          {
+            "id": "byok:63a73cf2-224a-4641-8dcb-c3313270d08a",
+            "name": "Claude Code Sonnet 4.6",
+            "family": "claude",
+            "provider": "zo-byok",
+            "role": "proposer"
+          }
+        ],
+        "aggregator": {
+          "id": "hf:zai-org/GLM-5.2",
+          "name": "GLM-5.2",
+          "family": "glm",
+          "provider": "synthetic",
+          "role": "aggregator"
+        }
+      },
+      {
+        "profile": "fast",
+        "roleProfile": "fast",
+        "capabilityTier": "efficient",
+        "weightPolicy": "any",
+        "valid": true,
+        "persistedAt": "2026-08-04T18:42:57.209Z",
+        "proposers": [
+          {
+            "id": "byok:461d8d6f-9616-4391-960e-3caea2a27829",
+            "name": "Claude Code Haiku 4.5",
+            "family": "claude",
+            "provider": "zo-byok",
+            "role": "proposer"
+          },
+          {
+            "id": "byok:2d297290-05e1-4f64-848c-0356e74f7187",
+            "name": "Codex GPT 5.4 mini",
+            "family": "gpt",
+            "provider": "zo-byok",
+            "role": "proposer"
+          },
+          {
+            "id": "oc:minimax-m3",
+            "name": "Minimax-m3",
+            "family": "minimax",
+            "provider": "opencode",
+            "role": "proposer"
+          }
+        ],
+        "aggregator": {
+          "id": "byok:12c6d41a-a8b4-45e3-b495-7df391f190ce",
+          "name": "OP:Ling-3.0-flash",
+          "family": "ling",
+          "provider": "zo-byok",
+          "role": "aggregator"
+        }
+      },
+      {
+        "profile": "open-weights",
+        "roleProfile": "deep-reasoning",
+        "capabilityTier": "frontier",
+        "weightPolicy": "open-only",
+        "valid": false,
+        "persistedAt": "2026-07-11T17:59:33.589Z",
+        "proposers": [
+          {
+            "id": "hf:MiniMaxAI/MiniMax-M3",
+            "name": "Minimax-M3",
+            "family": "minimax",
+            "provider": "synthetic",
+            "role": "proposer"
+          },
+          {
+            "id": "hf:Qwen/Qwen3.6-27B",
+            "name": "QWEN3.6-27B",
+            "family": "qwen",
+            "provider": "synthetic",
+            "role": "proposer"
+          },
+          {
+            "id": "hf:moonshotai/Kimi-K2.7-Code",
+            "name": "Kimi-K2.7-Code",
+            "family": "kimi",
+            "provider": "synthetic",
+            "role": "proposer"
+          }
+        ],
+        "aggregator": {
+          "id": "hf:zai-org/GLM-5.2",
+          "name": "GLM-5.2",
+          "family": "glm",
+          "provider": "synthetic",
+          "role": "aggregator"
+        }
+      },
+      {
+        "profile": "coder",
+        "roleProfile": "coding",
+        "capabilityTier": "strong",
+        "weightPolicy": "any",
+        "valid": false,
+        "persistedAt": "2026-07-13T02:34:05.093Z",
+        "proposers": [
+          {
+            "id": "oc:gpt-5.3-codex",
+            "name": "GPT-5.3-codex",
+            "family": "gpt",
+            "provider": "opencode",
+            "role": "proposer"
+          },
+          {
+            "id": "byok:463350ac-4a49-4ceb-8653-042ecffa513f",
+            "name": "Kimi K2.7-Code",
+            "family": "kimi",
+            "provider": "zo-byok",
+            "role": "proposer"
+          },
+          {
+            "id": "oc:north-mini-code-free",
+            "name": "North-mini-code-free",
+            "family": "north",
+            "provider": "opencode",
+            "role": "proposer"
+          }
+        ],
+        "aggregator": {
+          "id": "oc:gpt-5-codex",
+          "name": "GPT-5-codex",
+          "family": "gpt",
+          "provider": "opencode",
+          "role": "aggregator"
+        }
+      },
+      {
+        "profile": "judge",
+        "roleProfile": "judge",
+        "capabilityTier": "frontier",
+        "weightPolicy": "any",
+        "valid": false,
+        "persistedAt": null,
+        "proposers": [],
+        "aggregator": null
+      }
+    ]
+  },
+  "consensus": {
+    "source": "legacy",
+    "models": [
+      {
+        "id": "hf:zai-org/GLM-5.2",
+        "name": "GLM-5.2",
+        "family": "glm",
+        "provider": "synthetic",
+        "role": "reviewer"
+      },
+      {
+        "id": "kimi:kimi-k3",
+        "name": "Kimi-k3",
+        "family": "kimi:kimi",
+        "provider": "kimi",
+        "role": "reviewer"
+      },
+      {
+        "id": "hf:nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4",
+        "name": "Nvidia-Nemotron-3-Super-120B-A12B-NVFP4",
+        "family": "nvidia",
+        "provider": "synthetic",
+        "role": "reviewer"
+      }
+    ]
+  },
+  "generatedAt": "2026-08-05T00:52:48.991Z",
+  "configHash": "905ffcb039e8b5fe97facd94a7e36de22252eecb018aee985b00134a28e9112d",
+  "health": {
+    "hf:nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4": {
+      "ok": true,
+      "provider": "synthetic",
+      "latencyMs": 2289,
+      "observedAt": "2026-07-13T02:34:47.247Z"
+    },
+    "hf:MiniMaxAI/MiniMax-M3": {
+      "ok": true,
+      "provider": "synthetic",
+      "latencyMs": 2577,
+      "observedAt": "2026-07-13T02:34:47.247Z"
+    },
+    "hf:Qwen/Qwen3.6-27B": {
+      "ok": true,
+      "provider": "synthetic",
+      "latencyMs": 2723,
+      "observedAt": "2026-07-13T02:34:47.247Z"
+    },
+    "hf:moonshotai/Kimi-K2.7-Code": {
+      "ok": true,
+      "provider": "synthetic",
+      "latencyMs": 2216,
+      "observedAt": "2026-07-13T02:34:47.247Z"
+    },
+    "hf:zai-org/GLM-5.2": {
+      "ok": true,
+      "provider": "synthetic",
+      "latencyMs": 2279,
+      "observedAt": "2026-07-13T02:34:47.247Z"
+    },
+    "oc:gpt-5.3-codex": {
+      "ok": true,
+      "provider": "opencode",
+      "latencyMs": 1451,
+      "observedAt": "2026-07-13T02:34:47.247Z"
+    },
+    "oc:north-mini-code-free": {
+      "ok": true,
+      "provider": "opencode",
+      "latencyMs": 763,
+      "observedAt": "2026-07-13T02:34:47.247Z"
+    },
+    "oc:gpt-5-codex": {
+      "ok": true,
+      "provider": "opencode",
+      "latencyMs": 997,
+      "observedAt": "2026-07-13T02:34:47.247Z"
+    },
+    "byok:463350ac-4a49-4ceb-8653-042ecffa513f": {
+      "ok": true,
+      "provider": "zo-byok",
+      "latencyMs": 7118,
+      "observedAt": "2026-07-13T02:34:47.247Z"
+    }
+  }
+}

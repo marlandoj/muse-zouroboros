@@ -1,0 +1,171 @@
+{
+  "_readme": "Operator-editable registry of Zo BYOK model configs for the MoA/consensus-gate catalogs. There is no server-side listing API for BYOK configs (frontend-session only), so UUIDs are recorded here manually. To add a model: Settings → AI → Models, copy the config UUID into `id` as `byok:<uuid>`, then run `bun catalog-byok.ts --refresh`. Entries with `id: null` are known-pending — the model exists in the Zo UI but its UUID has not been captured yet. `subscription: true` = flat-rate subscription billing (Claude Code / Codex), which is why these take precedence over usage-billed Opencode/OpenRouter in lineup selection.",
+  "updated": "2026-08-01",
+  "models": [
+    {
+      "id": "byok:bb3d131d-749f-423b-a285-9f9efd103926",
+      "label": "Synthetic GLM-5.2",
+      "family": "glm",
+      "tier": "flagship",
+      "subscription": false,
+      "note": "Synthetic.new, usage-billed (not a flat-rate Claude Code/Codex subscription). Factory /zo/ask failover rung 3 (operator-set 2026-07-10 — demoted off primary because it is persistently quota-429'd; Fable 5 is now primary). Probed like every other rung; while 429-capped deriveChain() further demotes it below Haiku to the tail until its quota clears."
+    },
+    {
+      "id": "byok:461d8d6f-9616-4391-960e-3caea2a27829",
+      "label": "Claude Code Haiku 4.5",
+      "family": "claude",
+      "tier": "fast",
+      "subscription": true
+    },
+    {
+      "id": "byok:63a73cf2-224a-4641-8dcb-c3313270d08a",
+      "label": "Claude Code Sonnet 4.6",
+      "family": "claude",
+      "tier": "flagship",
+      "subscription": true
+    },
+    {
+      "id": "byok:b74479bc-ec30-494d-a8c8-b2ff6218e1c0",
+      "label": "Claude Code Opus 4.8",
+      "family": "claude",
+      "tier": "flagship",
+      "subscription": true
+    },
+    {
+      "id": "byok:d879829b-6d2c-44f6-a60e-0c1e31149b9e",
+      "label": "Claude Code Fable 5",
+      "family": "claude",
+      "tier": "flagship",
+      "subscription": true
+    },
+    {
+      "id": null,
+      "label": "Codex GPT 5.3 Codex",
+      "family": "gpt",
+      "tier": "coder",
+      "subscription": true,
+      "pending": "Not registerable via the Codex subscription — Codex retired the gpt-5.3-codex slug. Config byok:a793ecfe-e6fa-4fcb-8b97-8cf4245065f0 EXISTS and resolves, but /zo/ask returns HTTP 502 \"Couldn't switch to the model gpt-5.3-codex (Invalid params -32602)\" because the upstream no longer serves it; ~/.codex/models_cache.json lists 8 slugs and gpt-5.3-codex is not among them (gpt-5.3-codex-spark is, but supported_in_api=false). Do not re-capture a Codex UUID — it will fail the same way. To route this model through BYOK, register an OpenAI API-key config (Settings → AI → Providers → Bring Your Own Key) rather than a Codex config; OpenRouter serves openai/gpt-5.3-codex with provider=OpenAI, so the API exposes it. Until then oc:gpt-5.3-codex and openai/gpt-5.3-codex are the only live routes (both verified 2026-07-27)."
+    },
+    {
+      "id": "byok:2d297290-05e1-4f64-848c-0356e74f7187",
+      "label": "Codex GPT 5.4 mini",
+      "family": "gpt",
+      "tier": "fast",
+      "subscription": true
+    },
+    {
+      "id": "byok:fcb940f0-9ff7-42b2-9f04-ca8460a314a5",
+      "label": "Codex GPT 5.4",
+      "family": "gpt",
+      "tier": "flagship",
+      "subscription": true,
+      "pending": "UUID not captured — copy from Settings → AI → Models (Codex section)"
+    },
+    {
+      "id": "byok:47466410-d8ac-4c24-ab32-b5be5c2be6cd",
+      "label": "Codex GPT 5.5",
+      "family": "gpt",
+      "tier": "flagship",
+      "subscription": true
+    },
+    {
+      "id": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
+      "label": "Codex GPT 5.6 Sol",
+      "family": "gpt",
+      "tier": "flagship",
+      "subscription": true
+    },
+    {
+      "id": "byok:463350ac-4a49-4ceb-8653-042ecffa513f",
+      "label": "Kimi K2.7-Code",
+      "family": "kimi",
+      "tier": "coder",
+      "subscription": false
+    },
+    {
+      "id": "byok:12c6d41a-a8b4-45e3-b495-7df391f190ce",
+      "label": "OP:Ling-3.0-flash",
+      "family": "ling",
+      "tier": "fast",
+      "subscription": false
+    },
+    {
+      "id": "byok:bc8717e3-e94f-416e-81d5-ab9d80962766",
+      "label": "GPT 5.6 Terra",
+      "family": "gpt",
+      "tier": "flagship",
+      "subscription": true
+    },
+    {
+      "id": "byok:ef1faca8-a70d-46d3-88d3-b78f96635885",
+      "label": "GPT 5.6 Luna",
+      "family": "gpt",
+      "tier": "flagship",
+      "subscription": true
+    },
+    {
+      "id": "byok:73ae74c2-26d1-561e-91af-2cf47a33f4dd",
+      "label": "Kimi CLI - kimi-for-coding",
+      "family": "kimi",
+      "tier": "coder",
+      "subscription": true,
+      "note": "Kimi CLI subscription provider (flat-rate, like Claude Code/Codex). UUID captured 2026-08-01 via GET /models/available."
+    },
+    {
+      "id": "byok:76aef0ac-9f7e-50fc-9f13-c8332a118662",
+      "label": "Kimi CLI - kimi-for-coding (thinking)",
+      "family": "kimi",
+      "tier": "coder",
+      "subscription": true,
+      "note": "Thinking variant of kimi-for-coding. UUID captured 2026-08-01 via GET /models/available."
+    },
+    {
+      "id": "byok:d1f6a676-f46f-5f70-8991-baeec4df3bc6",
+      "label": "Kimi CLI - kimi-for-coding-highspeed",
+      "family": "kimi",
+      "tier": "coder",
+      "subscription": true,
+      "note": "Highspeed variant of kimi-for-coding. UUID captured 2026-08-01 via GET /models/available."
+    },
+    {
+      "id": "byok:4199702e-d6d4-5e6a-887d-2bada37c9771",
+      "label": "Kimi CLI - kimi-for-coding-highspeed (thinking)",
+      "family": "kimi",
+      "tier": "coder",
+      "subscription": true,
+      "note": "Thinking + highspeed variant. UUID captured 2026-08-01 via GET /models/available."
+    },
+    {
+      "id": "byok:1c67d8d3-9111-5841-b7b9-9012ba01b3ca",
+      "label": "Kimi CLI - k3",
+      "family": "kimi",
+      "tier": "flagship",
+      "subscription": true,
+      "note": "Kimi K3 via Kimi CLI subscription. UUID captured 2026-08-01 via GET /models/available."
+    },
+    {
+      "id": "byok:f165ae55-70dd-5f29-9244-66764ea04d28",
+      "label": "Kimi CLI - k3 (thinking)",
+      "family": "kimi",
+      "tier": "flagship",
+      "subscription": true,
+      "note": "Thinking variant of k3. UUID captured 2026-08-01 via GET /models/available."
+    },
+    {
+      "id": "byok:454a288a-bf4d-59ec-bbd9-6c0817719570",
+      "label": "Kimi CLI - k3-256k",
+      "family": "kimi",
+      "tier": "flagship",
+      "subscription": true,
+      "note": "K3 256k-context variant. UUID captured 2026-08-01 via GET /models/available."
+    },
+    {
+      "id": "byok:306bfc22-aa5e-572e-9f4b-a3cb43b3c0f9",
+      "label": "Kimi CLI - k3-256k (thinking)",
+      "family": "kimi",
+      "tier": "flagship",
+      "subscription": true,
+      "note": "Thinking variant of k3-256k; this is also the active Alaric chat model. UUID captured 2026-08-01 via GET /models/available."
+    }
+  ]
+}

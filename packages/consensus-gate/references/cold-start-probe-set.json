@@ -1,0 +1,71 @@
+{
+  "_meta": {
+    "purpose": "Held-out cold-start probe set for ZOU-485. Anti-Goodhart: these prompts are NEVER used for training, tuning, or prompt optimization. Scoring is deterministic pattern-matching (not LLM-judged) so a candidate cannot game a judge. Kept out of any tuning corpus.",
+    "version": 1,
+    "created": "2026-07-07",
+    "scoring": "Each item is scored by matching the model's response against 'expect' patterns (case-insensitive substring unless 'regex': true). Score = correct / total. Threshold to pass is configurable (default 0.6).",
+    "hermetic": true
+  },
+  "items": [
+    {
+      "id": "arith-1",
+      "prompt": "What is 2 + 2? Reply with only the number, no words.",
+      "expect": ["4"],
+      "category": "arithmetic"
+    },
+    {
+      "id": "arith-2",
+      "prompt": "What is 7 multiplied by 6? Reply with only the number.",
+      "expect": ["42"],
+      "category": "arithmetic"
+    },
+    {
+      "id": "exact-1",
+      "prompt": "Reply with exactly this word and nothing else: BANANA",
+      "expect": ["banana"],
+      "category": "instruction-following"
+    },
+    {
+      "id": "exact-2",
+      "prompt": "Reply with exactly this word and nothing else: QUARTZ",
+      "expect": ["quartz"],
+      "category": "instruction-following"
+    },
+    {
+      "id": "logic-1",
+      "prompt": "If all roses are flowers and some flowers fade quickly, is it certain that all roses fade quickly? Reply with only yes or no.",
+      "expect": ["no"],
+      "category": "logic"
+    },
+    {
+      "id": "logic-2",
+      "prompt": "A bat and a ball cost $1.10 in total. The bat costs $1.00 more than the ball. How much does the ball cost in cents? Reply with only the number.",
+      "expect": ["5"],
+      "category": "logic"
+    },
+    {
+      "id": "code-1",
+      "prompt": "What does this function return: function f(x){return x*2+1}? Call f(3). Reply with only the number.",
+      "expect": ["7"],
+      "category": "code"
+    },
+    {
+      "id": "code-2",
+      "prompt": "In Python, what is the result of len('hello')? Reply with only the number.",
+      "expect": ["5"],
+      "category": "code"
+    },
+    {
+      "id": "knowledge-1",
+      "prompt": "What is the chemical symbol for gold? Reply with only the symbol.",
+      "expect": ["au"],
+      "category": "knowledge"
+    },
+    {
+      "id": "knowledge-2",
+      "prompt": "What is the capital of France? Reply with only the city name.",
+      "expect": ["paris"],
+      "category": "knowledge"
+    }
+  ]
+}

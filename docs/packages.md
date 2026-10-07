@@ -105,6 +105,26 @@ verifies originals before inserting recovery references in live mode.
 - **Maturity:** production in shadow; live pruning is harness-dependent.
   Full guide: `docs/hooks.md`.
 
+## `packages/consensus-gate` — the retired model-quorum review gate
+
+Three blind reviewer models plus an independent arbiter, run in shadow/audit
+mode over code diffs. Records pass/fail/escalate verdicts with dissent
+preserved; never blocks on its own. **Retired as a merge gate** — superseded
+by the persona panel in `factory/lane` — and packaged here at operator
+request for audit history and explicitly authorized experiments.
+
+- **Entry points:** `bun scripts/consensus-gate.ts validate --file <diff>
+  --label <name> --shadow`, `bun scripts/consensus-gate.ts preflight`
+  (lineup health, no code sent), `bun scripts/noise-watch.ts` (signal/noise
+  health), `bun scripts/reputation.ts` (reviewer track record).
+- **Models:** synthetic.new primary (`hf:` ids), OpenRouter same-model
+  failover, direct Kimi / x.ai seats. Keys via operator-managed env
+  (`SYNTHETIC_API_KEY`, `OPENROUTER_API_KEY`, … — see `docs/api-keys.md`).
+- **Escalations** (deadlocked panels) go to the operator, not to any
+  automated reviewer — the old Mimir escalation target is retired.
+- **Maturity:** retired. Shadow verdicts are audit evidence; the panel does
+  not authorize merges. Full skill doc: `packages/consensus-gate/SKILL.md`.
+
 ## `factory/lane` — the software-factory conveyor
 
 Linear `factory-ready` tickets → 5-field contract (fail-closed validation) →
@@ -128,7 +148,9 @@ they become pull requests. It gets its own guide because it deserves one:
 `docs/consensus-panel.md` covers the personas, shadow vs. enforce modes,
 the `FACTORY_REVIEW_GATE_MODE` switch, what enforcement does and doesn't
 authorize, and the qualification checklist for flipping it. The retired
-model-quorum gate was deliberately excluded.
+model-quorum gate now also ships as `packages/consensus-gate` (audit
+history and operator-authorized experiments only — it is not the merge
+gate).
 
 ## What's deliberately not here
 

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "offline-paired-fixture",
+  "subject": { "type": "skill", "id": "production-ready", "version": "fixture-v1" },
+  "dataset": { "id": "offline-review-cases", "version": "1.0.0", "path": "cases.json" },
+  "variants": [
+    { "id": "baseline", "prompt": "Review the input for correctness.", "promptVersion": "baseline-v1", "toolVersion": "none-v1" },
+    { "id": "candidate", "prompt": "Review the input for correctness and security.", "promptVersion": "candidate-v1", "toolVersion": "none-v1" }
+  ],
+  "evaluator": { "id": "expected-pass", "type": "expected-pass", "version": "1.0.0" },
+  "model": { "id": "offline-fixture", "adapter": "offline", "tools": false },
+  "ordering": { "mode": "paired-hash", "seed": "zou-854-fixture" },
+  "budgets": { "maxCases": 4, "maxCalls": 8, "maxCostUsd": 0, "maxWallMs": 10000 },
+  "thresholds": { "minimumPairs": 6, "metric": "accuracy", "minimumDelta": 0.1 }
+}

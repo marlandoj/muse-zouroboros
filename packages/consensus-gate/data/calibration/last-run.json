@@ -1,0 +1,3368 @@
+{
+  "timestamp": "2026-06-17T00:29:14Z",
+  "test_cases": 28,
+  "ensemble": {
+    "n": 28,
+    "accuracy_pct": 85.7,
+    "defect_recall_pct": 95,
+    "clean_pass_pct": 67,
+    "escalations": 2,
+    "false_fail_clean": 3,
+    "missed_defects": 1
+  },
+  "stats": {
+    "hf:zai-org/GLM-5.1": {
+      "accuracy_pct": 85.7,
+      "precision_pct": 82.6,
+      "recall_pct": 100.0,
+      "f1": 0.9,
+      "leniency_false_pass_rate": 0.0,
+      "strictness_false_fail_rate": 44.4,
+      "total_verdicts": 28,
+      "abstentions": 0,
+      "avg_latency_ms": 9373,
+      "avg_confidence": 0.91,
+      "calibration_delta": null
+    },
+    "hf:moonshotai/Kimi-K2.6": {
+      "accuracy_pct": 82.1,
+      "precision_pct": 81.8,
+      "recall_pct": 94.7,
+      "f1": 0.88,
+      "leniency_false_pass_rate": 5.3,
+      "strictness_false_fail_rate": 44.4,
+      "total_verdicts": 28,
+      "abstentions": 0,
+      "avg_latency_ms": 11344,
+      "avg_confidence": 0.94,
+      "calibration_delta": null
+    },
+    "xai:grok-3-mini": {
+      "accuracy_pct": 92.9,
+      "precision_pct": 94.7,
+      "recall_pct": 94.7,
+      "f1": 0.95,
+      "leniency_false_pass_rate": 5.3,
+      "strictness_false_fail_rate": 11.1,
+      "total_verdicts": 28,
+      "abstentions": 0,
+      "avg_latency_ms": 6867,
+      "avg_confidence": 0.91,
+      "calibration_delta": null
+    },
+    "non-llm/arbiter-v1": {
+      "accuracy_pct": 35.7,
+      "precision_pct": 100.0,
+      "recall_pct": 5.3,
+      "f1": 0.1,
+      "leniency_false_pass_rate": 94.7,
+      "strictness_false_fail_rate": 0.0,
+      "total_verdicts": 28,
+      "abstentions": 0,
+      "avg_latency_ms": 2,
+      "avg_confidence": 0.99,
+      "calibration_delta": null
+    }
+  },
+  "recommendations": [
+    {
+      "judge": "non-llm/arbiter-v1",
+      "issue": "Too lenient",
+      "metric": "94.7% false pass rate",
+      "action": "Lower non-llm/arbiter-v1 threshold by 0.1 OR increase weight of dissenting votes against non-llm/arbiter-v1"
+    },
+    {
+      "judge": "hf:zai-org/GLM-5.1",
+      "issue": "Too strict",
+      "metric": "44.4% false fail rate",
+      "action": "Raise hf:zai-org/GLM-5.1 threshold by 0.1 OR reduce weight of hf:zai-org/GLM-5.1 in consensus"
+    },
+    {
+      "judge": "non-llm/arbiter-v1",
+      "issue": "Below-random accuracy",
+      "metric": "35.7% accuracy",
+      "action": "Consider removing non-llm/arbiter-v1 from the panel or running with --skip non-llm/arbiter-v1"
+    }
+  ],
+  "raw_results": [
+    {
+      "id": "cg-1781609549060-ut2npn",
+      "timestamp": "2026-06-16T11:32:29.060Z",
+      "label": "cal-cal-001",
+      "code": "const query = `SELECT * FROM users WHERE id = ${req.params.id}`;",
+      "criteria": "security,correctness",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": false,
+          "issues": [
+            "SQL injection vulnerability due to direct string interpolation of user input"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "SQL injection vulnerability due to direct string interpolation of user input",
+              "evidence": "SELECT * FROM users WHERE id = ${req.params.id}",
+              "severity": "high"
+            }
+          ],
+          "confidence": 1,
+          "latencyMs": 3013,
+          "inputTokens": 611,
+          "outputTokens": 245,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": false,
+          "issues": [
+            "SQL injection vulnerability via unsanitized user input interpolated into query string"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "SQL injection vulnerability via unsanitized user input interpolated into query string",
+              "evidence": "const query = `SELECT * FROM users WHERE id = ${req.params.id}`;",
+              "severity": "high"
+            }
+          ],
+          "confidence": 1,
+          "latencyMs": 4148,
+          "inputTokens": 611,
+          "outputTokens": 609,
+          "usageEstimated": false
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": false,
+          "issues": [
+            "Direct string interpolation of user input into SQL query enables SQL injection"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Direct string interpolation of user input into SQL query enables SQL injection",
+              "evidence": "const query = `SELECT * FROM users WHERE id = ${req.params.id}`;",
+              "severity": "high"
+            }
+          ],
+          "confidence": 0.95,
+          "latencyMs": 3589,
+          "inputTokens": 724,
+          "outputTokens": 75,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 1
+        }
+      ],
+      "consensus": {
+        "unanimous": false,
+        "pass": false,
+        "confidence": 0.9875,
+        "dissentingModels": [
+          "non-llm/arbiter-v1"
+        ]
+      },
+      "status": "rejected",
+      "dissent_summary": {
+        "split_axis": [
+          "security"
+        ],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "SQL injection vulnerability due to direct string interpolation of user input",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "SQL injection vulnerability via unsanitized user input interpolated into query string",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "Direct string interpolation of user input into SQL query enables SQL injection",
+            "model": "xai:grok-3-mini"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": false,
+      "category": "security",
+      "difficulty": "easy"
+    },
+    {
+      "id": "cg-1781609553273-wqcrr8",
+      "timestamp": "2026-06-16T11:32:33.273Z",
+      "label": "cal-cal-002",
+      "code": "async function fetchData(url: string): Promise<Data> {\n  try {\n    const response = await fetch(url);\n    if (!response.ok) throw new Error(`HTTP ${response.status}`);\n    return await response.json();\n  } catch (err) {\n    console.error('fetchData failed:', err);\n    throw err;\n  }\n}",
+      "criteria": "correctness,security",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": true,
+          "issues": [
+            "No request timeout \u2014 the fetch call has no AbortController timeout, so it can hang indefinitely on unresponsive servers until the platform's default timeout kicks in",
+            "No URL validation or restriction \u2014 the function accepts any URL string without scheme or origin checks, which is an SSRF risk if used server-side with user-controlled input",
+            "console.error may log sensitive information (full URL, error details) to logs that could be accessible to unauthorized parties"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "No request timeout \u2014 the fetch call has no AbortController timeout, so it can hang indefinitely on unresponsive servers until the platform's default timeout kicks in",
+              "evidence": "const response = await fetch(url);",
+              "severity": "low"
+            },
+            {
+              "claim": "No URL validation or restriction \u2014 the function accepts any URL string without scheme or origin checks, which is an SSRF risk if used server-side with user-controlled input",
+              "evidence": "async function fetchData(url: string): Promise<Data>",
+              "severity": "low"
+            },
+            {
+              "claim": "console.error may log sensitive information (full URL, error details) to logs that could be accessible to unauthorized parties",
+              "evidence": "console.error('fetchData failed:', err);",
+              "severity": "low"
+            }
+          ],
+          "confidence": 0.8,
+          "latencyMs": 19208,
+          "inputTokens": 660,
+          "outputTokens": 2815,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": false,
+          "issues": [
+            "Missing request timeout or abort mechanism can cause indefinite hangs or resource exhaustion on slow, throttled, or unresponsive endpoints.",
+            "Directly passing an unchecked URL string to fetch creates a potential SSRF or open redirect vulnerability if this function is invoked with user-controlled input in a server-side or proxy context."
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Missing request timeout or abort mechanism can cause indefinite hangs or resource exhaustion on slow, throttled, or unresponsive endpoints.",
+              "evidence": "const response = await fetch(url);",
+              "severity": "medium"
+            },
+            {
+              "claim": "Directly passing an unchecked URL string to fetch creates a potential SSRF or open redirect vulnerability if this function is invoked with user-controlled input in a server-side or proxy context.",
+              "evidence": "fetch(url)",
+              "severity": "low"
+            }
+          ],
+          "confidence": 0.85,
+          "latencyMs": 20458,
+          "inputTokens": 700,
+          "outputTokens": 3581,
+          "usageEstimated": false,
+          "substitutedFrom": "syn:small:vision",
+          "substituteAttempted": true,
+          "chainAttempts": [
+            "hf:moonshotai/Kimi-K2.6",
+            "syn:small:vision"
+          ]
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": true,
+          "issues": [],
+          "confidence": 0.9,
+          "latencyMs": 12507,
+          "inputTokens": 774,
+          "outputTokens": 22,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 2
+        }
+      ],
+      "consensus": {
+        "unanimous": false,
+        "pass": true,
+        "confidence": 0.8875,
+        "dissentingModels": [
+          "hf:moonshotai/Kimi-K2.6"
+        ]
+      },
+      "status": "passed",
+      "dissent_summary": {
+        "split_axis": [
+          "performance",
+          "type-safety"
+        ],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "No request timeout \u2014 the fetch call has no AbortController timeout, so it can hang indefinitely on unresponsive servers until the platform's default timeout kicks in",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "No URL validation or restriction \u2014 the function accepts any URL string without scheme or origin checks, which is an SSRF risk if used server-side with user-controlled input",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "console.error may log sensitive information (full URL, error details) to logs that could be accessible to unauthorized parties",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Missing request timeout or abort mechanism can cause indefinite hangs or resource exhaustion on slow, throttled, or unresponsive endpoints.",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "Directly passing an unchecked URL string to fetch creates a potential SSRF or open redirect vulnerability if this function is invoked with user-controlled input in a server-side or proxy context.",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": true,
+      "category": "correctness",
+      "difficulty": "easy"
+    },
+    {
+      "id": "cg-1781609597118-coeduo",
+      "timestamp": "2026-06-16T11:33:17.118Z",
+      "label": "cal-cal-003",
+      "code": "const STRIPE_KEY = 'sk_live_abc123xyz789';\nexport function createPayment(amount: number) {\n  return stripe.charges.create({ amount, currency: 'usd' });\n}",
+      "criteria": "security,correctness",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": false,
+          "issues": [
+            "Stripe live secret key is hardcoded in source code, exposing it to anyone with access to the repository or code"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Stripe live secret key is hardcoded in source code, exposing it to anyone with access to the repository or code",
+              "evidence": "const STRIPE_KEY = 'sk_live_abc123xyz789';",
+              "severity": "high"
+            }
+          ],
+          "confidence": 0.97,
+          "latencyMs": 3260,
+          "inputTokens": 637,
+          "outputTokens": 213,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": false,
+          "issues": [
+            "Hardcoded live Stripe secret key in source code"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Hardcoded live Stripe secret key in source code",
+              "evidence": "const STRIPE_KEY = 'sk_live_abc123xyz789';",
+              "severity": "high"
+            }
+          ],
+          "confidence": 1,
+          "latencyMs": 8826,
+          "inputTokens": 634,
+          "outputTokens": 1818,
+          "usageEstimated": false
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": false,
+          "issues": [
+            "Hardcoded live Stripe secret key exposed in source code"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Hardcoded live Stripe secret key exposed in source code",
+              "evidence": "const STRIPE_KEY = 'sk_live_abc123xyz789';",
+              "severity": "high"
+            }
+          ],
+          "confidence": 0.95,
+          "latencyMs": 7808,
+          "inputTokens": 747,
+          "outputTokens": 71,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 1
+        }
+      ],
+      "consensus": {
+        "unanimous": false,
+        "pass": false,
+        "confidence": 0.98,
+        "dissentingModels": [
+          "non-llm/arbiter-v1"
+        ]
+      },
+      "status": "rejected",
+      "dissent_summary": {
+        "split_axis": [
+          "security"
+        ],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "Stripe live secret key is hardcoded in source code, exposing it to anyone with access to the repository or code",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Hardcoded live Stripe secret key in source code",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "Hardcoded live Stripe secret key exposed in source code",
+            "model": "xai:grok-3-mini"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": false,
+      "category": "security",
+      "difficulty": "easy"
+    },
+    {
+      "id": "cg-1781609606013-0f0jii",
+      "timestamp": "2026-06-16T11:33:26.013Z",
+      "label": "cal-cal-004",
+      "code": "function findDuplicates(items: string[]): string[] {\n  const duplicates: string[] = [];\n  for (let i = 0; i < items.length; i++) {\n    for (let j = i + 1; j < items.length; j++) {\n      if (items[i] === items[j] && !duplicates.includes(items[i])) {\n        duplicates.push(items[i]);\n      }\n    }\n  }\n  return duplicates;\n}",
+      "criteria": "correctness,perf",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": false,
+          "issues": [
+            "O(n\u00b2) time complexity due to nested loops over the same array, which can be reduced to O(n) using a Set"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "O(n\u00b2) time complexity due to nested loops over the same array, which can be reduced to O(n) using a Set",
+              "evidence": "for (let i = 0; i < items.length; i++) {\n    for (let j = i + 1; j < items.length; j++) {",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.95,
+          "latencyMs": 12462,
+          "inputTokens": 683,
+          "outputTokens": 1654,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": false,
+          "issues": [
+            "Nested loops over the same collection create O(n\u00b2) pairwise comparisons",
+            "Array.prototype.includes() on duplicates adds an extra linear scan inside the loops"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Nested loops over the same collection create O(n\u00b2) pairwise comparisons",
+              "evidence": "for (let i = 0; i < items.length; i++) { for (let j = i + 1; j < items.length; j++) {",
+              "severity": "medium"
+            },
+            {
+              "claim": "Array.prototype.includes() on duplicates adds an extra linear scan inside the loops",
+              "evidence": "!duplicates.includes(items[i])",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.95,
+          "latencyMs": 8737,
+          "inputTokens": 683,
+          "outputTokens": 1983,
+          "usageEstimated": false
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": false,
+          "issues": [
+            "O(n\u00b2) nested loops over input array (visible structural inefficiency)"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "O(n\u00b2) nested loops over input array (visible structural inefficiency)",
+              "evidence": "for (let i = 0; i < items.length; i++) { for (let j = i + 1; j < items.length; j++) {",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.9,
+          "latencyMs": 15235,
+          "inputTokens": 796,
+          "outputTokens": 94,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 1
+        }
+      ],
+      "consensus": {
+        "unanimous": false,
+        "pass": false,
+        "confidence": 0.95,
+        "dissentingModels": [
+          "non-llm/arbiter-v1"
+        ]
+      },
+      "status": "rejected",
+      "dissent_summary": {
+        "split_axis": [],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "O(n\u00b2) time complexity due to nested loops over the same array, which can be reduced to O(n) using a Set",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Nested loops over the same collection create O(n\u00b2) pairwise comparisons",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "Array.prototype.includes() on duplicates adds an extra linear scan inside the loops",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "O(n\u00b2) nested loops over input array (visible structural inefficiency)",
+            "model": "xai:grok-3-mini"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": false,
+      "category": "performance",
+      "difficulty": "medium"
+    },
+    {
+      "id": "cg-1781609621314-n4fg9g",
+      "timestamp": "2026-06-16T11:33:41.314Z",
+      "label": "cal-cal-005",
+      "code": "const sorted = useMemo(() => {\n  return items.sort((a, b) => a.name.localeCompare(b.name));\n}, [items]);",
+      "criteria": "correctness,perf",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": false,
+          "issues": [
+            "Array.prototype.sort() mutates the original items array in place instead of creating a new sorted copy",
+            "Returned value is the same reference as the input array, so sorted === items, defeating the purpose of useMemo and breaking React's immutability contract"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Array.prototype.sort() mutates the original items array in place instead of creating a new sorted copy",
+              "evidence": "items.sort((a, b) => a.name.localeCompare(b.name))",
+              "severity": "high"
+            },
+            {
+              "claim": "Returned value is the same reference as the input array, so sorted === items, defeating the purpose of useMemo and breaking React's immutability contract",
+              "evidence": "return items.sort(...) \u2014 sort() returns the same array it was called on",
+              "severity": "high"
+            }
+          ],
+          "confidence": 0.95,
+          "latencyMs": 6867,
+          "inputTokens": 621,
+          "outputTokens": 638,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": false,
+          "issues": [
+            "Array.prototype.sort() mutates the items array in place, violating React immutability and potentially corrupting upstream state or props"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Array.prototype.sort() mutates the items array in place, violating React immutability and potentially corrupting upstream state or props",
+              "evidence": "return items.sort((a, b) => a.name.localeCompare(b.name));",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.9,
+          "latencyMs": 12330,
+          "inputTokens": 622,
+          "outputTokens": 2604,
+          "usageEstimated": false
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": false,
+          "issues": [
+            "items.sort() mutates the original array"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "items.sort() mutates the original array",
+              "evidence": "return items.sort((a, b) => a.name.localeCompare(b.name));",
+              "severity": "high"
+            }
+          ],
+          "confidence": 0.95,
+          "latencyMs": 7668,
+          "inputTokens": 735,
+          "outputTokens": 71,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 2
+        }
+      ],
+      "consensus": {
+        "unanimous": false,
+        "pass": false,
+        "confidence": 0.95,
+        "dissentingModels": [
+          "non-llm/arbiter-v1"
+        ]
+      },
+      "status": "rejected",
+      "dissent_summary": {
+        "split_axis": [
+          "design"
+        ],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "Array.prototype.sort() mutates the original items array in place instead of creating a new sorted copy",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Returned value is the same reference as the input array, so sorted === items, defeating the purpose of useMemo and breaking React's immutability contract",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Array.prototype.sort() mutates the items array in place, violating React immutability and potentially corrupting upstream state or props",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "items.sort() mutates the original array",
+            "model": "xai:grok-3-mini"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": false,
+      "category": "correctness",
+      "difficulty": "hard"
+    },
+    {
+      "id": "cg-1781609633732-e26apr",
+      "timestamp": "2026-06-16T11:33:53.732Z",
+      "label": "cal-cal-006",
+      "code": "export default async (c: Context) => {\n  const data = await db.users.findMany({ where: { orgId: c.req.param('orgId') } });\n  return c.json(data);\n}",
+      "criteria": "security,correctness",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": false,
+          "issues": [
+            "IDOR: No authorization check before returning user data for any orgId",
+            "All user fields (likely including password hashes and PII) are returned with no field selection",
+            "Unbounded query with no pagination could return all users, enabling DoS or excessive data exposure",
+            "No error handling for database query failure, risking unhandled promise rejection or leaked error details"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "IDOR: No authorization check before returning user data for any orgId",
+              "evidence": "db.users.findMany({ where: { orgId: c.req.param('orgId') } })",
+              "severity": "high"
+            },
+            {
+              "claim": "All user fields (likely including password hashes and PII) are returned with no field selection",
+              "evidence": "return c.json(data); // data = await db.users.findMany(...)",
+              "severity": "high"
+            },
+            {
+              "claim": "Unbounded query with no pagination could return all users, enabling DoS or excessive data exposure",
+              "evidence": "db.users.findMany({ where: { orgId: c.req.param('orgId') } })",
+              "severity": "medium"
+            },
+            {
+              "claim": "No error handling for database query failure, risking unhandled promise rejection or leaked error details",
+              "evidence": "const data = await db.users.findMany(...)",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.92,
+          "latencyMs": 8018,
+          "inputTokens": 637,
+          "outputTokens": 878,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": false,
+          "issues": [
+            "Broken Access Control (IDOR): The handler filters data using a client-supplied parameter (`orgId`) without verifying that the authenticated user is authorized to access that specific organization. This allows an attacker to enumerate or access users from other organizations by modifying the request parameter.",
+            "Information Exposure: The code returns the raw result of the database query directly to the client. Database models typically contain sensitive fields (e.g., password hashes, internal flags, tokens) that should be filtered out via a `select` clause before serialization to prevent leakage."
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Broken Access Control (IDOR): The handler filters data using a client-supplied parameter (`orgId`) without verifying that the authenticated user is authorized to access that specific organization. This allows an attacker to enumerate or access users from other organizations by modifying the request parameter.",
+              "evidence": "where: { orgId: c.req.param('orgId') }",
+              "severity": "high"
+            },
+            {
+              "claim": "Information Exposure: The code returns the raw result of the database query directly to the client. Database models typically contain sensitive fields (e.g., password hashes, internal flags, tokens) that should be filtered out via a `select` clause before serialization to prevent leakage.",
+              "evidence": "return c.json(data);",
+              "severity": "high"
+            }
+          ],
+          "confidence": 0.95,
+          "latencyMs": 12613,
+          "inputTokens": 670,
+          "outputTokens": 1978,
+          "usageEstimated": false,
+          "substitutedFrom": "syn:small:vision",
+          "substituteAttempted": true,
+          "chainAttempts": [
+            "hf:moonshotai/Kimi-K2.6",
+            "syn:small:vision"
+          ]
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": false,
+          "issues": [
+            "Missing authorization check: any caller can retrieve all users for any orgId"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Missing authorization check: any caller can retrieve all users for any orgId",
+              "evidence": "const data = await db.users.findMany({ where: { orgId: c.req.param('orgId') } });",
+              "severity": "high"
+            }
+          ],
+          "confidence": 0.9,
+          "latencyMs": 9701,
+          "inputTokens": 750,
+          "outputTokens": 85,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 2
+        }
+      ],
+      "consensus": {
+        "unanimous": false,
+        "pass": false,
+        "confidence": 0.9425,
+        "dissentingModels": [
+          "non-llm/arbiter-v1"
+        ]
+      },
+      "status": "rejected",
+      "dissent_summary": {
+        "split_axis": [
+          "type-safety"
+        ],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "IDOR: No authorization check before returning user data for any orgId",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "All user fields (likely including password hashes and PII) are returned with no field selection",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Unbounded query with no pagination could return all users, enabling DoS or excessive data exposure",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "No error handling for database query failure, risking unhandled promise rejection or leaked error details",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Broken Access Control (IDOR): The handler filters data using a client-supplied parameter (`orgId`) without verifying that the authenticated user is authorized to access that specific organization. This allows an attacker to enumerate or access users from other organizations by modifying the request parameter.",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "Information Exposure: The code returns the raw result of the database query directly to the client. Database models typically contain sensitive fields (e.g., password hashes, internal flags, tokens) that should be filtered out via a `select` clause before serialization to prevent leakage.",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "Missing authorization check: any caller can retrieve all users for any orgId",
+            "model": "xai:grok-3-mini"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": false,
+      "category": "security",
+      "difficulty": "medium"
+    },
+    {
+      "id": "cg-1781609668151-7q0gbn",
+      "timestamp": "2026-06-16T11:34:28.151Z",
+      "label": "cal-cal-007",
+      "code": "function createUser(input: { email: string; name: string }) {\n  if (!input.email || !input.email.includes('@')) {\n    throw new Error('Invalid email');\n  }\n  if (!input.name || input.name.length < 2) {\n    throw new Error('Name too short');\n  }\n  return db.users.create({ data: input });\n}",
+      "criteria": "security,correctness",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": false,
+          "issues": [
+            "No maximum length validation on email or name allows inputs that can exceed database column constraints and cause an unhandled crash",
+            "Email validation is too permissive \u2014 trivially invalid values like '@' or '@@' pass the check",
+            "Name validation accepts whitespace-only strings, bypassing the intended minimum-length check"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "No maximum length validation on email or name allows inputs that can exceed database column constraints and cause an unhandled crash",
+              "evidence": "Only minimum length is checked: `input.name.length < 2`; no upper bound like `input.name.length > MAX` exists for either field before passing to `db.users.create({ data: input })`",
+              "severity": "medium"
+            },
+            {
+              "claim": "Email validation is too permissive \u2014 trivially invalid values like '@' or '@@' pass the check",
+              "evidence": "`!input.email.includes('@')` only verifies an '@' character exists anywhere in the string, allowing strings like `'@'` or `'a@b@c'` to pass",
+              "severity": "low"
+            },
+            {
+              "claim": "Name validation accepts whitespace-only strings, bypassing the intended minimum-length check",
+              "evidence": "`input.name.length < 2` allows `'  '` (two spaces) as a valid name since it only checks character count, not meaningful content",
+              "severity": "low"
+            }
+          ],
+          "confidence": 0.8,
+          "latencyMs": 12997,
+          "inputTokens": 668,
+          "outputTokens": 1723,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": true,
+          "issues": [
+            "Weak email validation allows malformed addresses"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Weak email validation allows malformed addresses",
+              "evidence": "if (!input.email || !input.email.includes('@'))",
+              "severity": "low"
+            }
+          ],
+          "confidence": 0.9,
+          "latencyMs": 11735,
+          "inputTokens": 706,
+          "outputTokens": 1814,
+          "usageEstimated": false,
+          "substitutedFrom": "syn:small:vision",
+          "substituteAttempted": true,
+          "chainAttempts": [
+            "hf:moonshotai/Kimi-K2.6",
+            "syn:small:vision"
+          ]
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": true,
+          "issues": [],
+          "confidence": 0.9,
+          "latencyMs": 12580,
+          "inputTokens": 782,
+          "outputTokens": 22,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 2
+        }
+      ],
+      "consensus": {
+        "unanimous": false,
+        "pass": true,
+        "confidence": 0.9,
+        "dissentingModels": [
+          "hf:zai-org/GLM-5.1"
+        ]
+      },
+      "status": "passed",
+      "dissent_summary": {
+        "split_axis": [],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "No maximum length validation on email or name allows inputs that can exceed database column constraints and cause an unhandled crash",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Email validation is too permissive \u2014 trivially invalid values like '@' or '@@' pass the check",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Name validation accepts whitespace-only strings, bypassing the intended minimum-length check",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Weak email validation allows malformed addresses",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": false,
+      "category": "correctness",
+      "difficulty": "easy"
+    },
+    {
+      "id": "cg-1781609697948-1sboz8",
+      "timestamp": "2026-06-16T11:34:57.948Z",
+      "label": "cal-cal-008",
+      "code": "for (const item of largeArray) {\n  await db.items.create({ data: item });\n}",
+      "criteria": "correctness,perf",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": false,
+          "issues": [
+            "N+1 database calls: each iteration issues a separate INSERT instead of using a bulk insert (e.g. createMany), causing latency to scale linearly with array size",
+            "No transaction wrapping: if any insert fails midway, previously inserted items remain in the database, leaving data in a partially-committed inconsistent state"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "N+1 database calls: each iteration issues a separate INSERT instead of using a bulk insert (e.g. createMany), causing latency to scale linearly with array size",
+              "evidence": "for (const item of largeArray) { await db.items.create({ data: item }); }",
+              "severity": "medium"
+            },
+            {
+              "claim": "No transaction wrapping: if any insert fails midway, previously inserted items remain in the database, leaving data in a partially-committed inconsistent state",
+              "evidence": "for (const item of largeArray) { await db.items.create({ data: item }); }",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.92,
+          "latencyMs": 8613,
+          "inputTokens": 613,
+          "outputTokens": 819,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": false,
+          "issues": [
+            "Sequential database insertions in a loop create N individual round-trips, causing severe slowdown for largeArray",
+            "Loop lacks a transaction boundary, so a failure mid-loop leaves earlier items persisted and the batch partially written"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Sequential database insertions in a loop create N individual round-trips, causing severe slowdown for largeArray",
+              "evidence": "for (const item of largeArray) { await db.items.create({ data: item }); }",
+              "severity": "medium"
+            },
+            {
+              "claim": "Loop lacks a transaction boundary, so a failure mid-loop leaves earlier items persisted and the batch partially written",
+              "evidence": "for (const item of largeArray) { await db.items.create({ data: item }); }",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.95,
+          "latencyMs": 20491,
+          "inputTokens": 613,
+          "outputTokens": 1983,
+          "usageEstimated": false
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": false,
+          "issues": [
+            "Sequential await in loop performs N individual DB writes instead of bulk or concurrent operation"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Sequential await in loop performs N individual DB writes instead of bulk or concurrent operation",
+              "evidence": "for (const item of largeArray) { await db.items.create({ data: item }); }",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.9,
+          "latencyMs": 6018,
+          "inputTokens": 726,
+          "outputTokens": 81,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 1
+        }
+      ],
+      "consensus": {
+        "unanimous": false,
+        "pass": false,
+        "confidence": 0.9425,
+        "dissentingModels": [
+          "non-llm/arbiter-v1"
+        ]
+      },
+      "status": "rejected",
+      "dissent_summary": {
+        "split_axis": [
+          "performance",
+          "type-safety"
+        ],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "N+1 database calls: each iteration issues a separate INSERT instead of using a bulk insert (e.g. createMany), causing latency to scale linearly with array size",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "No transaction wrapping: if any insert fails midway, previously inserted items remain in the database, leaving data in a partially-committed inconsistent state",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Sequential database insertions in a loop create N individual round-trips, causing severe slowdown for largeArray",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "Loop lacks a transaction boundary, so a failure mid-loop leaves earlier items persisted and the batch partially written",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "Sequential await in loop performs N individual DB writes instead of bulk or concurrent operation",
+            "model": "xai:grok-3-mini"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": false,
+      "category": "performance",
+      "difficulty": "medium"
+    },
+    {
+      "id": "cg-1781609718507-ltvus0",
+      "timestamp": "2026-06-16T11:35:18.507Z",
+      "label": "cal-cal-009",
+      "code": "function executeExpression(expr: string) {\n  return eval(expr);\n}",
+      "criteria": "security,correctness",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": false,
+          "issues": [
+            "Arbitrary code execution via eval on unsanitized input"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Arbitrary code execution via eval on unsanitized input",
+              "evidence": "return eval(expr);",
+              "severity": "high"
+            }
+          ],
+          "confidence": 1,
+          "latencyMs": 2513,
+          "inputTokens": 609,
+          "outputTokens": 102,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": false,
+          "issues": [
+            "Arbitrary code execution via eval on unsanitized input"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Arbitrary code execution via eval on unsanitized input",
+              "evidence": "return eval(expr);",
+              "severity": "high"
+            }
+          ],
+          "confidence": 1,
+          "latencyMs": 3302,
+          "inputTokens": 609,
+          "outputTokens": 324,
+          "usageEstimated": false
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": false,
+          "issues": [
+            "Use of eval on arbitrary string input enables code injection and arbitrary code execution"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Use of eval on arbitrary string input enables code injection and arbitrary code execution",
+              "evidence": "return eval(expr);",
+              "severity": "high"
+            }
+          ],
+          "confidence": 0.95,
+          "latencyMs": 6053,
+          "inputTokens": 722,
+          "outputTokens": 65,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": false,
+          "issues": [
+            "eval() can execute arbitrary code from untrusted strings."
+          ],
+          "dissent_claims": [
+            {
+              "claim": "eval() can execute arbitrary code from untrusted strings.",
+              "evidence": "string) { return eval(expr); }",
+              "severity": "high"
+            }
+          ],
+          "confidence": 0.85,
+          "latencyMs": 2
+        }
+      ],
+      "consensus": {
+        "unanimous": true,
+        "pass": false,
+        "confidence": 0.9500000000000001
+      },
+      "status": "rejected",
+      "dissent_summary": {
+        "split_axis": [
+          "security"
+        ],
+        "aligned_claims": [
+          {
+            "claim": "Arbitrary code execution via eval on unsanitized input",
+            "models": [
+              "hf:moonshotai/Kimi-K2.6",
+              "hf:zai-org/GLM-5.1"
+            ]
+          }
+        ],
+        "unique_claims": [
+          {
+            "claim": "Use of eval on arbitrary string input enables code injection and arbitrary code execution",
+            "model": "xai:grok-3-mini"
+          },
+          {
+            "claim": "eval() can execute arbitrary code from untrusted strings.",
+            "model": "non-llm/arbiter-v1"
+          }
+        ],
+        "dissent_score": 0.6666666666666667
+      },
+      "expected_pass": false,
+      "category": "security",
+      "difficulty": "easy"
+    },
+    {
+      "id": "cg-1781609724627-03qqzp",
+      "timestamp": "2026-06-16T11:35:24.627Z",
+      "label": "cal-cal-010",
+      "code": "app.use(async (c, next) => {\n  try {\n    await next();\n  } catch (err) {\n    console.error('Request failed:', err);\n    return c.json({ error: 'Internal error' }, 500);\n  }\n});",
+      "criteria": "correctness,security",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": false,
+          "issues": [
+            "Catching all exceptions and unconditionally returning a 500 status code silently swallows intentional HTTP errors (like 401 Unauthorized or 403 Forbidden) thrown downstream, converting them into 500 Internal Server Error responses.",
+            "Logging the raw err object might expose sensitive information (e.g., user PII, credentials, or internal details) in server logs depending on what the error contains."
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Catching all exceptions and unconditionally returning a 500 status code silently swallows intentional HTTP errors (like 401 Unauthorized or 403 Forbidden) thrown downstream, converting them into 500 Internal Server Error responses.",
+              "evidence": "catch (err) { ... return c.json({ error: 'Internal error' }, 500); }",
+              "severity": "medium"
+            },
+            {
+              "claim": "Logging the raw err object might expose sensitive information (e.g., user PII, credentials, or internal details) in server logs depending on what the error contains.",
+              "evidence": "console.error('Request failed:', err);",
+              "severity": "low"
+            }
+          ],
+          "confidence": 0.85,
+          "latencyMs": 27428,
+          "inputTokens": 644,
+          "outputTokens": 3265,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": true,
+          "issues": [],
+          "confidence": 0.95,
+          "latencyMs": 11748,
+          "inputTokens": 683,
+          "outputTokens": 1910,
+          "usageEstimated": false,
+          "substitutedFrom": "syn:small:vision",
+          "substituteAttempted": true,
+          "chainAttempts": [
+            "hf:moonshotai/Kimi-K2.6",
+            "syn:small:vision"
+          ]
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": true,
+          "issues": [],
+          "confidence": 0.9,
+          "latencyMs": 7984,
+          "inputTokens": 757,
+          "outputTokens": 22,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 1
+        }
+      ],
+      "consensus": {
+        "unanimous": false,
+        "pass": true,
+        "confidence": 0.9249999999999999,
+        "dissentingModels": [
+          "hf:zai-org/GLM-5.1"
+        ]
+      },
+      "status": "passed",
+      "dissent_summary": {
+        "split_axis": [],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "Catching all exceptions and unconditionally returning a 500 status code silently swallows intentional HTTP errors (like 401 Unauthorized or 403 Forbidden) thrown downstream, converting them into 500 Internal Server Error responses.",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Logging the raw err object might expose sensitive information (e.g., user PII, credentials, or internal details) in server logs depending on what the error contains.",
+            "model": "hf:zai-org/GLM-5.1"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": true,
+      "category": "correctness",
+      "difficulty": "easy"
+    },
+    {
+      "id": "cg-1781609758612-kzu7rf",
+      "timestamp": "2026-06-16T11:35:58.612Z",
+      "label": "cal-cal-011",
+      "code": "function renderUserProfile(user: { name: string; bio: string }) {\n  return `<div><h2>${user.name}</h2><p>${user.bio}</p></div>`;\n}",
+      "criteria": "security,correctness",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": false,
+          "issues": [
+            "Cross-Site Scripting (XSS) vulnerability due to unescaped interpolation of user.name into HTML",
+            "Cross-Site Scripting (XSS) vulnerability due to unescaped interpolation of user.bio into HTML"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Cross-Site Scripting (XSS) vulnerability due to unescaped interpolation of user.name into HTML",
+              "evidence": "${user.name}",
+              "severity": "high"
+            },
+            {
+              "claim": "Cross-Site Scripting (XSS) vulnerability due to unescaped interpolation of user.bio into HTML",
+              "evidence": "${user.bio}",
+              "severity": "high"
+            }
+          ],
+          "confidence": 1,
+          "latencyMs": 4569,
+          "inputTokens": 634,
+          "outputTokens": 405,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": false,
+          "issues": [
+            "Cross-site scripting (XSS): user-controlled strings are interpolated directly into HTML without escaping"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Cross-site scripting (XSS): user-controlled strings are interpolated directly into HTML without escaping",
+              "evidence": "return `<div><h2>${user.name}</h2><p>${user.bio}</p></div>`;",
+              "severity": "high"
+            }
+          ],
+          "confidence": 1,
+          "latencyMs": 4668,
+          "inputTokens": 637,
+          "outputTokens": 884,
+          "usageEstimated": false
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": false,
+          "issues": [
+            "Direct interpolation of user-controlled strings into HTML creates XSS vulnerability"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Direct interpolation of user-controlled strings into HTML creates XSS vulnerability",
+              "evidence": "return `<div><h2>${user.name}</h2><p>${user.bio}</p></div>`;",
+              "severity": "high"
+            }
+          ],
+          "confidence": 0.9,
+          "latencyMs": 4237,
+          "inputTokens": 748,
+          "outputTokens": 80,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 2
+        }
+      ],
+      "consensus": {
+        "unanimous": false,
+        "pass": false,
+        "confidence": 0.975,
+        "dissentingModels": [
+          "non-llm/arbiter-v1"
+        ]
+      },
+      "status": "rejected",
+      "dissent_summary": {
+        "split_axis": [
+          "security"
+        ],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "Cross-Site Scripting (XSS) vulnerability due to unescaped interpolation of user.name into HTML",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Cross-Site Scripting (XSS) vulnerability due to unescaped interpolation of user.bio into HTML",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Cross-site scripting (XSS): user-controlled strings are interpolated directly into HTML without escaping",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "Direct interpolation of user-controlled strings into HTML creates XSS vulnerability",
+            "model": "xai:grok-3-mini"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": false,
+      "category": "security",
+      "difficulty": "hard"
+    },
+    {
+      "id": "cg-1781609763345-nfubub",
+      "timestamp": "2026-06-16T11:36:03.345Z",
+      "label": "cal-cal-012",
+      "code": "interface Config {\n  apiUrl: string;\n  timeout: number;\n  retries: number;\n}\n\nfunction validateConfig(config: unknown): config is Config {\n  const c = config as Record<string, unknown>;\n  return typeof c.apiUrl === 'string' && typeof c.timeout === 'number' && typeof c.retries === 'number';\n}",
+      "criteria": "correctness,security",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": false,
+          "issues": [
+            "The function crashes when config is null or undefined instead of returning false",
+            "NaN and Infinity pass the number checks, likely producing invalid runtime behavior downstream"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "The function crashes when config is null or undefined instead of returning false",
+              "evidence": "const c = config as Record<string, unknown>; return typeof c.apiUrl === 'string' ...",
+              "severity": "high"
+            },
+            {
+              "claim": "NaN and Infinity pass the number checks, likely producing invalid runtime behavior downstream",
+              "evidence": "typeof c.timeout === 'number' && typeof c.retries === 'number'",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.92,
+          "latencyMs": 8677,
+          "inputTokens": 661,
+          "outputTokens": 1053,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": false,
+          "issues": [
+            "Type guard crashes on null or undefined input"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Type guard crashes on null or undefined input",
+              "evidence": "const c = config as Record<string, unknown>; return typeof c.apiUrl === 'string' && ...",
+              "severity": "high"
+            }
+          ],
+          "confidence": 0.95,
+          "latencyMs": 11977,
+          "inputTokens": 663,
+          "outputTokens": 2564,
+          "usageEstimated": false
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": false,
+          "issues": [
+            "validateConfig crashes on null/undefined/primitive inputs instead of returning false"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "validateConfig crashes on null/undefined/primitive inputs instead of returning false",
+              "evidence": "const c = config as Record<string, unknown>; return typeof c.apiUrl ... (no prior typeof config === 'object' && config !== null check)",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.9,
+          "latencyMs": 8129,
+          "inputTokens": 776,
+          "outputTokens": 91,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 2
+        }
+      ],
+      "consensus": {
+        "unanimous": false,
+        "pass": false,
+        "confidence": 0.9425,
+        "dissentingModels": [
+          "non-llm/arbiter-v1"
+        ]
+      },
+      "status": "rejected",
+      "dissent_summary": {
+        "split_axis": [
+          "correctness",
+          "type-safety"
+        ],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "The function crashes when config is null or undefined instead of returning false",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "NaN and Infinity pass the number checks, likely producing invalid runtime behavior downstream",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Type guard crashes on null or undefined input",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "validateConfig crashes on null/undefined/primitive inputs instead of returning false",
+            "model": "xai:grok-3-mini"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": false,
+      "category": "correctness",
+      "difficulty": "hard"
+    },
+    {
+      "id": "cg-1781609775390-cyxj4e",
+      "timestamp": "2026-06-16T11:36:15.390Z",
+      "label": "cal-cal-013",
+      "code": "function calculateTotal(quantities: number[], unitPrice: number): number {\n  return quantities.reduce((sum, q) => sum + q, 0) * unitPrice;\n}",
+      "criteria": "correctness,security",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": true,
+          "issues": [
+            "No input validation for NaN, Infinity, or negative values in quantities or unitPrice, which could produce nonsensical results",
+            "Floating-point precision loss can occur when summing many decimal quantities, common to all JS/TS number arithmetic"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "No input validation for NaN, Infinity, or negative values in quantities or unitPrice, which could produce nonsensical results",
+              "evidence": "function calculateTotal(quantities: number[], unitPrice: number): number { return quantities.reduce((sum, q) => sum + q, 0) * unitPrice; }",
+              "severity": "low"
+            },
+            {
+              "claim": "Floating-point precision loss can occur when summing many decimal quantities, common to all JS/TS number arithmetic",
+              "evidence": "quantities.reduce((sum, q) => sum + q, 0) * unitPrice",
+              "severity": "low"
+            }
+          ],
+          "confidence": 0.95,
+          "latencyMs": 6519,
+          "inputTokens": 631,
+          "outputTokens": 671,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": true,
+          "issues": [],
+          "confidence": 0.95,
+          "latencyMs": 9516,
+          "inputTokens": 631,
+          "outputTokens": 2126,
+          "usageEstimated": false
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": true,
+          "issues": [],
+          "confidence": 0.9,
+          "latencyMs": 8871,
+          "inputTokens": 744,
+          "outputTokens": 22,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 1
+        }
+      ],
+      "consensus": {
+        "unanimous": true,
+        "pass": true,
+        "confidence": 0.95
+      },
+      "status": "passed",
+      "dissent_summary": {
+        "split_axis": [],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "No input validation for NaN, Infinity, or negative values in quantities or unitPrice, which could produce nonsensical results",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Floating-point precision loss can occur when summing many decimal quantities, common to all JS/TS number arithmetic",
+            "model": "hf:zai-org/GLM-5.1"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": true,
+      "category": "correctness",
+      "difficulty": "hard"
+    },
+    {
+      "id": "cg-1781609784971-q11634",
+      "timestamp": "2026-06-16T11:36:24.971Z",
+      "label": "cal-cal-014",
+      "code": "async function transferFunds(from: string, to: string, amount: number) {\n  const balance = await db.accounts.findUnique({ where: { id: from } });\n  if (balance.amount >= amount) {\n    await db.accounts.update({ where: { id: from }, data: { amount: balance.amount - amount } });\n    await db.accounts.update({ where: { id: to }, data: { amount: { increment: amount } } });\n  }\n}",
+      "criteria": "security,correctness",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": false,
+          "issues": [
+            "Race condition (TOCTOU) allows double-spending: balance is read then separately updated without any locking or serializable transaction, so two concurrent transfers can both pass the balance check and both decrement, resulting in a negative balance",
+            "Transfer is non-atomic: the two update operations are not wrapped in a database transaction, so if the debit succeeds but the credit fails (crash, error, missing account), funds are permanently lost",
+            "Null dereference if 'from' account does not exist: findUnique returns null for a missing record, and accessing balance.amount will throw an unhandled TypeError",
+            "No validation that amount is positive or that from !== to, allowing a self-transfer or negative-amount transfer that would incorrectly increment the balance"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Race condition (TOCTOU) allows double-spending: balance is read then separately updated without any locking or serializable transaction, so two concurrent transfers can both pass the balance check and both decrement, resulting in a negative balance",
+              "evidence": "const balance = await db.accounts.findUnique({ where: { id: from } });\n  if (balance.amount >= amount) {\n    await db.accounts.update({ where: { id: from }, data: { amount: balance.amount - amount } });",
+              "severity": "high"
+            },
+            {
+              "claim": "Transfer is non-atomic: the two update operations are not wrapped in a database transaction, so if the debit succeeds but the credit fails (crash, error, missing account), funds are permanently lost",
+              "evidence": "await db.accounts.update({ where: { id: from }, data: { amount: balance.amount - amount } });\n    await db.accounts.update({ where: { id: to }, data: { amount: { increment: amount } } });",
+              "severity": "high"
+            },
+            {
+              "claim": "Null dereference if 'from' account does not exist: findUnique returns null for a missing record, and accessing balance.amount will throw an unhandled TypeError",
+              "evidence": "const balance = await db.accounts.findUnique({ where: { id: from } });\n  if (balance.amount >= amount) {",
+              "severity": "medium"
+            },
+            {
+              "claim": "No validation that amount is positive or that from !== to, allowing a self-transfer or negative-amount transfer that would incorrectly increment the balance",
+              "evidence": "async function transferFunds(from: string, to: string, amount: number) {",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.97,
+          "latencyMs": 10158,
+          "inputTokens": 692,
+          "outputTokens": 957,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": false,
+          "issues": [
+            "Transfer debit and credit are not wrapped in a database transaction",
+            "Sender balance update suffers from a race condition (lost update)",
+            "Missing null check on fetched sender account causes runtime crash",
+            "Negative or zero transfer amount is not rejected, allowing reversed or no-op transfers"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Transfer debit and credit are not wrapped in a database transaction",
+              "evidence": "Sequential independent awaits: `await db.accounts.update({ where: { id: from }, data: { amount: balance.amount - amount } });` and `await db.accounts.update({ where: { id: to }, data: { amount: { increment: amount } } });` with no transaction wrapper; a failure between them loses funds",
+              "severity": "high"
+            },
+            {
+              "claim": "Sender balance update suffers from a race condition (lost update)",
+              "evidence": "Balance is read earlier via `const balance = await db.accounts.findUnique({ where: { id: from } });` and the debit computes `data: { amount: balance.amount - amount }` from that stale read rather than using an atomic decrement",
+              "severity": "high"
+            },
+            {
+              "claim": "Missing null check on fetched sender account causes runtime crash",
+              "evidence": "`const balance = await db.accounts.findUnique(...)` may return `null`, but the code immediately accesses `balance.amount` without verifying the account exists",
+              "severity": "medium"
+            },
+            {
+              "claim": "Negative or zero transfer amount is not rejected, allowing reversed or no-op transfers",
+              "evidence": "Parameter `amount: number` is used directly in `if (balance.amount >= amount)` and `increment: amount` without validating `amount > 0`",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.95,
+          "latencyMs": 17159,
+          "inputTokens": 691,
+          "outputTokens": 3904,
+          "usageEstimated": false
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": false,
+          "issues": [
+            "No null check on balance after findUnique, causing crash if account does not exist",
+            "TOCTOU race condition: balance check and updates are not atomic, allowing overdraft or lost updates"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "No null check on balance after findUnique, causing crash if account does not exist",
+              "evidence": "const balance = await db.accounts.findUnique...; if (balance.amount >= amount)",
+              "severity": "high"
+            },
+            {
+              "claim": "TOCTOU race condition: balance check and updates are not atomic, allowing overdraft or lost updates",
+              "evidence": "if (balance.amount >= amount) { await update from; await update to; } (no transaction, no select-for-update)",
+              "severity": "high"
+            }
+          ],
+          "confidence": 0.9,
+          "latencyMs": 7554,
+          "inputTokens": 804,
+          "outputTokens": 147,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 2
+        }
+      ],
+      "consensus": {
+        "unanimous": false,
+        "pass": false,
+        "confidence": 0.955,
+        "dissentingModels": [
+          "non-llm/arbiter-v1"
+        ]
+      },
+      "status": "rejected",
+      "dissent_summary": {
+        "split_axis": [
+          "correctness",
+          "type-safety"
+        ],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "Race condition (TOCTOU) allows double-spending: balance is read then separately updated without any locking or serializable transaction, so two concurrent transfers can both pass the balance check and both decrement, resulting in a negative balance",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Transfer is non-atomic: the two update operations are not wrapped in a database transaction, so if the debit succeeds but the credit fails (crash, error, missing account), funds are permanently lost",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Null dereference if 'from' account does not exist: findUnique returns null for a missing record, and accessing balance.amount will throw an unhandled TypeError",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "No validation that amount is positive or that from !== to, allowing a self-transfer or negative-amount transfer that would incorrectly increment the balance",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Transfer debit and credit are not wrapped in a database transaction",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "Sender balance update suffers from a race condition (lost update)",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "Missing null check on fetched sender account causes runtime crash",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "Negative or zero transfer amount is not rejected, allowing reversed or no-op transfers",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "No null check on balance after findUnique, causing crash if account does not exist",
+            "model": "xai:grok-3-mini"
+          },
+          {
+            "claim": "TOCTOU race condition: balance check and updates are not atomic, allowing overdraft or lost updates",
+            "model": "xai:grok-3-mini"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": false,
+      "category": "security",
+      "difficulty": "hard"
+    },
+    {
+      "id": "cg-1781609802214-tjwg44",
+      "timestamp": "2026-06-16T11:36:42.214Z",
+      "label": "cal-cal-015",
+      "code": "async function getCachedUser(id: string): Promise<User | null> {\n  const cached = await redis.get(`user:${id}`);\n  if (cached) return JSON.parse(cached);\n  const user = await db.users.findUnique({ where: { id } });\n  if (user) await redis.set(`user:${id}`, JSON.stringify(user), 'EX', 3600);\n  return user;\n}",
+      "criteria": "correctness,perf",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": false,
+          "issues": [
+            "Cache penetration: null/non-existent users are never cached, so every request for a missing ID always hits the database, which can overwhelm the DB under heavy traffic for absent keys",
+            "JSON.parse on cached value has no error handling; corrupted or invalid data in Redis will cause an unhandled exception instead of falling back to the database",
+            "Stale data: cached user is served for up to 1 hour with no visible cache invalidation, so DB updates within the TTL window will not be reflected"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Cache penetration: null/non-existent users are never cached, so every request for a missing ID always hits the database, which can overwhelm the DB under heavy traffic for absent keys",
+              "evidence": "if (user) await redis.set(`user:${id}`, JSON.stringify(user), 'EX', 3600); \u2014 the cache write is gated on `user` being truthy, so `null` results are never stored",
+              "severity": "medium"
+            },
+            {
+              "claim": "JSON.parse on cached value has no error handling; corrupted or invalid data in Redis will cause an unhandled exception instead of falling back to the database",
+              "evidence": "if (cached) return JSON.parse(cached); \u2014 no try/catch around JSON.parse",
+              "severity": "low"
+            },
+            {
+              "claim": "Stale data: cached user is served for up to 1 hour with no visible cache invalidation, so DB updates within the TTL window will not be reflected",
+              "evidence": "await redis.set(`user:${id}`, JSON.stringify(user), 'EX', 3600); \u2014 3600-second TTL with no invalidation on DB writes",
+              "severity": "low"
+            }
+          ],
+          "confidence": 0.78,
+          "latencyMs": 21681,
+          "inputTokens": 676,
+          "outputTokens": 2568,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": false,
+          "issues": [
+            "Unhandled exception risk if cached data is malformed or corrupted, causing request crash"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Unhandled exception risk if cached data is malformed or corrupted, causing request crash",
+              "evidence": "if (cached) return JSON.parse(cached);",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.85,
+          "latencyMs": 19685,
+          "inputTokens": 715,
+          "outputTokens": 3493,
+          "usageEstimated": false,
+          "substitutedFrom": "syn:small:vision",
+          "substituteAttempted": true,
+          "chainAttempts": [
+            "hf:moonshotai/Kimi-K2.6",
+            "syn:small:vision"
+          ]
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": false,
+          "issues": [
+            "JSON.parse on unvalidated cache data can throw or return wrong shape"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "JSON.parse on unvalidated cache data can throw or return wrong shape",
+              "evidence": "if (cached) return JSON.parse(cached);",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.7,
+          "latencyMs": 12010,
+          "inputTokens": 789,
+          "outputTokens": 70,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 1
+        }
+      ],
+      "consensus": {
+        "unanimous": false,
+        "pass": false,
+        "confidence": 0.8325,
+        "dissentingModels": [
+          "non-llm/arbiter-v1"
+        ]
+      },
+      "status": "rejected",
+      "dissent_summary": {
+        "split_axis": [
+          "correctness"
+        ],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "Cache penetration: null/non-existent users are never cached, so every request for a missing ID always hits the database, which can overwhelm the DB under heavy traffic for absent keys",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "JSON.parse on cached value has no error handling; corrupted or invalid data in Redis will cause an unhandled exception instead of falling back to the database",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Stale data: cached user is served for up to 1 hour with no visible cache invalidation, so DB updates within the TTL window will not be reflected",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Unhandled exception risk if cached data is malformed or corrupted, causing request crash",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "JSON.parse on unvalidated cache data can throw or return wrong shape",
+            "model": "xai:grok-3-mini"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": false,
+      "category": "correctness",
+      "difficulty": "easy"
+    },
+    {
+      "id": "cg-1781609839451-zuxo82",
+      "timestamp": "2026-06-16T11:37:19.451Z",
+      "label": "cal-cal-016",
+      "code": "function getFile(filename: string): Buffer {\n  return fs.readFileSync(`./uploads/${filename}`);\n}",
+      "criteria": "security,correctness",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": false,
+          "issues": [
+            "Path traversal vulnerability: unsanitized user input is directly interpolated into a file path, allowing arbitrary file reads",
+            "No error handling for missing or inaccessible files; readFileSync will throw an unhandled exception",
+            "Relative path depends on current working directory, making file resolution fragile and environment-dependent"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Path traversal vulnerability: unsanitized user input is directly interpolated into a file path, allowing arbitrary file reads",
+              "evidence": "fs.readFileSync(`./uploads/${filename}`)",
+              "severity": "high"
+            },
+            {
+              "claim": "No error handling for missing or inaccessible files; readFileSync will throw an unhandled exception",
+              "evidence": "return fs.readFileSync(`./uploads/${filename}`);",
+              "severity": "low"
+            },
+            {
+              "claim": "Relative path depends on current working directory, making file resolution fragile and environment-dependent",
+              "evidence": "`./uploads/${filename}`",
+              "severity": "low"
+            }
+          ],
+          "confidence": 0.97,
+          "latencyMs": 6661,
+          "inputTokens": 614,
+          "outputTokens": 581,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": false,
+          "issues": [
+            "Path traversal vulnerability allows arbitrary file read"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Path traversal vulnerability allows arbitrary file read",
+              "evidence": "return fs.readFileSync(`./uploads/${filename}`);",
+              "severity": "high"
+            }
+          ],
+          "confidence": 1,
+          "latencyMs": 13695,
+          "inputTokens": 618,
+          "outputTokens": 2297,
+          "usageEstimated": false
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": false,
+          "issues": [
+            "Path traversal vulnerability: unsanitized filename allows reading arbitrary files outside uploads/"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Path traversal vulnerability: unsanitized filename allows reading arbitrary files outside uploads/",
+              "evidence": "fs.readFileSync(`./uploads/${filename}`)",
+              "severity": "high"
+            }
+          ],
+          "confidence": 0.95,
+          "latencyMs": 4168,
+          "inputTokens": 730,
+          "outputTokens": 71,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 2
+        }
+      ],
+      "consensus": {
+        "unanimous": false,
+        "pass": false,
+        "confidence": 0.98,
+        "dissentingModels": [
+          "non-llm/arbiter-v1"
+        ]
+      },
+      "status": "rejected",
+      "dissent_summary": {
+        "split_axis": [],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "Path traversal vulnerability: unsanitized user input is directly interpolated into a file path, allowing arbitrary file reads",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "No error handling for missing or inaccessible files; readFileSync will throw an unhandled exception",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Relative path depends on current working directory, making file resolution fragile and environment-dependent",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Path traversal vulnerability allows arbitrary file read",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "Path traversal vulnerability: unsanitized filename allows reading arbitrary files outside uploads/",
+            "model": "xai:grok-3-mini"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": false,
+      "category": "security",
+      "difficulty": "medium"
+    },
+    {
+      "id": "cg-1781609853215-5cqs79",
+      "timestamp": "2026-06-16T11:37:33.215Z",
+      "label": "cal-cal-017",
+      "code": "async function getAllUsers(): Promise<User[]> {\n  return db.users.findMany();\n}",
+      "criteria": "correctness,perf",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": false,
+          "issues": [
+            "Unbounded database query without limit or pagination can cause memory exhaustion or severe performance degradation as the table grows."
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Unbounded database query without limit or pagination can cause memory exhaustion or severe performance degradation as the table grows.",
+              "evidence": "db.users.findMany()",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.85,
+          "latencyMs": 9400,
+          "inputTokens": 610,
+          "outputTokens": 819,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": false,
+          "issues": [
+            "Unbounded query loads entire table into memory without limit or pagination"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Unbounded query loads entire table into memory without limit or pagination",
+              "evidence": "return db.users.findMany();",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 1,
+          "latencyMs": 5388,
+          "inputTokens": 611,
+          "outputTokens": 1086,
+          "usageEstimated": false
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": false,
+          "issues": [
+            "Unbounded query with no limit/pagination"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Unbounded query with no limit/pagination",
+              "evidence": "return db.users.findMany();",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.9,
+          "latencyMs": 4430,
+          "inputTokens": 724,
+          "outputTokens": 61,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 2
+        }
+      ],
+      "consensus": {
+        "unanimous": false,
+        "pass": false,
+        "confidence": 0.9375,
+        "dissentingModels": [
+          "non-llm/arbiter-v1"
+        ]
+      },
+      "status": "rejected",
+      "dissent_summary": {
+        "split_axis": [
+          "performance"
+        ],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "Unbounded database query without limit or pagination can cause memory exhaustion or severe performance degradation as the table grows.",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Unbounded query loads entire table into memory without limit or pagination",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "Unbounded query with no limit/pagination",
+            "model": "xai:grok-3-mini"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": false,
+      "category": "performance",
+      "difficulty": "medium"
+    },
+    {
+      "id": "cg-1781609862679-wswslu",
+      "timestamp": "2026-06-16T11:37:42.679Z",
+      "label": "cal-cal-018",
+      "code": "async function loadDashboard(userId: string) {\n  const [profile, orders, notifications] = await Promise.all([\n    db.users.findUnique({ where: { id: userId } }),\n    db.orders.findMany({ where: { userId }, take: 10 }),\n    db.notifications.findMany({ where: { userId, read: false }, take: 5 })\n  ]);\n  return { profile, orders, notifications };\n}",
+      "criteria": "correctness,perf",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": true,
+          "issues": [
+            "findUnique may return null if user does not exist, and the function returns it without any null check or error signaling",
+            "Promise.all rejects on the first failure, losing results from already-resolved parallel queries; no error handling or fallback for partial success"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "findUnique may return null if user does not exist, and the function returns it without any null check or error signaling",
+              "evidence": "db.users.findUnique({ where: { id: userId } })",
+              "severity": "low"
+            },
+            {
+              "claim": "Promise.all rejects on the first failure, losing results from already-resolved parallel queries; no error handling or fallback for partial success",
+              "evidence": "await Promise.all([...])",
+              "severity": "low"
+            }
+          ],
+          "confidence": 0.88,
+          "latencyMs": 10480,
+          "inputTokens": 678,
+          "outputTokens": 1067,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": true,
+          "issues": [
+            "Missing orderBy in findMany queries yields non-deterministic subsets"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Missing orderBy in findMany queries yields non-deterministic subsets",
+              "evidence": "db.orders.findMany({ where: { userId }, take: 10 }) and db.notifications.findMany({ where: { userId, read: false }, take: 5 }) lack an orderBy clause",
+              "severity": "low"
+            }
+          ],
+          "confidence": 0.92,
+          "latencyMs": 15992,
+          "inputTokens": 682,
+          "outputTokens": 3825,
+          "usageEstimated": false
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": true,
+          "issues": [],
+          "confidence": 0.9,
+          "latencyMs": 6219,
+          "inputTokens": 795,
+          "outputTokens": 22,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 2
+        }
+      ],
+      "consensus": {
+        "unanimous": true,
+        "pass": true,
+        "confidence": 0.925
+      },
+      "status": "passed",
+      "dissent_summary": {
+        "split_axis": [
+          "correctness",
+          "type-safety"
+        ],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "findUnique may return null if user does not exist, and the function returns it without any null check or error signaling",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Promise.all rejects on the first failure, losing results from already-resolved parallel queries; no error handling or fallback for partial success",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Missing orderBy in findMany queries yields non-deterministic subsets",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": true,
+      "category": "correctness",
+      "difficulty": "easy"
+    },
+    {
+      "id": "cg-1781609878758-clkxt4",
+      "timestamp": "2026-06-16T11:37:58.758Z",
+      "label": "cal-cal-019",
+      "code": "async function processJob(job: Job) {\n  try {\n    await executeJob(job);\n  } catch {\n    // ignore\n  }\n}",
+      "criteria": "correctness,security",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": false,
+          "issues": [
+            "All errors from executeJob are silently swallowed, causing silent job failures with no logging, retry, or propagation"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "All errors from executeJob are silently swallowed, causing silent job failures with no logging, retry, or propagation",
+              "evidence": "catch {\n    // ignore\n  }",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.92,
+          "latencyMs": 6046,
+          "inputTokens": 622,
+          "outputTokens": 650,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": false,
+          "issues": [
+            "Empty catch block silently swallows all errors from job execution, preventing failure detection, retries, or logging"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Empty catch block silently swallows all errors from job execution, preventing failure detection, retries, or logging",
+              "evidence": "catch {\n    // ignore\n  }",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.9,
+          "latencyMs": 9256,
+          "inputTokens": 622,
+          "outputTokens": 1843,
+          "usageEstimated": false
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": false,
+          "issues": [
+            "Silently swallows all errors from executeJob, causing unhandled job failures"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Silently swallows all errors from executeJob, causing unhandled job failures",
+              "evidence": "catch { // ignore }",
+              "severity": "high"
+            }
+          ],
+          "confidence": 0.9,
+          "latencyMs": 3937,
+          "inputTokens": 735,
+          "outputTokens": 66,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 1
+        }
+      ],
+      "consensus": {
+        "unanimous": false,
+        "pass": false,
+        "confidence": 0.93,
+        "dissentingModels": [
+          "non-llm/arbiter-v1"
+        ]
+      },
+      "status": "rejected",
+      "dissent_summary": {
+        "split_axis": [],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "All errors from executeJob are silently swallowed, causing silent job failures with no logging, retry, or propagation",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Empty catch block silently swallows all errors from job execution, preventing failure detection, retries, or logging",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "Silently swallows all errors from executeJob, causing unhandled job failures",
+            "model": "xai:grok-3-mini"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": false,
+      "category": "correctness",
+      "difficulty": "medium"
+    },
+    {
+      "id": "cg-1781609888081-u65mih",
+      "timestamp": "2026-06-16T11:38:08.081Z",
+      "label": "cal-cal-020",
+      "code": "async function login(email: string, password: string) {\n  console.log(`Login attempt: email=${email}, password=${password}`);\n  const user = await db.users.findUnique({ where: { email } });\n  return user;\n}",
+      "criteria": "security,correctness",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": false,
+          "issues": [
+            "Password is never verified \u2014 the function authenticates solely by email, allowing anyone who knows an email to log in",
+            "Plaintext password is logged, exposing credentials in log output",
+            "Full user object (likely including password hash and other sensitive fields) is returned to the caller"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Password is never verified \u2014 the function authenticates solely by email, allowing anyone who knows an email to log in",
+              "evidence": "const user = await db.users.findUnique({ where: { email } }); return user;",
+              "severity": "high"
+            },
+            {
+              "claim": "Plaintext password is logged, exposing credentials in log output",
+              "evidence": "console.log(`Login attempt: email=${email}, password=${password}`);",
+              "severity": "high"
+            },
+            {
+              "claim": "Full user object (likely including password hash and other sensitive fields) is returned to the caller",
+              "evidence": "return user;",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.97,
+          "latencyMs": 4207,
+          "inputTokens": 643,
+          "outputTokens": 429,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": false,
+          "issues": [
+            "Logs plaintext password to console",
+            "Accepts password parameter but never verifies it, enabling authentication bypass",
+            "Returns raw database user object likely exposing sensitive fields such as password hash"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Logs plaintext password to console",
+              "evidence": "console.log(`Login attempt: email=${email}, password=${password}`);",
+              "severity": "high"
+            },
+            {
+              "claim": "Accepts password parameter but never verifies it, enabling authentication bypass",
+              "evidence": "async function login(email: string, password: string) { ... const user = await db.users.findUnique({ where: { email } }); return user; }",
+              "severity": "high"
+            },
+            {
+              "claim": "Returns raw database user object likely exposing sensitive fields such as password hash",
+              "evidence": "return user;",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 1,
+          "latencyMs": 10890,
+          "inputTokens": 643,
+          "outputTokens": 2216,
+          "usageEstimated": false
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": false,
+          "issues": [
+            "Password is logged in plaintext to console",
+            "Login performs no password verification or authentication"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Password is logged in plaintext to console",
+              "evidence": "console.log(`Login attempt: email=${email}, password=${password}`);",
+              "severity": "high"
+            },
+            {
+              "claim": "Login performs no password verification or authentication",
+              "evidence": "const user = await db.users.findUnique({ where: { email } }); return user;",
+              "severity": "high"
+            }
+          ],
+          "confidence": 0.95,
+          "latencyMs": 4555,
+          "inputTokens": 756,
+          "outputTokens": 116,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 2
+        }
+      ],
+      "consensus": {
+        "unanimous": false,
+        "pass": false,
+        "confidence": 0.98,
+        "dissentingModels": [
+          "non-llm/arbiter-v1"
+        ]
+      },
+      "status": "rejected",
+      "dissent_summary": {
+        "split_axis": [],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "Password is never verified \u2014 the function authenticates solely by email, allowing anyone who knows an email to log in",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Plaintext password is logged, exposing credentials in log output",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Full user object (likely including password hash and other sensitive fields) is returned to the caller",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Logs plaintext password to console",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "Accepts password parameter but never verifies it, enabling authentication bypass",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "Returns raw database user object likely exposing sensitive fields such as password hash",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "Password is logged in plaintext to console",
+            "model": "xai:grok-3-mini"
+          },
+          {
+            "claim": "Login performs no password verification or authentication",
+            "model": "xai:grok-3-mini"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": false,
+      "category": "security",
+      "difficulty": "medium"
+    },
+    {
+      "id": "cg-1781609899039-9q48ys",
+      "timestamp": "2026-06-16T11:38:19.039Z",
+      "label": "cal-cal-021",
+      "code": "const rows = await db.query('SELECT * FROM users WHERE id = $1', [req.params.id]);",
+      "criteria": "security,correctness",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": true,
+          "issues": [
+            "User input used directly without validation; if id must be numeric, a non-numeric string could cause a database error or unexpected behavior",
+            "SELECT * exposes all columns and may leak sensitive fields (e.g., password hashes, internal flags) if the result is later serialized",
+            "No error handling visible; a failed query would cause an unhandled promise rejection"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "User input used directly without validation; if id must be numeric, a non-numeric string could cause a database error or unexpected behavior",
+              "evidence": "req.params.id passed directly as parameter without type checking",
+              "severity": "low"
+            },
+            {
+              "claim": "SELECT * exposes all columns and may leak sensitive fields (e.g., password hashes, internal flags) if the result is later serialized",
+              "evidence": "'SELECT * FROM users WHERE id = $1'",
+              "severity": "low"
+            },
+            {
+              "claim": "No error handling visible; a failed query would cause an unhandled promise rejection",
+              "evidence": "const rows = await db.query(...) \u2014 no try/catch or .catch()",
+              "severity": "low"
+            }
+          ],
+          "confidence": 0.88,
+          "latencyMs": 7567,
+          "inputTokens": 617,
+          "outputTokens": 864,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": true,
+          "issues": [],
+          "confidence": 0.95,
+          "latencyMs": 10731,
+          "inputTokens": 647,
+          "outputTokens": 1667,
+          "usageEstimated": false,
+          "substitutedFrom": "syn:small:vision",
+          "substituteAttempted": true,
+          "chainAttempts": [
+            "hf:moonshotai/Kimi-K2.6",
+            "syn:small:vision"
+          ]
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": true,
+          "issues": [],
+          "confidence": 0.9,
+          "latencyMs": 4771,
+          "inputTokens": 730,
+          "outputTokens": 22,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 1
+        }
+      ],
+      "consensus": {
+        "unanimous": true,
+        "pass": true,
+        "confidence": 0.9325
+      },
+      "status": "passed",
+      "dissent_summary": {
+        "split_axis": [
+          "performance"
+        ],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "User input used directly without validation; if id must be numeric, a non-numeric string could cause a database error or unexpected behavior",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "SELECT * exposes all columns and may leak sensitive fields (e.g., password hashes, internal flags) if the result is later serialized",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "No error handling visible; a failed query would cause an unhandled promise rejection",
+            "model": "hf:zai-org/GLM-5.1"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": true,
+      "category": "security",
+      "difficulty": "easy"
+    },
+    {
+      "id": "cg-1781609927711-m3z9h0",
+      "timestamp": "2026-06-16T11:38:47.711Z",
+      "label": "cal-cal-022",
+      "code": "function firstName(user?: { name?: string }) {\n  if (user == null || user.name == null) return 'Guest';\n  return user.name.split(' ')[0];\n}",
+      "criteria": "correctness",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": false,
+          "issues": [
+            "Function returns an empty string instead of the first name if the name string has leading spaces.",
+            "Function returns an empty string instead of 'Guest' if the name is an empty string or contains only whitespace."
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Function returns an empty string instead of the first name if the name string has leading spaces.",
+              "evidence": "return user.name.split(' ')[0]; // e.g., ' John'.split(' ')[0] returns ''",
+              "severity": "medium"
+            },
+            {
+              "claim": "Function returns an empty string instead of 'Guest' if the name is an empty string or contains only whitespace.",
+              "evidence": "if (user == null || user.name == null) return 'Guest'; // '' or ' ' passes the check, resulting in '' from split",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.85,
+          "latencyMs": 15555,
+          "inputTokens": 625,
+          "outputTokens": 1967,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": false,
+          "issues": [
+            "Returns an empty string for names with leading whitespace instead of the first name"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Returns an empty string for names with leading whitespace instead of the first name",
+              "evidence": "return user.name.split(' ')[0];",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.95,
+          "latencyMs": 10353,
+          "inputTokens": 658,
+          "outputTokens": 1703,
+          "usageEstimated": false,
+          "substitutedFrom": "syn:small:vision",
+          "substituteAttempted": true,
+          "chainAttempts": [
+            "hf:moonshotai/Kimi-K2.6",
+            "syn:small:vision"
+          ]
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": true,
+          "issues": [],
+          "confidence": 0.9,
+          "latencyMs": 8282,
+          "inputTokens": 739,
+          "outputTokens": 22,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 1
+        }
+      ],
+      "consensus": {
+        "unanimous": false,
+        "pass": null,
+        "confidence": 0.9249999999999999
+      },
+      "status": "escalate",
+      "dissent_summary": {
+        "split_axis": [],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "Function returns an empty string instead of the first name if the name string has leading spaces.",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Function returns an empty string instead of 'Guest' if the name is an empty string or contains only whitespace.",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Returns an empty string for names with leading whitespace instead of the first name",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": true,
+      "category": "correctness",
+      "difficulty": "medium"
+    },
+    {
+      "id": "cg-1781609955178-zs37ea",
+      "timestamp": "2026-06-16T11:39:15.178Z",
+      "label": "cal-cal-023",
+      "code": "function makeResetToken(): string {\n  return Math.random().toString(36).slice(2) + Date.now().toString(36);\n}",
+      "criteria": "security,correctness",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": false,
+          "issues": [
+            "Math.random() is not cryptographically secure and should never be used to generate security-sensitive tokens",
+            "Date.now() is predictable \u2014 an attacker can narrow the timestamp window \u2014 and adds negligible entropy to the token",
+            "The output length of Math.random().toString(36).slice(2) is variable and can be very short for certain random values, yielding insufficient entropy"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Math.random() is not cryptographically secure and should never be used to generate security-sensitive tokens",
+              "evidence": "return Math.random().toString(36).slice(2) + Date.now().toString(36);",
+              "severity": "high"
+            },
+            {
+              "claim": "Date.now() is predictable \u2014 an attacker can narrow the timestamp window \u2014 and adds negligible entropy to the token",
+              "evidence": "Date.now().toString(36)",
+              "severity": "high"
+            },
+            {
+              "claim": "The output length of Math.random().toString(36).slice(2) is variable and can be very short for certain random values, yielding insufficient entropy",
+              "evidence": "Math.random().toString(36).slice(2)",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.97,
+          "latencyMs": 9408,
+          "inputTokens": 624,
+          "outputTokens": 747,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": false,
+          "issues": [
+            "Math.random() is not cryptographically secure, making reset tokens predictable and unsuitable for security-sensitive operations"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Math.random() is not cryptographically secure, making reset tokens predictable and unsuitable for security-sensitive operations",
+              "evidence": "return Math.random().toString(36).slice(2) + Date.now().toString(36);",
+              "severity": "high"
+            }
+          ],
+          "confidence": 1,
+          "latencyMs": 6773,
+          "inputTokens": 626,
+          "outputTokens": 1413,
+          "usageEstimated": false
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": false,
+          "issues": [
+            "Uses Math.random() to generate security-sensitive reset token"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Uses Math.random() to generate security-sensitive reset token",
+              "evidence": "return Math.random().toString(36).slice(2) + Date.now().toString(36);",
+              "severity": "high"
+            }
+          ],
+          "confidence": 0.95,
+          "latencyMs": 3843,
+          "inputTokens": 739,
+          "outputTokens": 79,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 2
+        }
+      ],
+      "consensus": {
+        "unanimous": false,
+        "pass": false,
+        "confidence": 0.98,
+        "dissentingModels": [
+          "non-llm/arbiter-v1"
+        ]
+      },
+      "status": "rejected",
+      "dissent_summary": {
+        "split_axis": [
+          "security"
+        ],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "Math.random() is not cryptographically secure and should never be used to generate security-sensitive tokens",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Date.now() is predictable \u2014 an attacker can narrow the timestamp window \u2014 and adds negligible entropy to the token",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "The output length of Math.random().toString(36).slice(2) is variable and can be very short for certain random values, yielding insufficient entropy",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Math.random() is not cryptographically secure, making reset tokens predictable and unsuitable for security-sensitive operations",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "Uses Math.random() to generate security-sensitive reset token",
+            "model": "xai:grok-3-mini"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": false,
+      "category": "security",
+      "difficulty": "medium"
+    },
+    {
+      "id": "cg-1781609964751-rozivi",
+      "timestamp": "2026-06-16T11:39:24.751Z",
+      "label": "cal-cal-024",
+      "code": "function unique(items: number[]): number[] {\n  const out: number[] = [];\n  for (const x of items) {\n    let seen = false;\n    for (const y of out) if (y === x) seen = true;\n    if (!seen) out.push(x);\n  }\n  return out;\n}",
+      "criteria": "correctness,perf",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": false,
+          "issues": [
+            "O(n\u00b2) time complexity due to nested loop over the same logical collection \u2014 each new element is checked against all previously seen elements via a linear scan of `out`"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "O(n\u00b2) time complexity due to nested loop over the same logical collection \u2014 each new element is checked against all previously seen elements via a linear scan of `out`",
+              "evidence": "for (const x of items) {\n    ...\n    for (const y of out) if (y === x) seen = true;\n    ...\n  }",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.92,
+          "latencyMs": 6703,
+          "inputTokens": 659,
+          "outputTokens": 574,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": false,
+          "issues": [
+            "Quadratic time complexity from nested linear scan for duplicates",
+            "Duplicate NaN values are not deduplicated"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Quadratic time complexity from nested linear scan for duplicates",
+              "evidence": "Inner loop `for (const y of out) if (y === x) seen = true;` runs for every element of `items`, producing O(n\u00b2) behavior when most or all values are unique",
+              "severity": "medium"
+            },
+            {
+              "claim": "Duplicate NaN values are not deduplicated",
+              "evidence": "Equality check `if (y === x) seen = true;` evaluates to false for NaN because `NaN === NaN` is false, so multiple NaN entries in `items: number[]` are all appended to `out`",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.95,
+          "latencyMs": 12845,
+          "inputTokens": 659,
+          "outputTokens": 3357,
+          "usageEstimated": false
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": false,
+          "issues": [
+            "O(n\u00b2) nested loop makes uniqueness check inefficient for large inputs"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "O(n\u00b2) nested loop makes uniqueness check inefficient for large inputs",
+              "evidence": "for (const x of items) { ... for (const y of out) if (y === x) seen = true; ... }",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.9,
+          "latencyMs": 4203,
+          "inputTokens": 772,
+          "outputTokens": 88,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 1
+        }
+      ],
+      "consensus": {
+        "unanimous": false,
+        "pass": false,
+        "confidence": 0.9425,
+        "dissentingModels": [
+          "non-llm/arbiter-v1"
+        ]
+      },
+      "status": "rejected",
+      "dissent_summary": {
+        "split_axis": [],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "O(n\u00b2) time complexity due to nested loop over the same logical collection \u2014 each new element is checked against all previously seen elements via a linear scan of `out`",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Quadratic time complexity from nested linear scan for duplicates",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "Duplicate NaN values are not deduplicated",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "O(n\u00b2) nested loop makes uniqueness check inefficient for large inputs",
+            "model": "xai:grok-3-mini"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": true,
+      "category": "correctness",
+      "difficulty": "medium"
+    },
+    {
+      "id": "cg-1781609977682-z82clp",
+      "timestamp": "2026-06-16T11:39:37.682Z",
+      "label": "cal-cal-025",
+      "code": "async function register(user: User) {\n  sendWelcomeEmail(user.email);\n  await db.users.create({ data: user });\n}",
+      "criteria": "correctness",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": false,
+          "issues": [
+            "Welcome email is sent before the user is persisted, so if database creation fails (e.g., unique constraint violation, DB error), the user receives a welcome email for an account that does not exist",
+            "sendWelcomeEmail is not awaited, so if it returns a rejected promise the rejection is unhandled, which can crash the process (UnhandledPromiseRejection)"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Welcome email is sent before the user is persisted, so if database creation fails (e.g., unique constraint violation, DB error), the user receives a welcome email for an account that does not exist",
+              "evidence": "sendWelcomeEmail(user.email); await db.users.create({ data: user }); \u2014 the email is sent before the awaited DB write",
+              "severity": "medium"
+            },
+            {
+              "claim": "sendWelcomeEmail is not awaited, so if it returns a rejected promise the rejection is unhandled, which can crash the process (UnhandledPromiseRejection)",
+              "evidence": "sendWelcomeEmail(user.email); \u2014 no await, no .catch(), no try/catch",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.9,
+          "latencyMs": 8650,
+          "inputTokens": 615,
+          "outputTokens": 863,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": false,
+          "issues": [
+            "Welcome email is sent before the user is persisted, causing an inconsistent state if database creation fails",
+            "sendWelcomeEmail is not awaited, risking an unhandled promise rejection if the email operation fails"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Welcome email is sent before the user is persisted, causing an inconsistent state if database creation fails",
+              "evidence": "sendWelcomeEmail(user.email); appears before await db.users.create({ data: user });",
+              "severity": "medium"
+            },
+            {
+              "claim": "sendWelcomeEmail is not awaited, risking an unhandled promise rejection if the email operation fails",
+              "evidence": "sendWelcomeEmail(user.email); is invoked without await inside an async function",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.85,
+          "latencyMs": 15324,
+          "inputTokens": 615,
+          "outputTokens": 3737,
+          "usageEstimated": false
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": false,
+          "issues": [
+            "Welcome email is sent before user creation succeeds, so failures after sendWelcomeEmail leave the system in an inconsistent state (email delivered for a user that was never created)"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Welcome email is sent before user creation succeeds, so failures after sendWelcomeEmail leave the system in an inconsistent state (email delivered for a user that was never created)",
+              "evidence": "sendWelcomeEmail(user.email);\nawait db.users.create({ data: user });",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.85,
+          "latencyMs": 5879,
+          "inputTokens": 728,
+          "outputTokens": 95,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 1
+        }
+      ],
+      "consensus": {
+        "unanimous": false,
+        "pass": false,
+        "confidence": 0.9,
+        "dissentingModels": [
+          "non-llm/arbiter-v1"
+        ]
+      },
+      "status": "rejected",
+      "dissent_summary": {
+        "split_axis": [],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "Welcome email is sent before the user is persisted, so if database creation fails (e.g., unique constraint violation, DB error), the user receives a welcome email for an account that does not exist",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "sendWelcomeEmail is not awaited, so if it returns a rejected promise the rejection is unhandled, which can crash the process (UnhandledPromiseRejection)",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Welcome email is sent before the user is persisted, causing an inconsistent state if database creation fails",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "sendWelcomeEmail is not awaited, risking an unhandled promise rejection if the email operation fails",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "Welcome email is sent before user creation succeeds, so failures after sendWelcomeEmail leave the system in an inconsistent state (email delivered for a user that was never created)",
+            "model": "xai:grok-3-mini"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": false,
+      "category": "correctness",
+      "difficulty": "hard"
+    },
+    {
+      "id": "cg-1781609993093-eg77zh",
+      "timestamp": "2026-06-16T11:39:53.093Z",
+      "label": "cal-cal-026",
+      "code": "const REQUEST_TIMEOUT_MS = 5000;\nexport function withTimeout<T>(p: Promise<T>) {\n  return Promise.race([p, sleep(REQUEST_TIMEOUT_MS).then(() => { throw new Error('timeout'); })]);\n}",
+      "criteria": "security",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": false,
+          "issues": [
+            "The original promise continues executing after the timeout fires, enabling resource exhaustion / DoS"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "The original promise continues executing after the timeout fires, enabling resource exhaustion / DoS",
+              "evidence": "Promise.race([p, sleep(REQUEST_TIMEOUT_MS).then(() => { throw new Error('timeout'); })]) \u2014 p is never aborted or cancelled; it runs to completion in the background even after the race is lost",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.78,
+          "latencyMs": 10705,
+          "inputTokens": 637,
+          "outputTokens": 1352,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": false,
+          "issues": [
+            "Timeout race leaves the underlying promise running, risking resource exhaustion and denial-of-service"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Timeout race leaves the underlying promise running, risking resource exhaustion and denial-of-service",
+              "evidence": "return Promise.race([p, sleep(REQUEST_TIMEOUT_MS).then(() => { throw new Error('timeout'); })]);",
+              "severity": "medium"
+            }
+          ],
+          "confidence": 0.8,
+          "latencyMs": 13264,
+          "inputTokens": 637,
+          "outputTokens": 3059,
+          "usageEstimated": false
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": true,
+          "issues": [],
+          "confidence": 0.9,
+          "latencyMs": 5253,
+          "inputTokens": 750,
+          "outputTokens": 22,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 1
+        }
+      ],
+      "consensus": {
+        "unanimous": false,
+        "pass": null,
+        "confidence": 0.87
+      },
+      "status": "escalate",
+      "dissent_summary": {
+        "split_axis": [
+          "correctness"
+        ],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "The original promise continues executing after the timeout fires, enabling resource exhaustion / DoS",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Timeout race leaves the underlying promise running, risking resource exhaustion and denial-of-service",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": true,
+      "category": "security",
+      "difficulty": "medium"
+    },
+    {
+      "id": "cg-1781610006441-82suxh",
+      "timestamp": "2026-06-16T11:40:06.441Z",
+      "label": "cal-cal-027",
+      "code": "function sum(arr: number[]): number {\n  let total = 0;\n  for (let i = 0; i <= arr.length; i++) total += arr[i];\n  return total;\n}",
+      "criteria": "correctness",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": false,
+          "issues": [
+            "Off-by-one error in loop condition causes out-of-bounds array access"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Off-by-one error in loop condition causes out-of-bounds array access",
+              "evidence": "for (let i = 0; i <= arr.length; i++) total += arr[i];",
+              "severity": "high"
+            }
+          ],
+          "confidence": 1,
+          "latencyMs": 2873,
+          "inputTokens": 630,
+          "outputTokens": 210,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": false,
+          "issues": [
+            "Off-by-one error causes array access at undefined index, producing NaN for every input"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Off-by-one error causes array access at undefined index, producing NaN for every input",
+              "evidence": "for (let i = 0; i <= arr.length; i++) total += arr[i];",
+              "severity": "high"
+            }
+          ],
+          "confidence": 1,
+          "latencyMs": 3335,
+          "inputTokens": 630,
+          "outputTokens": 521,
+          "usageEstimated": false
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": false,
+          "issues": [
+            "Loop iterates past array bounds (i <= arr.length), accessing undefined and producing NaN"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Loop iterates past array bounds (i <= arr.length), accessing undefined and producing NaN",
+              "evidence": "for (let i = 0; i <= arr.length; i++) total += arr[i];",
+              "severity": "high"
+            }
+          ],
+          "confidence": 0.95,
+          "latencyMs": 4119,
+          "inputTokens": 743,
+          "outputTokens": 84,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 1
+        }
+      ],
+      "consensus": {
+        "unanimous": false,
+        "pass": false,
+        "confidence": 0.9875,
+        "dissentingModels": [
+          "non-llm/arbiter-v1"
+        ]
+      },
+      "status": "rejected",
+      "dissent_summary": {
+        "split_axis": [
+          "correctness"
+        ],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "Off-by-one error in loop condition causes out-of-bounds array access",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "Off-by-one error causes array access at undefined index, producing NaN for every input",
+            "model": "hf:moonshotai/Kimi-K2.6"
+          },
+          {
+            "claim": "Loop iterates past array bounds (i <= arr.length), accessing undefined and producing NaN",
+            "model": "xai:grok-3-mini"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": false,
+      "category": "correctness",
+      "difficulty": "medium"
+    },
+    {
+      "id": "cg-1781610010628-tvzday",
+      "timestamp": "2026-06-16T11:40:10.628Z",
+      "label": "cal-cal-028",
+      "code": "const STRIPE_KEY = process.env.STRIPE_SECRET_KEY;\nif (!STRIPE_KEY) throw new Error('STRIPE_SECRET_KEY not set');\nexport const stripe = new Stripe(STRIPE_KEY);",
+      "criteria": "security,correctness",
+      "verdicts": [
+        {
+          "model": "hf:zai-org/GLM-5.1",
+          "pass": true,
+          "issues": [
+            "Module-level throw on missing env var will crash the entire application at startup with no recovery path",
+            "The Stripe constructor is invoked without try/catch, so a malformed key value (e.g., whitespace-only) passes the truthiness check but may cause an unhandled exception at module load time"
+          ],
+          "dissent_claims": [
+            {
+              "claim": "Module-level throw on missing env var will crash the entire application at startup with no recovery path",
+              "evidence": "if (!STRIPE_KEY) throw new Error('STRIPE_SECRET_KEY not set');",
+              "severity": "low"
+            },
+            {
+              "claim": "The Stripe constructor is invoked without try/catch, so a malformed key value (e.g., whitespace-only) passes the truthiness check but may cause an unhandled exception at module load time",
+              "evidence": "if (!STRIPE_KEY) throw new Error('STRIPE_SECRET_KEY not set');\nexport const stripe = new Stripe(STRIPE_KEY);",
+              "severity": "low"
+            }
+          ],
+          "confidence": 0.88,
+          "latencyMs": 8197,
+          "inputTokens": 639,
+          "outputTokens": 792,
+          "usageEstimated": false
+        },
+        {
+          "model": "hf:moonshotai/Kimi-K2.6",
+          "pass": true,
+          "issues": [],
+          "confidence": 0.95,
+          "latencyMs": 12389,
+          "inputTokens": 671,
+          "outputTokens": 2100,
+          "usageEstimated": false,
+          "substitutedFrom": "syn:small:vision",
+          "substituteAttempted": true,
+          "chainAttempts": [
+            "hf:moonshotai/Kimi-K2.6",
+            "syn:small:vision"
+          ]
+        },
+        {
+          "model": "xai:grok-3-mini",
+          "pass": true,
+          "issues": [],
+          "confidence": 0.9,
+          "latencyMs": 2668,
+          "inputTokens": 751,
+          "outputTokens": 22,
+          "usageEstimated": false
+        },
+        {
+          "model": "non-llm/arbiter-v1",
+          "pass": true,
+          "issues": [],
+          "dissent_claims": [],
+          "confidence": 1,
+          "latencyMs": 2
+        }
+      ],
+      "consensus": {
+        "unanimous": true,
+        "pass": true,
+        "confidence": 0.9325
+      },
+      "status": "passed",
+      "dissent_summary": {
+        "split_axis": [],
+        "aligned_claims": [],
+        "unique_claims": [
+          {
+            "claim": "Module-level throw on missing env var will crash the entire application at startup with no recovery path",
+            "model": "hf:zai-org/GLM-5.1"
+          },
+          {
+            "claim": "The Stripe constructor is invoked without try/catch, so a malformed key value (e.g., whitespace-only) passes the truthiness check but may cause an unhandled exception at module load time",
+            "model": "hf:zai-org/GLM-5.1"
+          }
+        ],
+        "dissent_score": 1
+      },
+      "expected_pass": true,
+      "category": "security",
+      "difficulty": "easy"
+    }
+  ]
+}

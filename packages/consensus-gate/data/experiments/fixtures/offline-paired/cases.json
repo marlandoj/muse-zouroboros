@@ -1,0 +1,8 @@
+{
+  "cases": [
+    { "id": "case-1", "input": "safe code", "expected_pass": true, "responses": { "baseline": "{\"pass\":true,\"confidence\":0.9}", "candidate": "{\"pass\":true,\"confidence\":0.9}" } },
+    { "id": "case-2", "input": "unsafe code", "expected_pass": false, "responses": { "baseline": "{\"pass\":true,\"confidence\":0.7}", "candidate": "{\"pass\":false,\"confidence\":0.8}" } },
+    { "id": "case-3", "input": "valid code", "expected_pass": true, "responses": { "baseline": "{\"pass\":false,\"confidence\":0.6}", "candidate": "{\"pass\":true,\"confidence\":0.8}" } },
+    { "id": "case-4", "input": "defective code", "expected_pass": false, "responses": { "baseline": "{\"pass\":false,\"confidence\":0.8}", "candidate": "{\"pass\":true,\"confidence\":0.6}" } }
+  ]
+}

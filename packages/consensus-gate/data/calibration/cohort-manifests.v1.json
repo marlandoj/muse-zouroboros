@@ -1,0 +1,66 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-07-11T00:30:00.000Z",
+  "manifests": {
+    "train": {
+      "schema_version": "1.0.0",
+      "cohort": "train",
+      "version": "1.0.0",
+      "immutable": false,
+      "case_count": 0,
+      "case_ids": [],
+      "content_sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "generated_at": "2026-07-11T00:30:00.000Z"
+    },
+    "calibration": {
+      "schema_version": "1.0.0",
+      "cohort": "calibration",
+      "version": "2.0.0",
+      "immutable": false,
+      "case_count": 28,
+      "case_ids": [
+        "cal-001", "cal-002", "cal-003", "cal-004", "cal-005", "cal-006", "cal-007",
+        "cal-008", "cal-009", "cal-010", "cal-011", "cal-012", "cal-013", "cal-014",
+        "cal-015", "cal-016", "cal-017", "cal-018", "cal-019", "cal-020", "cal-021",
+        "cal-022", "cal-023", "cal-024", "cal-025", "cal-026", "cal-027", "cal-028"
+      ],
+      "content_sha256": "174348c4a2ef642a6783381a3696bb7d6aeb6fbec668633c5795e164c0c9efa6",
+      "generated_at": "2026-07-11T00:30:00.000Z"
+    },
+    "holdout": {
+      "schema_version": "1.0.0",
+      "cohort": "holdout",
+      "version": "1.0.0",
+      "immutable": true,
+      "case_count": 8,
+      "case_ids": [
+        "rec-fbissh", "rec-gnkhbs", "rec-h4j471", "rec-lol2ak",
+        "rec-n3sdxz", "rec-nvedhh", "rec-r7p6al", "rec-uthsvq"
+      ],
+      "content_sha256": "645186b736030a387f8a200045b4dfb312ee0c7f3ac95378bf70a619e1a219ee",
+      "generated_at": "2026-07-11T00:30:00.000Z"
+    }
+  },
+  "provenance": [
+    { "source_trace_id": "cg-1779750812321-h4j471", "source_trace_sha256": "1c8eb4b92e0e59c897b5528291aaa4150058b989e9e1dc035e5026d7014c6fc3", "annotation_sha256": "93b50364913a52f5f6362b7b67c911fd1970b61c2c3eefe42af501025f9e383b", "cohort": "holdout", "cohort_sha256": "645186b736030a387f8a200045b4dfb312ee0c7f3ac95378bf70a619e1a219ee", "rubric_sha256": "498bffa63de9c3b57343b2b92c19745ec392346fa99ebe9127301c25475ec074" },
+    { "source_trace_id": "cg-1781646795922-fbissh", "source_trace_sha256": "1f445484b79a951b1f1994730f8ba6dc0164cf96a512a532b19791990e00558b", "annotation_sha256": "aaa04897604d028cbc52e5011cd89357779c1486b88a8ba85b2aec2bb6bcbc7b", "cohort": "holdout", "cohort_sha256": "645186b736030a387f8a200045b4dfb312ee0c7f3ac95378bf70a619e1a219ee", "rubric_sha256": "498bffa63de9c3b57343b2b92c19745ec392346fa99ebe9127301c25475ec074" },
+    { "source_trace_id": "cg-1781734497272-uthsvq", "source_trace_sha256": "02dbc65ebe465e6621c901d57072953122809d60872114c4c0aa0e6fec2dbbac", "annotation_sha256": "a9663a3829c9626bb178728919432dac805a7ca55d6770848a08f29ae1c30208", "cohort": "holdout", "cohort_sha256": "645186b736030a387f8a200045b4dfb312ee0c7f3ac95378bf70a619e1a219ee", "rubric_sha256": "498bffa63de9c3b57343b2b92c19745ec392346fa99ebe9127301c25475ec074" },
+    { "source_trace_id": "cg-1781734643035-lol2ak", "source_trace_sha256": "469ed6250d065e44e80b9b88a4d2408d6e4312f76faa4c278fe46d34902b030d", "annotation_sha256": "b65eae90b376488075ea7e1fc55f3e5bed83f16961f15df4f7f1a537a1ce1197", "cohort": "holdout", "cohort_sha256": "645186b736030a387f8a200045b4dfb312ee0c7f3ac95378bf70a619e1a219ee", "rubric_sha256": "498bffa63de9c3b57343b2b92c19745ec392346fa99ebe9127301c25475ec074" },
+    { "source_trace_id": "cg-1782563602867-gnkhbs", "source_trace_sha256": "d6885d4072fa5921a89e9b92c9ddace6a90f289938dc965bb93581a128570137", "annotation_sha256": "af69f790073eb787cfa7f6245d20af657b51e7651e137939ec02885bb768ebbb", "cohort": "holdout", "cohort_sha256": "645186b736030a387f8a200045b4dfb312ee0c7f3ac95378bf70a619e1a219ee", "rubric_sha256": "498bffa63de9c3b57343b2b92c19745ec392346fa99ebe9127301c25475ec074" },
+    { "source_trace_id": "cg-1782815996533-r7p6al", "source_trace_sha256": "5c6ebc77574188a711fbda4c758c454cea247796016d567467ed0f225638d937", "annotation_sha256": "df2f784dba3a42dfc0863fc927fb418e1e93113e159d63de466909444c9e5bf3", "cohort": "holdout", "cohort_sha256": "645186b736030a387f8a200045b4dfb312ee0c7f3ac95378bf70a619e1a219ee", "rubric_sha256": "498bffa63de9c3b57343b2b92c19745ec392346fa99ebe9127301c25475ec074" },
+    { "source_trace_id": "cg-1782816087716-nvedhh", "source_trace_sha256": "f827b1b1165e742dfd7770dcbe75d9937c54d7cb6b28fd59a028f0ebabc6a728", "annotation_sha256": "6762b0673502c22bfade5ae44b749054dcffbfb1edb48c85eae31df476332195", "cohort": "holdout", "cohort_sha256": "645186b736030a387f8a200045b4dfb312ee0c7f3ac95378bf70a619e1a219ee", "rubric_sha256": "498bffa63de9c3b57343b2b92c19745ec392346fa99ebe9127301c25475ec074" },
+    { "source_trace_id": "cg-1782829757216-n3sdxz", "source_trace_sha256": "bf5682235fbfecc37f14bf4c8c6b878cc4555583cf9f094d70c2695ccc040c7b", "annotation_sha256": "5d88ba89a0fd3bb84938c20af1e5838bb6a2d8bf0b2797e45c85622408a37041", "cohort": "holdout", "cohort_sha256": "645186b736030a387f8a200045b4dfb312ee0c7f3ac95378bf70a619e1a219ee", "rubric_sha256": "498bffa63de9c3b57343b2b92c19745ec392346fa99ebe9127301c25475ec074" }
+  ],
+  "report": {
+    "source_trace_count": 8,
+    "annotated_trace_count": 8,
+    "annotation_coverage": 1,
+    "cohort_counts": { "train": 0, "calibration": 28, "holdout": 8 },
+    "oldest_annotation_days": 10,
+    "manifests_drifted": []
+  },
+  "rubric": {
+    "version": "1.0.0-current",
+    "content_sha256": "498bffa63de9c3b57343b2b92c19745ec392346fa99ebe9127301c25475ec074"
+  }
+}

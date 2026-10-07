@@ -1,0 +1,291 @@
+{
+  "name": "consensus-gate-calibration-v2",
+  "version": "2.0.0",
+  "created": "2026-06-15",
+  "human_verified": true,
+  "verified_date": "2026-06-16",
+  "verified_by": "marlandoj",
+  "notes": "Human-reviewed ground truth. cal-013 flipped FAIL->PASS (no integer overflow in JS float64). cal-021..028 added as positive controls + over-strict traps. cal-005 & cal-012 flipped PASS->FAIL after live calibration 2026-06-16 surfaced real bugs the human review missed (sort mutation; null-deref in type guard). Now 11 PASS / 17 FAIL.",
+  "cases": [
+    {
+      "id": "cal-001",
+      "label": "Security: SQL injection in user input",
+      "code": "const query = `SELECT * FROM users WHERE id = ${req.params.id}`;",
+      "criteria": "security,correctness",
+      "expected_pass": false,
+      "category": "security",
+      "difficulty": "easy",
+      "notes": "Unsanitized SQL injection \u2014 all judges should catch this"
+    },
+    {
+      "id": "cal-002",
+      "label": "Correct: Proper error handling wrapper",
+      "code": "async function fetchData(url: string): Promise<Data> {\n  try {\n    const response = await fetch(url);\n    if (!response.ok) throw new Error(`HTTP ${response.status}`);\n    return await response.json();\n  } catch (err) {\n    console.error('fetchData failed:', err);\n    throw err;\n  }\n}",
+      "criteria": "correctness,security",
+      "expected_pass": true,
+      "category": "correctness",
+      "difficulty": "easy",
+      "notes": "Clean error handling \u2014 should pass"
+    },
+    {
+      "id": "cal-003",
+      "label": "Security: Hardcoded API key",
+      "code": "const STRIPE_KEY = 'sk_live_abc123xyz789';\nexport function createPayment(amount: number) {\n  return stripe.charges.create({ amount, currency: 'usd' });\n}",
+      "criteria": "security,correctness",
+      "expected_pass": false,
+      "category": "security",
+      "difficulty": "easy",
+      "notes": "Hardcoded secret key \u2014 should fail security"
+    },
+    {
+      "id": "cal-004",
+      "label": "Perf: O(n\u00b2) nested loop on large data",
+      "code": "function findDuplicates(items: string[]): string[] {\n  const duplicates: string[] = [];\n  for (let i = 0; i < items.length; i++) {\n    for (let j = i + 1; j < items.length; j++) {\n      if (items[i] === items[j] && !duplicates.includes(items[i])) {\n        duplicates.push(items[i]);\n      }\n    }\n  }\n  return duplicates;\n}",
+      "criteria": "correctness,perf",
+      "expected_pass": false,
+      "category": "performance",
+      "difficulty": "medium",
+      "notes": "O(n\u00b2) with O(n) includes inside \u2014 should flag performance"
+    },
+    {
+      "id": "cal-005",
+      "label": "Bug: useMemo sorts with in-place mutation",
+      "code": "const sorted = useMemo(() => {\n  return items.sort((a, b) => a.name.localeCompare(b.name));\n}, [items]);",
+      "criteria": "correctness,perf",
+      "expected_pass": false,
+      "category": "correctness",
+      "difficulty": "hard",
+      "notes": "FLIPPED PASS->FAIL on live calibration 2026-06-16: Array.prototype.sort mutates items in place, violating React immutability \u2014 real state-corruption bug. Should be [...items].sort(). Judges caught this; original label was wrong."
+    },
+    {
+      "id": "cal-006",
+      "label": "Security: Missing authorization check",
+      "code": "export default async (c: Context) => {\n  const data = await db.users.findMany({ where: { orgId: c.req.param('orgId') } });\n  return c.json(data);\n}",
+      "criteria": "security,correctness",
+      "expected_pass": false,
+      "category": "security",
+      "difficulty": "medium",
+      "notes": "No authz check \u2014 anyone can access any org's users"
+    },
+    {
+      "id": "cal-007",
+      "label": "Defect: Mass-assignment / overposting on db.create",
+      "code": "function createUser(input: { email: string; name: string }) {\n  if (!input.email || !input.email.includes('@')) {\n    throw new Error('Invalid email');\n  }\n  if (!input.name || input.name.length < 2) {\n    throw new Error('Name too short');\n  }\n  return db.users.create({ data: input });\n}",
+      "criteria": "security,correctness",
+      "expected_pass": false,
+      "category": "correctness",
+      "difficulty": "easy",
+      "notes": "FLIPPED 2026-06-16: GLM(high)+Grok(medium) independently caught mass-assignment \u2014 input forwarded whole to db.users.create({data:input}), allowing role/isAdmin injection. Original 'clean validation' label missed the create() sink."
+    },
+    {
+      "id": "cal-008",
+      "label": "Perf: Missing batch insert for loop",
+      "code": "for (const item of largeArray) {\n  await db.items.create({ data: item });\n}",
+      "criteria": "correctness,perf",
+      "expected_pass": false,
+      "category": "performance",
+      "difficulty": "medium",
+      "notes": "N+1 query in loop \u2014 should flag performance"
+    },
+    {
+      "id": "cal-009",
+      "label": "Security: Unsafe eval usage",
+      "code": "function executeExpression(expr: string) {\n  return eval(expr);\n}",
+      "criteria": "security,correctness",
+      "expected_pass": false,
+      "category": "security",
+      "difficulty": "easy",
+      "notes": "eval() is dangerous \u2014 should fail security"
+    },
+    {
+      "id": "cal-010",
+      "label": "Correct: Proper async error boundary",
+      "code": "app.use(async (c, next) => {\n  try {\n    await next();\n  } catch (err) {\n    console.error('Request failed:', err);\n    return c.json({ error: 'Internal error' }, 500);\n  }\n});",
+      "criteria": "correctness,security",
+      "expected_pass": true,
+      "category": "correctness",
+      "difficulty": "easy",
+      "notes": "Clean error boundary \u2014 should pass"
+    },
+    {
+      "id": "cal-011",
+      "label": "Security: XSS vulnerability in HTML output",
+      "code": "function renderUserProfile(user: { name: string; bio: string }) {\n  return `<div><h2>${user.name}</h2><p>${user.bio}</p></div>`;\n}",
+      "criteria": "security,correctness",
+      "expected_pass": false,
+      "category": "security",
+      "difficulty": "hard",
+      "notes": "Unsanitized HTML interpolation \u2014 context-dependent (vuln if rendered as HTML); judges may miss this"
+    },
+    {
+      "id": "cal-012",
+      "label": "Bug: type guard throws on null config",
+      "code": "interface Config {\n  apiUrl: string;\n  timeout: number;\n  retries: number;\n}\n\nfunction validateConfig(config: unknown): config is Config {\n  const c = config as Record<string, unknown>;\n  return typeof c.apiUrl === 'string' && typeof c.timeout === 'number' && typeof c.retries === 'number';\n}",
+      "criteria": "correctness,security",
+      "expected_pass": false,
+      "category": "correctness",
+      "difficulty": "hard",
+      "notes": "FLIPPED PASS->FAIL on live calibration 2026-06-16: throws TypeError when config is null/undefined (c.apiUrl on null), so the guard crashes instead of returning false. Needs a null check first. Judges caught this; original label was wrong."
+    },
+    {
+      "id": "cal-013",
+      "label": "Correct: Ordinary arithmetic total (no JS overflow)",
+      "code": "function calculateTotal(quantities: number[], unitPrice: number): number {\n  return quantities.reduce((sum, q) => sum + q, 0) * unitPrice;\n}",
+      "criteria": "correctness,security",
+      "expected_pass": true,
+      "category": "correctness",
+      "difficulty": "hard",
+      "notes": "FLIPPED FAIL->PASS on human review: JS numbers are float64, no integer overflow until 2^53. Flagging ordinary arithmetic trains over-strict judges. This is the over-strict trap."
+    },
+    {
+      "id": "cal-014",
+      "label": "Security: Race condition in DB write",
+      "code": "async function transferFunds(from: string, to: string, amount: number) {\n  const balance = await db.accounts.findUnique({ where: { id: from } });\n  if (balance.amount >= amount) {\n    await db.accounts.update({ where: { id: from }, data: { amount: balance.amount - amount } });\n    await db.accounts.update({ where: { id: to }, data: { amount: { increment: amount } } });\n  }\n}",
+      "criteria": "security,correctness",
+      "expected_pass": false,
+      "category": "security",
+      "difficulty": "hard",
+      "notes": "Race condition \u2014 balance check and update aren't atomic"
+    },
+    {
+      "id": "cal-015",
+      "label": "Defect: Unhandled JSON.parse crash on corrupt cache",
+      "code": "async function getCachedUser(id: string): Promise<User | null> {\n  const cached = await redis.get(`user:${id}`);\n  if (cached) return JSON.parse(cached);\n  const user = await db.users.findUnique({ where: { id } });\n  if (user) await redis.set(`user:${id}`, JSON.stringify(user), 'EX', 3600);\n  return user;\n}",
+      "criteria": "correctness,perf",
+      "expected_pass": false,
+      "category": "correctness",
+      "difficulty": "easy",
+      "notes": "FLIPPED 2026-06-16: all 3 LLM judges failed it \u2014 JSON.parse(cached) has no try/catch, crashes caller on corrupted/poisoned cache entry. Original 'clean cache-aside' label missed the unhandled-exception sink."
+    },
+    {
+      "id": "cal-016",
+      "label": "Security: Unsanitized file path traversal",
+      "code": "function getFile(filename: string): Buffer {\n  return fs.readFileSync(`./uploads/${filename}`);\n}",
+      "criteria": "security,correctness",
+      "expected_pass": false,
+      "category": "security",
+      "difficulty": "medium",
+      "notes": "Path traversal \u2014 ../../etc/passwd would work"
+    },
+    {
+      "id": "cal-017",
+      "label": "Perf: Missing pagination on large query",
+      "code": "async function getAllUsers(): Promise<User[]> {\n  return db.users.findMany();\n}",
+      "criteria": "correctness,perf",
+      "expected_pass": false,
+      "category": "performance",
+      "difficulty": "medium",
+      "notes": "Unbounded query \u2014 could return millions of rows"
+    },
+    {
+      "id": "cal-018",
+      "label": "Correct: Proper Promise.all parallelization",
+      "code": "async function loadDashboard(userId: string) {\n  const [profile, orders, notifications] = await Promise.all([\n    db.users.findUnique({ where: { id: userId } }),\n    db.orders.findMany({ where: { userId }, take: 10 }),\n    db.notifications.findMany({ where: { userId, read: false }, take: 5 })\n  ]);\n  return { profile, orders, notifications };\n}",
+      "criteria": "correctness,perf",
+      "expected_pass": true,
+      "category": "correctness",
+      "difficulty": "easy",
+      "notes": "Proper parallel fetching \u2014 should pass"
+    },
+    {
+      "id": "cal-019",
+      "label": "Boundary: Silent error swallowing",
+      "code": "async function processJob(job: Job) {\n  try {\n    await executeJob(job);\n  } catch {\n    // ignore\n  }\n}",
+      "criteria": "correctness,security",
+      "expected_pass": false,
+      "category": "correctness",
+      "difficulty": "medium",
+      "notes": "Empty catch block \u2014 errors silently ignored"
+    },
+    {
+      "id": "cal-020",
+      "label": "Security: Sensitive data in logs",
+      "code": "async function login(email: string, password: string) {\n  console.log(`Login attempt: email=${email}, password=${password}`);\n  const user = await db.users.findUnique({ where: { email } });\n  return user;\n}",
+      "criteria": "security,correctness",
+      "expected_pass": false,
+      "category": "security",
+      "difficulty": "medium",
+      "notes": "Password logged in plaintext \u2014 should fail security"
+    },
+    {
+      "id": "cal-021",
+      "label": "Correct: Parameterized SQL query",
+      "code": "const rows = await db.query('SELECT * FROM users WHERE id = $1', [req.params.id]);",
+      "criteria": "security,correctness",
+      "expected_pass": true,
+      "category": "security",
+      "difficulty": "easy",
+      "notes": "Positive control for cal-001 \u2014 parameterized, safe. Over-strict judges may FAIL anything touching req params."
+    },
+    {
+      "id": "cal-022",
+      "label": "Correct: Idiomatic == null null-check",
+      "code": "function firstName(user?: { name?: string }) {\n  if (user == null || user.name == null) return 'Guest';\n  return user.name.split(' ')[0];\n}",
+      "criteria": "correctness",
+      "expected_pass": true,
+      "category": "correctness",
+      "difficulty": "medium",
+      "notes": "Over-strict trap: == null is the idiomatic null-OR-undefined guard; flagging loose equality here is wrong."
+    },
+    {
+      "id": "cal-023",
+      "label": "Security: Math.random() for security token",
+      "code": "function makeResetToken(): string {\n  return Math.random().toString(36).slice(2) + Date.now().toString(36);\n}",
+      "criteria": "security,correctness",
+      "expected_pass": false,
+      "category": "security",
+      "difficulty": "medium",
+      "notes": "Math.random is not cryptographically secure \u2014 predictable reset/session tokens. Subtle; lenient judges may pass it."
+    },
+    {
+      "id": "cal-024",
+      "label": "Defect: Correct output but O(n^2) dedupe (visible complexity)",
+      "code": "function unique(items: number[]): number[] {\n  const out: number[] = [];\n  for (const x of items) {\n    let seen = false;\n    for (const y of out) if (y === x) seen = true;\n    if (!seen) out.push(x);\n  }\n  return out;\n}",
+      "criteria": "correctness,perf",
+      "expected_pass": false,
+      "category": "correctness",
+      "difficulty": "medium",
+      "notes": "FLIPPED 2026-06-16: consistency with cal-004 and approved perf clause \u2014 visible O(n^2) nested scan over same collection is at least medium/blocking even when output is correct. All 3 judges flag it."
+    },
+    {
+      "id": "cal-025",
+      "label": "Boundary: Floating (unawaited) promise",
+      "code": "async function register(user: User) {\n  sendWelcomeEmail(user.email);\n  await db.users.create({ data: user });\n}",
+      "criteria": "correctness",
+      "expected_pass": false,
+      "category": "correctness",
+      "difficulty": "hard",
+      "notes": "sendWelcomeEmail is not awaited \u2014 rejection is unhandled and silently lost. Subtle correctness defect."
+    },
+    {
+      "id": "cal-026",
+      "label": "Correct: Hardcoded non-secret constant",
+      "code": "const REQUEST_TIMEOUT_MS = 5000;\nexport function withTimeout<T>(p: Promise<T>) {\n  return Promise.race([p, sleep(REQUEST_TIMEOUT_MS).then(() => { throw new Error('timeout'); })]);\n}",
+      "criteria": "security",
+      "expected_pass": true,
+      "category": "security",
+      "difficulty": "medium",
+      "notes": "Over-strict trap for 'hardcoded literal = bad'. A timeout constant is not a leaked credential."
+    },
+    {
+      "id": "cal-027",
+      "label": "Boundary: Off-by-one past array end",
+      "code": "function sum(arr: number[]): number {\n  let total = 0;\n  for (let i = 0; i <= arr.length; i++) total += arr[i];\n  return total;\n}",
+      "criteria": "correctness",
+      "expected_pass": false,
+      "category": "correctness",
+      "difficulty": "medium",
+      "notes": "<= reads arr[arr.length] = undefined -> NaN. Classic off-by-one."
+    },
+    {
+      "id": "cal-028",
+      "label": "Correct: Secret read from process.env",
+      "code": "const STRIPE_KEY = process.env.STRIPE_SECRET_KEY;\nif (!STRIPE_KEY) throw new Error('STRIPE_SECRET_KEY not set');\nexport const stripe = new Stripe(STRIPE_KEY);",
+      "criteria": "security,correctness",
+      "expected_pass": true,
+      "category": "security",
+      "difficulty": "easy",
+      "notes": "Positive control for cal-003 \u2014 secret injected via env, not embedded; includes presence check."
+    }
+  ]
+}

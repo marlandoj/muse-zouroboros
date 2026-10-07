@@ -37,6 +37,13 @@ for h in wayfinder verity sift; do
 done
 [ -f "$HOME/.wayfinder/suggestions.jsonl" ] && ok "wayfinder has logged suggestions" || bad "wayfinder not yet active — walkthrough step 05"
 
+head "consensus gate (retired, audit only)"
+if [ -f "$REPO/packages/consensus-gate/scripts/consensus-gate.ts" ]; then
+  if (cd "$REPO/packages/consensus-gate" && timeout 60 bun scripts/consensus-gate.ts --help >/dev/null 2>&1); then
+    ok "consensus-gate CLI present and parses"
+  else bad "consensus-gate CLI broken — run: cd packages/consensus-gate && bun scripts/consensus-gate.ts --help"; fi
+else bad "consensus-gate package missing"; fi
+
 head "factory"
 if (cd "$REPO/factory/lane" && timeout 120 bun scripts/factory-mvp.ts smoke >/dev/null 2>&1); then
   ok "factory MVP smoke green"

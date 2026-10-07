@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<style>
+  :root {
+    --bg: #0c111b;
+    --panel: #131a28;
+    --panel2: #1a2335;
+    --line: #283349;
+    --ink: #e8edf6;
+    --muted: #8a98b3;
+    --primary: #34d399;     /* synthetic = emerald */
+    --primary-dim: #0f2c24;
+    --failover: #fbbf24;    /* openrouter = amber */
+    --failover-dim: #2e2410;
+    --grok: #818cf8;        /* xai = indigo */
+    --pass: #34d399;
+    --warn: #fbbf24;
+    --fail: #f87171;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    width: 1200px;
+    background: radial-gradient(1200px 600px at 50% -10%, #16203200, #0c111b);
+    background-color: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    padding: 48px 56px 40px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .head { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom: 30px; }
+  h1 { font-size: 34px; font-weight: 750; letter-spacing: -0.5px; }
+  h1 .accent { color: var(--primary); }
+  .sub { color: var(--muted); font-size: 15px; margin-top: 8px; max-width: 760px; line-height: 1.5; }
+  .legend { display:flex; gap:18px; align-items:center; font-size:13px; color:var(--muted); margin-top:6px; }
+  .dot { display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:7px; vertical-align:-1px; }
+  .flagpill { font-size:12.5px; color:var(--ink); background:var(--panel2); border:1px solid var(--line);
+    border-radius:999px; padding:8px 14px; white-space:nowrap; }
+  .flagpill b { color: var(--primary); }
+
+  .stage-label { font-size:12px; text-transform:uppercase; letter-spacing:1.6px; color:var(--muted); margin:0 0 12px 2px; }
+
+  .input { background: var(--panel); border:1px solid var(--line); border-radius:14px; padding:16px 20px;
+    text-align:center; font-size:15px; color:var(--ink); margin-bottom:8px; }
+  .input b { color:#fff; }
+  .arrow-down { text-align:center; color:var(--line); font-size:22px; line-height:1; margin:6px 0; }
+
+  .lanes { display:grid; grid-template-columns: repeat(4, 1fr); gap:16px; margin-top:6px; }
+  .lane { background: var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px 16px 16px;
+    display:flex; flex-direction:column; }
+  .lane h3 { font-size:16px; font-weight:700; }
+  .lane .role { font-size:12px; color:var(--muted); margin-top:3px; min-height:30px; line-height:1.35; }
+
+  .prov { border-radius:11px; padding:11px 12px; margin-top:12px; font-size:12.5px; position:relative; }
+  .prov .ptag { font-size:10.5px; text-transform:uppercase; letter-spacing:1px; font-weight:700; }
+  .prov .pid { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size:12px; margin-top:5px; color:var(--ink); word-break:break-all; }
+  .prov.primary { background: var(--primary-dim); border:1px solid #1f5c49; }
+  .prov.primary .ptag { color: var(--primary); }
+  .prov.failover { background: var(--failover-dim); border:1px solid #6b531a; }
+  .prov.failover .ptag { color: var(--failover); }
+  .prov.grok { background:#171a33; border:1px solid #3a3f74; }
+  .prov.grok .ptag { color: var(--grok); }
+
+  .failarrow { display:flex; align-items:center; gap:8px; margin:9px 2px 2px; font-size:11.5px; color:var(--failover); }
+  .failarrow .ico { font-size:13px; }
+  .nofail { margin:9px 2px 2px; font-size:11.5px; color:var(--muted); }
+
+  .merge { margin-top:22px; background: linear-gradient(180deg,#141d2e,#111827); border:1px solid var(--line);
+    border-radius:16px; padding:20px 22px; }
+  .merge h3 { font-size:16px; margin-bottom:4px; }
+  .merge p { font-size:13px; color:var(--muted); line-height:1.5; }
+  .verdicts { display:flex; gap:14px; margin-top:16px; }
+  .v { flex:1; border-radius:12px; padding:13px 14px; font-size:13px; border:1px solid var(--line); background:var(--panel2); }
+  .v .vt { font-weight:700; font-size:14px; }
+  .v.pass { border-color:#1f5c49; } .v.pass .vt { color:var(--pass); }
+  .v.warn { border-color:#6b531a; } .v.warn .vt { color:var(--warn); }
+  .v.fail { border-color:#6e2b2b; } .v.fail .vt { color:var(--fail); }
+  .v small { color:var(--muted); display:block; margin-top:3px; }
+
+  .foot { display:flex; justify-content:space-between; align-items:center; margin-top:26px;
+    border-top:1px solid var(--line); padding-top:16px; font-size:12px; color:var(--muted); }
+  .foot code { font-family: ui-monospace, Menlo, monospace; color:var(--ink); background:var(--panel2);
+    padding:2px 7px; border-radius:6px; border:1px solid var(--line); }
+</style>
+</head>
+<body>
+  <div class="head">
+    <div>
+      <h1>Consensus Gate · <span class="accent">Provider Failover</span></h1>
+      <div class="sub">Every model runs on <b style="color:var(--primary)">synthetic.new</b> (primary). When a vendor response comes back empty or errored, the gate transparently fails over to the <b style="color:var(--failover)">same model on OpenRouter</b> — so vendor-side degradation never poisons the consensus verdict.</div>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--primary)"></span>synthetic.new — primary</span>
+        <span><span class="dot" style="background:var(--failover)"></span>OpenRouter — failover</span>
+        <span><span class="dot" style="background:var(--grok)"></span>x.ai — direct (no failover)</span>
+      </div>
+    </div>
+    <div class="flagpill">flag · <b>CG_OPENROUTER_FAILOVER</b> = on</div>
+  </div>
+
+  <div class="stage-label">Input</div>
+  <div class="input">Code / procedure under review &nbsp;→&nbsp; <b>fan-out to the review panel</b></div>
+  <div class="arrow-down">▼</div>
+
+  <div class="stage-label">Review panel · per-model failover</div>
+  <div class="lanes">
+
+    <div class="lane">
+      <h3>GLM-5.1</h3>
+      <div class="role">Coherence &amp; implementation quality</div>
+      <div class="prov primary">
+        <div class="ptag">① synthetic.new</div>
+        <div class="pid">hf:zai-org/GLM-5.1</div>
+      </div>
+      <div class="failarrow"><span class="ico">⤷</span> on empty / error</div>
+      <div class="prov failover">
+        <div class="ptag">② OpenRouter</div>
+        <div class="pid">z-ai/glm-5.1</div>
+      </div>
+    </div>
+
+    <div class="lane">
+      <h3>Kimi-K2.6</h3>
+      <div class="role">Edge cases · security · performance</div>
+      <div class="prov primary">
+        <div class="ptag">① synthetic.new</div>
+        <div class="pid">hf:moonshotai/Kimi-K2.6</div>
+      </div>
+      <div class="failarrow"><span class="ico">⤷</span> on empty / error</div>
+      <div class="prov failover">
+        <div class="ptag">② OpenRouter</div>
+        <div class="pid">moonshotai/kimi-k2.6</div>
+      </div>
+    </div>
+
+    <div class="lane">
+      <h3>MiniMax-M3</h3>
+      <div class="role">Architectural consistency &amp; cross-concerns</div>
+      <div class="prov primary">
+        <div class="ptag">① synthetic.new</div>
+        <div class="pid">hf:MiniMaxAI/MiniMax-M3</div>
+      </div>
+      <div class="failarrow"><span class="ico">⤷</span> on empty / error</div>
+      <div class="prov failover">
+        <div class="ptag">② OpenRouter</div>
+        <div class="pid">minimax/minimax-m3</div>
+      </div>
+    </div>
+
+    <div class="lane">
+      <h3>grok-3-mini</h3>
+      <div class="role">Fast independent reviewer</div>
+      <div class="prov grok">
+        <div class="ptag">x.ai · direct</div>
+        <div class="pid">xai:grok-3-mini</div>
+      </div>
+      <div class="nofail">no OpenRouter equivalent — does not fail over</div>
+    </div>
+
+  </div>
+
+  <div class="arrow-down">▼</div>
+
+  <div class="merge">
+    <h3>Merge → Consensus</h3>
+    <p>Verdicts (plus the non-LLM Arbiter) are merged. If OpenRouter also returns empty/errored, the gate keeps synthetic's original verdict to preserve error context.</p>
+    <div class="verdicts">
+      <div class="v pass"><span class="vt">✅ Unanimous pass</span><small>save immediately</small></div>
+      <div class="v warn"><span class="vt">⚠️ Split verdict</span><small>log &amp; proceed (soft gate)</small></div>
+      <div class="v fail"><span class="vt">❌ Unanimous fail</span><small>reject with issue list</small></div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span>Requires <code>OPENROUTER_API_KEY</code> · set <code>CG_OPENROUTER_FAILOVER=0</code> to disable · both keys absent → Zo <code>/zo/ask</code> proxy</span>
+    <span>Zouroboros · consensus-gate</span>
+  </div>
+</body>
+</html>
