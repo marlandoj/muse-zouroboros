@@ -40,7 +40,7 @@ import {
   createHandoffEnvelope,
 } from "./elevated-task-helper";
 import { ElevatedAuditStore, type PlanGateAuditSummary } from "./elevated-task-audit";
-import { runSwarmPlanGatePreflight } from "../../../packages/swarm/src/plan-gate-preflight.ts";
+import { runSwarmPlanGatePreflight } from "../../../packages/zo-swarm-orchestrator/src/plan-gate-preflight.ts";
 
 export interface BrokerConfig {
   /** Root directory for storing audits, dispatched markers, and full logs. */

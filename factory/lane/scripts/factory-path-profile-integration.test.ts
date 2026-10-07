@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { bindFactoryPathProfile, configHash, loadRuntimeConfig, validateConfig, rollbackConfig } from './runtime-config';
 import { factoryStateRoot } from './factory-state-root';
 import { reconcileCodebaseIndexes } from './codebase-index-reconcile';
-import { factoryProfileEnv, loadFactoryPathProfile } from '../../../packages/swarm/src/transport/factory-path-profile';
+import { factoryProfileEnv, loadFactoryPathProfile } from '../../../packages/zo-swarm-orchestrator/src/transport/factory-path-profile';
 
 const roots: string[] = [];
 const prior = { ...process.env };

@@ -19,7 +19,7 @@ import {
   type HarnessPortabilityProtocol,
   type HarnessPortabilitySummary,
 } from "./harness-portability-comparison-contract.ts";
-import type { PortableHarnessInventory } from "../../../packages/swarm/src/executor/portability.ts";
+import type { PortableHarnessInventory } from "../../../packages/zo-swarm-orchestrator/src/executor/portability.ts";
 
 export const SKILL_PROMOTION_PROTOCOL = "skill-promotion-decision/v1" as const;
 export const SKILL_PROMOTION_PAIR = "skill-version-comparison-pair/v1" as const;

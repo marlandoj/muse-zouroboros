@@ -66,7 +66,7 @@ describe("workspace parsing", () => {
   test("expands star globs and literal paths, skipping dirs without a package.json", () => {
     const root = makeRoot(PRODUCTION_WORKSPACE);
     addPackage(root, "packages/workflow", { name: "zouroboros-workflow" });
-    addPackage(root, "packages/swarm", { name: "zouroboros-swarm" });
+    addPackage(root, "packages/zo-swarm-orchestrator", { name: "zouroboros-swarm" });
     mkdirSync(join(root, "packages/not-a-package"), { recursive: true });
     addPackage(root, "Projects/software-template-library", { name: "software-template-library" });
 
@@ -74,7 +74,7 @@ describe("workspace parsing", () => {
     expect(dirs).toEqual(
       [
         join(root, "Projects/software-template-library"),
-        join(root, "packages/swarm"),
+        join(root, "packages/zo-swarm-orchestrator"),
         join(root, "packages/workflow"),
       ].sort(),
     );

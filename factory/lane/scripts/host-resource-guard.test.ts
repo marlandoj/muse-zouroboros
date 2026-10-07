@@ -6,12 +6,16 @@ import {
   acquireExecutorLease,
   assertMemoryHeadroom,
   cgroupAvailableMemoryMib,
+  DISPATCH_OPERATOR_OVERRIDE_ENV,
+  dispatchOperatorIdentity,
+  dispatchOperatorOverrideEnabled,
   effectiveAvailableMemoryMib,
   enterFactoryExecutorGuard,
   parseCgroupBytes,
   parseMemAvailableMib,
   parseProcessStartTicks,
   validateHostResourcePolicy,
+  waitForMemoryHeadroom,
 } from "./host-resource-guard";
 
 const roots: string[] = [];
@@ -180,5 +184,42 @@ describe("factory host resource guard", () => {
       SWARM_EXEC_CONTAINMENT_GID: "65534",
     });
     guard.lease.release();
+  });
+});
+
+describe("factory host resource guard operator override (F-001)", () => {
+  test("override is strictly opt-in and reports an operator identity", () => {
+    expect(dispatchOperatorOverrideEnabled({})).toBe(false);
+    expect(dispatchOperatorOverrideEnabled({ [DISPATCH_OPERATOR_OVERRIDE_ENV]: "0" })).toBe(false);
+    expect(dispatchOperatorOverrideEnabled({ [DISPATCH_OPERATOR_OVERRIDE_ENV]: "1" })).toBe(true);
+    expect(dispatchOperatorIdentity({ USER: "marlando" })).toBe("marlando");
+    expect(dispatchOperatorIdentity({ LOGNAME: "marlando" })).toBe("marlando");
+    expect(dispatchOperatorIdentity({})).toBe("unknown");
+  });
+
+  test("override skips the memory wait without lowering the floor", async () => {
+    const prior = process.env[DISPATCH_OPERATOR_OVERRIDE_ENV];
+    process.env[DISPATCH_OPERATOR_OVERRIDE_ENV] = "1";
+    try {
+      const low = {
+        host_available_mib: 731,
+        cgroup_available_mib: null,
+        effective_available_mib: 731,
+      };
+      let samples = 0;
+      const readings = await waitForMemoryHeadroom({
+        policy,
+        readReadings: () => { samples += 1; return low; },
+        timeoutMs: 30_000,
+        intervalMs: 10,
+        logger: { warn: () => {} },
+      });
+      expect(readings).toEqual(low);
+      // One sample only: no polling loop ran.
+      expect(samples).toBe(1);
+    } finally {
+      if (prior === undefined) delete process.env[DISPATCH_OPERATOR_OVERRIDE_ENV];
+      else process.env[DISPATCH_OPERATOR_OVERRIDE_ENV] = prior;
+    }
   });
 });

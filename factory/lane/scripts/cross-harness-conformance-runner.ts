@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { readFileSync, writeFileSync } from "node:fs";
-import { PORTABLE_HARNESS_IDS, buildPortableHarnessInventory, type PortableHarnessInventory } from "../../../packages/swarm/src/executor/portability.ts";
+import { PORTABLE_HARNESS_IDS, buildPortableHarnessInventory, type PortableHarnessInventory } from "../../../packages/zo-swarm-orchestrator/src/executor/portability.ts";
 import {
   COMPARISON_HARNESSES,
   CROSS_HARNESS_SUMMARY,

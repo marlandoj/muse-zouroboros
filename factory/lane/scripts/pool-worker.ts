@@ -24,10 +24,10 @@
  * Exit codes: 0 ok · 1 error · 2 usage/validation.
  */
 
-import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync, readFileSync, realpathSync, writeFileSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { join } from "node:path";
+import { basename, isAbsolute, join, relative, sep } from "node:path";
 import {
   type Campaign,
   type WorkItem,
@@ -79,7 +79,15 @@ import {
   type CodingCascadeMode,
 } from "./coding-cascade";
 import { executionWorkspaceRoot } from "./execution-repository";
-import { acquireLease, recordResultDurable } from "./worker-supervisor";
+import { factoryWorktreesRoot } from "../../../packages/zo-swarm-orchestrator/src/transport/factory-path-profile";
+import {
+  DISPATCH_OPERATOR_OVERRIDE_ENV,
+  dispatchOperatorIdentity,
+  dispatchOperatorOverrideEnabled,
+  loadHostResourcePolicy,
+  readHostMemoryHeadroom,
+} from "./host-resource-guard";
+import { acquireLease, recordOperatorOverride, recordResultDurable, releaseLeaseForAssignment } from "./worker-supervisor";
 import {
   preparePersonaOrchestration,
   resolvePersonaOrchestrationMode,
@@ -94,6 +102,20 @@ declare const Bun: { YAML: { parse(text: string): unknown } };
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type AssignmentOutcome = "success" | "failure" | "stale";
+
+/**
+ * F-001: audit record for an operator override past the host memory gate
+ * (FACTORY_DISPATCH_OPERATOR_OVERRIDE=1). The gate stays the default; this
+ * record (plus the supervisor "operator-override" checkpoint) makes the
+ * deliberate bypass auditable: who, when, what the gate observed.
+ */
+export interface OperatorOverrideRecord {
+  env: string;
+  operator: string;
+  observed_available_mib: number;
+  required_floor_mib: number;
+  recorded_at: string;
+}
 
 export interface Assignment {
   assignment_id: string;
@@ -133,6 +155,15 @@ export interface Assignment {
   worker_id?: string;
   lease_id?: string;
   persona_orchestration?: PersonaOrchestrationRecord;
+  /**
+   * F-002: set exactly when the harness executor actually launches for this
+   * assignment (harness-router onLaunch hook). A claimed assignment WITHOUT
+   * this stamp never got off the ground (e.g. the memory gate blocked it
+   * before launch) and is safe to fail + re-dispatch on reclaim.
+   */
+  harness_started_at?: string;
+  /** F-001: present when the operator override past the memory gate was used. */
+  operator_override?: OperatorOverrideRecord;
 }
 
 export interface WorkerResult {
@@ -470,6 +501,104 @@ export async function reviewWorkerImplementation(
   return review;
 }
 
+export interface FailAssignmentOptions {
+  /** Reset the queue item to ready with attempts incremented (default true). */
+  incrementAttempt?: boolean;
+}
+
+/**
+ * F-003: the one call that does the whole retry-reset dance atomically (under
+ * the pool mutation lock): fail the assignment, release its supervisor lease,
+ * reset the queue item to ready. Use this instead of hand-rolled sequences —
+ * the lease registry is the second source of truth for lease state, and
+ * nulling `assignment.lease_id` does NOT release it.
+ *
+ * Idempotent: an unknown assignment id returns null; an assignment that
+ * already has an outcome is returned unchanged.
+ */
+export function failAssignment(
+  assignmentId: string,
+  reason: string,
+  opts: FailAssignmentOptions = {},
+): Assignment | null {
+  return withPoolMutationLock(() => failAssignmentLocked(assignmentId, reason, opts));
+}
+
+/** failAssignment body for callers that already hold the pool mutation lock. */
+function failAssignmentLocked(
+  assignmentId: string,
+  reason: string,
+  opts: FailAssignmentOptions = {},
+): Assignment | null {
+  const assignment = loadAssignments().find((candidate) => candidate.assignment_id === assignmentId);
+  if (!assignment) return null;
+  if (assignment.outcome !== null) return assignment;
+  assignment.completed_at = assignment.completed_at ?? new Date().toISOString();
+  assignment.outcome = "failure";
+  assignment.failure = classifyCascadeFailure({ cause: "dispatch", detail: reason });
+  saveAssignment(assignment);
+  // Release the supervisor lease through the registry (it appends the
+  // "released" checkpoint) — never by editing the assignment record.
+  releaseLeaseForAssignment(assignmentId, "failure");
+  markItem(assignment.campaign_id, assignment.task_id, "ready", {
+    ...(opts.incrementAttempt === false ? {} : { increment_attempt: true }),
+  });
+  return assignment;
+}
+
+const FACTORY_WORKTREES_ROOT_NAME = ".factory-worktrees";
+
+/**
+ * F-005: with the coding cascade off, no worktree is prepared, so the harness
+ * runs in SF_MULTI_HARNESS_WORKDIR as-is — but executor containment
+ * (agent-containment.assignedWorktree) requires the workdir to be a strict
+ * descendant of the .factory-worktrees root and fails closed otherwise.
+ * Validate BEFORE the assignment is claimed, with an error that names the two
+ * supported setups instead of the bare containment failure at launch.
+ */
+function validateOffCascadeHarnessWorkdir(cascadeMode: CodingCascadeMode): void {
+  if (cascadeMode !== "off") return;
+  const workdir = process.env.SF_MULTI_HARNESS_WORKDIR;
+  if (!workdir) return; // unset ⇒ executor transport default; nothing to validate
+  const configuredRoot = factoryWorktreesRoot();
+  let root: string;
+  try {
+    root = realpathSync(configuredRoot);
+  } catch {
+    throw new CascadeDispatchError(
+      `SF_MULTI_HARNESS_WORKDIR validation: factory worktrees root ${configuredRoot} is not accessible. `
+      + "Supported setups: (a) set FACTORY_CODING_CASCADE=enforce and give the campaign a local target_repository path "
+      + "so the lane prepares the worktree itself, or (b) create the factory worktrees root and point "
+      + "SF_MULTI_HARNESS_WORKDIR at a worktree inside it.",
+      "unsafe_scope",
+    );
+  }
+  if (basename(root) !== FACTORY_WORKTREES_ROOT_NAME) {
+    throw new CascadeDispatchError(
+      `factory worktrees root ${root} does not end with ${FACTORY_WORKTREES_ROOT_NAME}; executor containment would reject it`,
+      "unsafe_scope",
+    );
+  }
+  let cwd: string;
+  try {
+    cwd = realpathSync(workdir);
+  } catch {
+    throw new CascadeDispatchError(
+      `SF_MULTI_HARNESS_WORKDIR ${workdir} does not exist or is not accessible`,
+      "unsafe_scope",
+    );
+  }
+  const rel = relative(root, cwd);
+  if (rel === "" || rel === ".." || rel.startsWith(`..${sep}`) || isAbsolute(rel)) {
+    throw new CascadeDispatchError(
+      `SF_MULTI_HARNESS_WORKDIR ${workdir} is not inside the factory worktrees root ${root}. `
+      + "Supported setups: (a) set FACTORY_CODING_CASCADE=enforce and give the campaign a local target_repository path "
+      + "so the lane prepares the worktree itself, or (b) point SF_MULTI_HARNESS_WORKDIR at a worktree inside the factory worktrees root.",
+      "unsafe_scope",
+    );
+  }
+}
+
 /**
  * Dispatch ONE ready work item: stamp Assignment + heartbeat sentinel, mark the
  * item in-flight (attempt++), then dispatch through a local harness
@@ -478,6 +607,9 @@ export async function reviewWorkerImplementation(
 async function dispatchWorkerScoped(campaign: Campaign, item: WorkItem, opts: DispatchOpts = {}): Promise<Assignment> {
   const attempt = item.attempts; // 0-based rung BEFORE increment
   const cascadeMode = resolveCodingCascadeMode();
+  // F-005: validate the operator workdir against the containment root before
+  // anything is claimed, while the failure is still cheap and clear.
+  validateOffCascadeHarnessWorkdir(cascadeMode);
   const model = modelForAttempt(attempt, campaign.execution_policy);
   const assignmentId = `asg-${campaign.campaign_id}-${item.task_id}-a${attempt}-${Date.now().toString(36)}`;
   let plannedWorktree: string | undefined;
@@ -565,28 +697,44 @@ async function dispatchWorkerScoped(campaign: Campaign, item: WorkItem, opts: Di
     (process.env.SF_MULTI_HARNESS === "1" && process.env.SF_MULTI_HARNESS_ENFORCE === "1") ||
     (process.env.SF_EXPERTISE_ROUTER === "1" && process.env.SF_EXPERTISE_ROUTER_ENFORCE === "1");
   const claim = withPoolMutationLock(() => {
-    const liveItem = loadQueue().find(
+    const findLiveItem = () => loadQueue().find(
       (candidate) => candidate.campaign_id === campaign.campaign_id && candidate.task_id === item.task_id,
     );
+    let liveItem = findLiveItem();
     const existing = loadAssignments().find(
       (candidate) => candidate.campaign_id === campaign.campaign_id && candidate.task_id === item.task_id && candidate.outcome === null,
     );
     if (existing) {
-      if (liveItem?.state === "ready") {
-        markItem(campaign.campaign_id, item.task_id, "in-flight", { increment_attempt: true });
+      if (!existing.harness_started_at) {
+        // F-002: the prior claim never got the harness running (e.g. the
+        // memory gate blocked it before launch). Fail it atomically — no
+        // attempt was consumed, so don't increment — and fall through to a
+        // genuinely fresh dispatch instead of returning a dead assignment.
+        // Re-read the queue item: failAssignmentLocked just moved it.
+        failAssignmentLocked(
+          existing.assignment_id,
+          `harness never started on prior dispatch attempt ${existing.assignment_id}; failing the stale claim and re-dispatching (F-002)`,
+          { incrementAttempt: false },
+        );
+        liveItem = findLiveItem();
+        // NOTE: falls through to the fresh-claim path below.
+      } else {
+        if (liveItem?.state === "ready") {
+          markItem(campaign.campaign_id, item.task_id, "in-flight", { increment_attempt: true });
+        }
+        if (!existing.lease_id) {
+          const claimed = acquireLease({
+            assignment_id: existing.assignment_id,
+            campaign_id: existing.campaign_id,
+            task_id: existing.task_id,
+            timeout_min: existing.timeout_min,
+          });
+          existing.worker_id = claimed.worker.worker_id;
+          existing.lease_id = claimed.lease.lease_id;
+          saveAssignment(existing);
+        }
+        return { assignment: existing, created: false };
       }
-      if (!existing.lease_id) {
-        const claimed = acquireLease({
-          assignment_id: existing.assignment_id,
-          campaign_id: existing.campaign_id,
-          task_id: existing.task_id,
-          timeout_min: existing.timeout_min,
-        });
-        existing.worker_id = claimed.worker.worker_id;
-        existing.lease_id = claimed.lease.lease_id;
-        saveAssignment(existing);
-      }
-      return { assignment: existing, created: false };
     }
     if (!liveItem || liveItem.state !== "ready") {
       throw new Error(`cannot claim ${campaign.campaign_id}/${item.task_id}: task is ${liveItem?.state ?? "missing"}`);
@@ -693,10 +841,40 @@ async function dispatchWorkerScoped(campaign: Campaign, item: WorkItem, opts: Di
   // enforceOn is false ⇒ this block is skipped.
   if (shouldDispatchThroughHarness(cascadeMode, enforceOn, enforceExecutor)) {
     const executorId = enforceExecutor;
+    // F-001: sanctioned operator override past the host memory gate. The gates
+    // in harness-router honor FACTORY_DISPATCH_OPERATOR_OVERRIDE=1; stamp the
+    // decision on the assignment and in the supervisor checkpoint so the
+    // bypass is auditable. The gate stays the default for everyone else.
+    if (dispatchOperatorOverrideEnabled() && !a.mock) {
+      const readings = readHostMemoryHeadroom();
+      a.operator_override = {
+        env: DISPATCH_OPERATOR_OVERRIDE_ENV,
+        operator: dispatchOperatorIdentity(),
+        observed_available_mib: readings.effective_available_mib,
+        required_floor_mib: loadHostResourcePolicy().min_available_memory_mib,
+        recorded_at: new Date().toISOString(),
+      };
+      saveAssignment(a);
+      if (a.lease_id && a.worker_id) {
+        recordOperatorOverride({
+          assignment_id: a.assignment_id,
+          lease_id: a.lease_id,
+          worker_id: a.worker_id,
+          detail: `operator ${a.operator_override.operator} overrode the memory gate at `
+            + `${a.operator_override.observed_available_mib} MiB available (floor ${a.operator_override.required_floor_mib} MiB)`,
+        });
+      }
+    }
     try {
       const r = await runHarness(executorId, prompt, {
         workdir: a.worktree_path ?? process.env.SF_MULTI_HARNESS_WORKDIR,
         timeoutMs: a.timeout_min * 60_000,
+        onLaunch: () => {
+          // F-002: the executor really launched — a later reclaim can tell a
+          // dispatched assignment apart from one that never got off the ground.
+          a.harness_started_at = new Date().toISOString();
+          saveAssignment(a);
+        },
       });
       // The agent is told (completion contract in buildWorkerPrompt) to write the
       // result sentinel itself; if it didn't, synthesize one from the run result so
@@ -747,7 +925,11 @@ export async function dispatchWorker(campaign: Campaign, item: WorkItem, opts: D
   const liveItem = loadQueue().find(
     (candidate) => candidate.campaign_id === campaign.campaign_id && candidate.task_id === item.task_id,
   );
-  if (existing && liveItem?.state === "in-flight") return existing;
+  // F-002: only return an existing claim when the harness actually launched
+  // for it. A claimed-but-never-launched assignment is not a dispatch in
+  // progress — fall through so dispatchWorkerScoped fails the stale claim
+  // and re-dispatches instead of returning it as a silent no-op.
+  if (existing && existing.harness_started_at && liveItem?.state === "in-flight") return existing;
   const applied = campaign.execution_policy ? applyModelPolicy(campaign.execution_policy) : null;
   try {
     return await dispatchWorkerScoped(campaign, item, opts);
@@ -1009,6 +1191,7 @@ function usage(msg?: string): never {
   if (msg) console.error(`ERROR: ${msg}\n`);
   console.error(`Usage:
   pool-worker.ts dispatch --campaign <id> --task <id> [--mock]
+  pool-worker.ts fail <assignment_id> [--reason <text>] [--no-increment]
   pool-worker.ts mock-complete <assignment_id> --outcome success|failure [--summary <s>] [--cost <usd>]
   pool-worker.ts re-review <assignment_id> [--workdir <path>]
   pool-worker.ts remediate-review <assignment_id> --workdir <path> --by <operator> --note <evidence> [--prior-commit <full-sha>]
@@ -1018,9 +1201,10 @@ Env:
   SF003_TASK_TIMEOUT_MIN   stall timeout minutes (default ${DEFAULT_TASK_TIMEOUT_MIN})
   SF_MULTI_HARNESS         =1 ⇒ advisory harness routing + health preflight (default OFF, zero spend)
   SF_MULTI_HARNESS_ENFORCE =1 ⇒ dispatch through the selected coder harness (operator-only, spends)
-  SF_MULTI_HARNESS_WORKDIR workdir for the enforced harness run (default: transport default)
-  SF_EXPERTISE_ROUTER      =1 ⇒ advisory expertise routing: research legs → Hermes, code legs → coder chain (default OFF, zero spend)
-  SF_EXPERTISE_ROUTER_ENFORCE =1 ⇒ dispatch a research leg through the resolved executor (operator-only, spends)`);
+  SF_MULTI_HARNESS_WORKDIR workdir for the enforced harness run (must be inside the factory .factory-worktrees root when FACTORY_CODING_CASCADE=off; default: transport default)
+  FACTORY_CODING_CASCADE   off|shadow|enforce (default off); enforce ⇒ lane prepares a cascade worktree under .factory-worktrees
+  FACTORY_MEMORY_WAIT_MS   bounded wait for memory headroom before dispatch (default 120000)
+  FACTORY_DISPATCH_OPERATOR_OVERRIDE =1 ⇒ operator override past the host memory gate (F-001); deliberate and auditable — stamped on the assignment and in the supervisor checkpoint`);
   process.exit(2);
 }
 
@@ -1079,6 +1263,16 @@ if (import.meta.main) {
       case "dispatch":
         await cmdDispatch(args);
         break;
+      case "fail": {
+        const id = args.find((x) => !x.startsWith("--"));
+        if (!id) usage("fail requires <assignment_id> [--reason <text>]");
+        const failed = failAssignment(id, flagValue(args, "--reason") ?? "operator fail", {
+          incrementAttempt: !args.includes("--no-increment"),
+        });
+        if (!failed) usage(`unknown assignment: ${id}`);
+        console.log(`[pool-worker] failed ${id}: ${failed.campaign_id}/${failed.task_id} reset to ready`);
+        break;
+      }
       case "mock-complete":
         cmdMockComplete(args);
         break;

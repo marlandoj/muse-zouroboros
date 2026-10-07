@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import type { EvaluationTaskClass, Sha256Digest, SkillLifecycleRecord } from "../../../Skills/skill-security-gate/scripts/lifecycle/types.ts";
-import { buildPortableHarnessInventory } from "../../../packages/swarm/src/executor/portability.ts";
+import { buildPortableHarnessInventory } from "../../../packages/zo-swarm-orchestrator/src/executor/portability.ts";
 import { actorSha256, parseActorSystemManifest } from "./actor-system-twin.ts";
 import { buildSyntheticScenarioSourceQualification } from "./scenario-source-comparison-cohort.ts";
 import { evaluateScenarioSourceComparison } from "./scenario-source-comparison-runner.ts";

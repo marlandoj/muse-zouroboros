@@ -3,7 +3,7 @@
  * ZOU-436 SF-P3 — Multi-harness router for the SF-003 coder pool.
  *
  * The pool currently rotates /zo/ask MODELS (pool-worker.ts MODEL_FALLBACK_CHAIN).
- * ECC-007 shipped an executor registry + ACP transport (packages/swarm) that makes
+ * ECC-007 shipped an executor registry + ACP transport (packages/zo-swarm-orchestrator) that makes
  * real coder HARNESSES — Claude Code, OpenCode, Codex, Gemini, Pi, and Kimi —
  * dispatchable. This module
  * is the pure routing + health-preflight seam that pool-worker.ts wires in behind
@@ -17,7 +17,7 @@
 
 import { join } from "node:path";
 import { enterFactoryExecutorGuard, loadHostResourcePolicy, waitForMemoryHeadroom } from "./host-resource-guard";
-import { readSharedCatalog, selectShared } from "../../../packages/swarm/src/routing/shared-catalog";
+import { readSharedCatalog, selectShared } from "../../../packages/zo-swarm-orchestrator/src/routing/shared-catalog";
 
 /** Every coder harness the factory is allowed to dispatch to. */
 export const KNOWN_CODER_HARNESSES: ReadonlyArray<string> = [
@@ -146,7 +146,7 @@ export async function selectHarness(args: SelectHarnessArgs): Promise<HarnessDec
 
 // ─── Real-binary seam (lazy) ────────────────────────────────────────────────────
 
-// Fixed repo-relative paths into packages/swarm. NOT env-derived on purpose: the
+// Fixed repo-relative paths into packages/zo-swarm-orchestrator. NOT env-derived on purpose: the
 // executor-client path is fed to a dynamic import(), so an env-controlled path would
 // be an arbitrary-module-load / RCE surface. The module's location is a fixed repo
 // fact, not an operator knob.
@@ -170,7 +170,7 @@ function swarmExecutorClientPath(): string {
 }
 
 /**
- * The real health probe: lazy-imports ExecutorClient from packages/swarm source
+ * The real health probe: lazy-imports ExecutorClient from packages/zo-swarm-orchestrator source
  * (Bun runs the TS directly — no dist needed) and calls .health(), which for ACP
  * executors is a cheap side-effect-free `which <bin>` (it does NOT start a session).
  * Any failure to import/instantiate/probe is folded into { healthy:false }.
@@ -241,6 +241,14 @@ export interface HarnessRunOptions {
   idleTimeoutMs?: number;
   env?: Record<string, string>;
   onOutput?: (text: string) => void;
+  /**
+   * F-002: invoked exactly when the harness executor actually launches (memory
+   * gates passed, ExecutorClient created, about to run). Lets the dispatcher
+   * stamp harness start so a later reclaim can tell "dispatched" apart from
+   * "claimed but never launched". Called synchronously before client.run; a
+   * throw fails the dispatch before any launch happened.
+   */
+  onLaunch?: (info: { executorId: string }) => void;
 }
 
 /**
@@ -323,6 +331,10 @@ export async function runHarness(
           }
         }
       : undefined;
+    // F-002: the memory gates passed and the executor is about to launch —
+    // stamp harness start now, before any launch, so a later reclaim can
+    // distinguish "dispatched" from "claimed but never launched".
+    opts.onLaunch?.({ executorId });
     const r = await client.run(prompt, {
       workdir: opts.workdir,
       timeoutMs: opts.timeoutMs,

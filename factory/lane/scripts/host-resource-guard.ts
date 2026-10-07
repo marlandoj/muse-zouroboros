@@ -1,5 +1,5 @@
-import { factoryProfileEnv, factoryWorktreesRoot } from "../../../packages/swarm/src/transport/factory-path-profile";
-import { readManagedFactoryBoundary } from "../../../packages/swarm/src/transport/factory-systemd-containment";
+import { factoryProfileEnv, factoryWorktreesRoot } from "../../../packages/zo-swarm-orchestrator/src/transport/factory-path-profile";
+import { readManagedFactoryBoundary } from "../../../packages/zo-swarm-orchestrator/src/transport/factory-systemd-containment";
 import { factoryStatePath, factoryStatePathForProject, factoryStateRoot, resolveFactoryStateOverride } from "./factory-state-root";
 import { randomUUID } from "node:crypto";
 import {
@@ -120,6 +120,28 @@ export function loadHostResourcePolicy(path = DEFAULT_POLICY_PATH): HostResource
   }
 }
 
+/**
+ * F-001: explicit operator-override path past the host memory gate. On a
+ * shared host, sustained contention from other tenants can pin MemAvailable
+ * below the floor for long stretches; the gate correctly refuses to dispatch
+ * on its own, but there was no sanctioned way for an operator who has
+ * inspected the host and judged the workload safe to proceed through the
+ * lane. Setting FACTORY_DISPATCH_OPERATOR_OVERRIDE=1 is a deliberate,
+ * auditable decision — it skips the wait/assert in this module, and the
+ * dispatcher records who/when/observed-MiB on the assignment and in the
+ * supervisor checkpoint. The gate stays the default; never just lower the
+ * floor (that would silently weaken it for everyone).
+ */
+export const DISPATCH_OPERATOR_OVERRIDE_ENV = "FACTORY_DISPATCH_OPERATOR_OVERRIDE";
+
+export function dispatchOperatorOverrideEnabled(env: Record<string, string | undefined> = process.env): boolean {
+  return env[DISPATCH_OPERATOR_OVERRIDE_ENV] === "1";
+}
+
+export function dispatchOperatorIdentity(env: Record<string, string | undefined> = process.env): string {
+  return env.USER || env.LOGNAME || "unknown";
+}
+
 export function parseMemAvailableMib(content: string): number {
   const match = content.match(/^MemAvailable:\s+(\d+)\s+kB$/m);
   if (!match) throw new Error("MemAvailable is unavailable in /proc/meminfo");
@@ -199,6 +221,17 @@ export async function waitForMemoryHeadroom(options: {
   const intervalMs = options.intervalMs ?? HEADROOM_POLL_INTERVAL_MS;
   const deadline = Date.now() + Math.max(0, timeoutMs);
   let attempts = 0;
+  // F-001: deliberate operator override — take one reading, log the bypass
+  // loudly, and proceed. The dispatcher records the full audit trail.
+  if (dispatchOperatorOverrideEnabled()) {
+    const readings = read();
+    (options.logger ?? console).warn(
+      `[host-resource-guard] OPERATOR OVERRIDE ${DISPATCH_OPERATOR_OVERRIDE_ENV}=1 `
+      + `— skipping memory-headroom wait (operator ${dispatchOperatorIdentity()}, `
+      + `${readings.effective_available_mib} MiB available, floor ${policy.min_available_memory_mib} MiB)`,
+    );
+    return readings;
+  }
   for (;;) {
     const readings = read();
     attempts += 1;
@@ -342,7 +375,17 @@ export function enterFactoryExecutorGuard(options: {
     throw new Error("managed Factory unit requires the exact enrolled host resource policy");
   }
   const memory = options.readings ?? readHostMemoryHeadroom();
-  assertMemoryHeadroom(policy, memory);
+  // F-001: deliberate operator override — skip the single-sample assert too
+  // (the dispatch path already waited or overrode there). Logged loudly here
+  // so a bypass is visible even for callers that skip waitForMemoryHeadroom.
+  if (dispatchOperatorOverrideEnabled()) {
+    console.warn(
+      `[host-resource-guard] OPERATOR OVERRIDE ${DISPATCH_OPERATOR_OVERRIDE_ENV}=1 — skipping memory-headroom assert `
+      + `(operator ${dispatchOperatorIdentity()}, ${memory.effective_available_mib} MiB available, floor ${policy.min_available_memory_mib} MiB)`,
+    );
+  } else {
+    assertMemoryHeadroom(policy, memory);
+  }
   const lease = acquireExecutorLease({
     path: options.leasePath,
     now: options.now,

@@ -318,7 +318,7 @@ export function doctorFactory(rootInput: string, factoryDirInput?: string): Doct
     detail: runtimeValidation.status === 0 ? runtimeValidation.stdout.trim() : (runtimeValidation.stderr || runtimeValidation.stdout).trim().slice(0, 500),
   });
 
-  for (const path of ["packages/swarm", "packages/workflow", "Skills/tier-resolver", "Skills/zouroboros-governance"]) {
+  for (const path of ["packages/zo-swarm-orchestrator", "packages/workflow", "Skills/tier-resolver", "Skills/zouroboros-governance"]) {
     checks.push({
       status: existsSync(join(root, path)) ? "PASS" : "WARN",
       label: path,

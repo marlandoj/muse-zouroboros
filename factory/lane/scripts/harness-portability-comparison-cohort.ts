@@ -1,5 +1,5 @@
 import { readFileSync } from "node:fs";
-import { buildPortableHarnessInventory } from "../../../packages/swarm/src/executor/portability.ts";
+import { buildPortableHarnessInventory } from "../../../packages/zo-swarm-orchestrator/src/executor/portability.ts";
 import {
   CANONICAL_RECEIPT_CONTRACT_SHA256,
   CANONICAL_VERIFIER_CONTRACT_SHA256,

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { createHash } from "node:crypto";
-import { canonicalFactoryPath, loadFactoryPathProfile } from "../../../packages/swarm/src/transport/factory-path-profile";
+import { canonicalFactoryPath, loadFactoryPathProfile } from "../../../packages/zo-swarm-orchestrator/src/transport/factory-path-profile";
 import { existsSync, lstatSync, readFileSync, readdirSync, readlinkSync, realpathSync } from "node:fs";
 import { createRequire } from "node:module";
 import { arch, platform } from "node:os";
@@ -210,7 +210,7 @@ const INERT_SOURCE_ALIASES: Readonly<Record<string, string>> = {
   "AVATAR-USER.md": "AVATAR-KEVIN.md",
   "evaluations/bench": "/home/workspace/zouroboros/packages/bench/evaluations",
   "evaluations/rag": "/home/workspace/zouroboros/packages/rag/evaluations",
-  "evaluations/swarm": "/home/workspace/zouroboros/packages/swarm/evaluations",
+  "evaluations/swarm": "/home/workspace/zouroboros/packages/zo-swarm-orchestrator/evaluations",
   "Projects/zourobench-2026/node_modules": "hal-adapter/node_modules",
 };
 const INERT_ALIAS_WORKSPACE_BLOB = "dda638de2b858681bdb3740c2cc5ba7d5df3db32";

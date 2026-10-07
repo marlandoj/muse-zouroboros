@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { loadFactoryPathProfile } from "../../../packages/swarm/src/transport/factory-path-profile";
+import { loadFactoryPathProfile } from "../../../packages/zo-swarm-orchestrator/src/transport/factory-path-profile";
 import { factoryStatePath, factoryStatePathForProject, factoryStateRoot, resolveFactoryStateOverride, validateFactoryStateMarker } from "./factory-state-root";
 import { conveyorReleaseManifestPath, readConveyorReleaseManifest, type ConveyorReleaseManifest } from "./factory-conveyor-release";
 /**

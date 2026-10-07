@@ -147,9 +147,9 @@ describe("factory state ownership boundary", () => {
     mkdirSync(stateRoot);
     for (const runtime of [runtimeA, runtimeB]) {
       mkdirSync(runtime, { recursive: true });
-      const transport = resolve(runtime, '../../../packages/swarm/src/transport');
+      const transport = resolve(runtime, '../../../packages/zo-swarm-orchestrator/src/transport');
       mkdirSync(transport, { recursive: true });
-      copyFileSync(resolve(repositoryRoot, 'packages/swarm/src/transport/factory-path-profile.ts'), join(transport, 'factory-path-profile.ts'));
+      copyFileSync(resolve(repositoryRoot, 'packages/zo-swarm-orchestrator/src/transport/factory-path-profile.ts'), join(transport, 'factory-path-profile.ts'));
     }
     writeMarker(stateRoot);
 

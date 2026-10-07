@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { factoryWorktreeReadRoots, factoryWorktreesRoot, loadFactoryPathProfile } from "../../../packages/swarm/src/transport/factory-path-profile";
+import { factoryWorktreeReadRoots, factoryWorktreesRoot, loadFactoryPathProfile } from "../../../packages/zo-swarm-orchestrator/src/transport/factory-path-profile";
 
 import {
   appendFileSync,
@@ -19,7 +19,7 @@ import { poolStateDir, writeJsonAtomic } from "./pool-queue";
 
 export type WorkerStatus = "idle" | "leased" | "stale";
 export type LeaseStatus = "active" | "released" | "expired";
-export type CheckpointStage = "claimed" | "heartbeat" | "result-durable" | "terminal" | "released";
+export type CheckpointStage = "claimed" | "heartbeat" | "result-durable" | "terminal" | "released" | "operator-override";
 
 export interface WorkerRecord {
   worker_id: string;
@@ -338,6 +338,30 @@ export function recordResultDurable(assignmentId: string, recordedAt = new Date(
       recorded_at: recordedAt.toISOString(),
     });
   });
+}
+
+/**
+ * Audit checkpoint for an operator override of a factory safety gate
+ * (e.g. FACTORY_DISPATCH_OPERATOR_OVERRIDE=1 past the memory gate). The
+ * override is deliberate and logged: this checkpoint plus the assignment's
+ * `operator_override` record carry who/when/what was observed. Idempotent
+ * per assignment (appendCheckpointUnsafe dedupes on assignment+stage).
+ */
+export function recordOperatorOverride(input: {
+  assignment_id: string;
+  lease_id: string;
+  worker_id: string;
+  detail: string;
+  at?: Date;
+}): WorkerCheckpoint {
+  return withSupervisorLock(() => appendCheckpointUnsafe({
+    assignment_id: input.assignment_id,
+    lease_id: input.lease_id,
+    worker_id: input.worker_id,
+    stage: "operator-override",
+    recorded_at: (input.at ?? new Date()).toISOString(),
+    detail: input.detail,
+  }));
 }
 
 export function releaseLeaseForAssignment(assignmentId: string, outcome: string, releasedAt = new Date()): boolean {

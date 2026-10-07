@@ -5,7 +5,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { appendWorktreeLedger } from "./execution-repository";
-import { factoryWorktreesRoot, loadFactoryPathProfile } from "../../../packages/swarm/src/transport/factory-path-profile";
+import { factoryWorktreesRoot, loadFactoryPathProfile } from "../../../packages/zo-swarm-orchestrator/src/transport/factory-path-profile";
 import type { ExecutionPolicy } from "./model-policy";
 
 export type CodingCascadeMode = "off" | "shadow" | "enforce";
@@ -25,6 +25,7 @@ export type CascadeFailureKind =
   | "policy"
   | "unsafe_scope"
   | "worker_failure"
+  | "dispatch"
   | "unknown";
 
 export interface CascadeFailure {
@@ -192,6 +193,9 @@ export function classifyCascadeFailure(input: {
       retryable: false,
       detail: input.detail ?? "factory review gate blocked the implementation without review evidence",
     };
+  }
+  if (input.cause === "dispatch") {
+    return { kind: "dispatch", retryable: true, detail: input.detail ?? "dispatch-time failure" };
   }
   return {
     kind: input.cause,

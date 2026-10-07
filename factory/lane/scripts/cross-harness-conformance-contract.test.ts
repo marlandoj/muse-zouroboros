@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { buildPortableHarnessInventory } from "../../../packages/swarm/src/executor/portability.ts";
+import { buildPortableHarnessInventory } from "../../../packages/zo-swarm-orchestrator/src/executor/portability.ts";
 import {
   COMPARISON_HARNESSES,
   CROSS_HARNESS_OBSERVATION,

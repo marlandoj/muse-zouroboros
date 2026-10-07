@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { buildPortableHarnessInventory } from "../../../packages/swarm/src/executor/portability.ts";
+import { buildPortableHarnessInventory } from "../../../packages/zo-swarm-orchestrator/src/executor/portability.ts";
 import {
   COMPARISON_HARNESSES,
   CROSS_HARNESS_OBSERVATION,

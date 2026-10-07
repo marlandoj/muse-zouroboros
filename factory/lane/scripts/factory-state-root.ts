@@ -1,5 +1,5 @@
 import { existsSync, lstatSync, readFileSync, realpathSync } from "node:fs";
-import { loadFactoryPathProfile } from "../../../packages/swarm/src/transport/factory-path-profile";
+import { loadFactoryPathProfile } from "../../../packages/zo-swarm-orchestrator/src/transport/factory-path-profile";
 import { basename, isAbsolute, join, relative, resolve, sep } from "node:path";
 
 export const FACTORY_STATE_ENV = "FACTORY_STATE_DIR";

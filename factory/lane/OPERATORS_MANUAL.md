@@ -674,3 +674,69 @@ the switch stays off and the loops remain a planning-state, read-mostly harness.
 *This manual describes the factory as of 2026-07-24. The native-loops integration
 (ZOU-876–884, 888, +889/890/900) is complete and merged in planning-state; the
 conveyor (Path A) is the live production path.*
+## 6. Pool-lane operator recipes (F-001–F-005 fixes, 2026-10-06)
+
+The pool worker dispatch lane (`scripts/pool-worker.ts`) had five blockers
+observed during the UpOnly Yard #4 build. All are fixed in code; this section
+is the operator-facing summary.
+
+### 6.1 Memory-gate operator override (F-001)
+
+The host memory gate (`host-resource-guard.ts`) reads host `/proc/meminfo`
+`MemAvailable` and requires a 1024 MiB floor. On this shared host, sustained
+contention from other tenants can pin it below the floor for long stretches —
+the gate correctly refuses, but there was no sanctioned override.
+
+```bash
+FACTORY_DISPATCH_OPERATOR_OVERRIDE=1 bun pool-worker.ts dispatch --campaign <id> --task <id>
+```
+
+- This is a **deliberate, auditable decision**, not a floor change. Set it only
+  after inspecting the host and judging the workload safe.
+- The bypass is logged loudly (stderr), stamped on the assignment
+  (`operator_override`: who / when / observed MiB / floor), and appended to
+  the supervisor checkpoints as an `operator-override` stage.
+- The gate stays the default for everyone else.
+
+### 6.2 Stale-claim reclaim (F-002) and `failAssignment` (F-003)
+
+- A dispatch now stamps `harness_started_at` on the assignment **exactly when
+  the executor launches** (after the memory gates pass). If a prior claim
+  never launched (e.g. the gate blocked it first), the next dispatch fails
+  the dead claim atomically and re-dispatches — no more silent no-op reclaims
+  and no more three-step manual dance.
+- Lease state: the assignment record and the supervisor lease registry stay
+  the two sources of truth, but there is now one call that moves both:
+  ```bash
+  bun pool-worker.ts fail <assignment_id> --reason "harness never started" [--no-increment]
+  ```
+  It fails the assignment (kind `dispatch`, retryable), releases the
+  supervisor lease, and resets the queue item to `ready` (attempts incremented
+  unless `--no-increment`). Use it instead of nulling `lease_id` by hand —
+  that never released the registry lease.
+
+### 6.3 Direct harness runs (F-004)
+
+`claude -p` as root is permission-deadlocked: every write/npm/read is denied
+by prompts that can't be answered in print mode, and
+`--dangerously-skip-permissions` is rejected for root. The sanctioned recipe:
+
+```bash
+# One-shot, using the proven pre-approved tool set:
+claude -p --allowedTools "Write Edit Read Bash Glob Grep TodoWrite" "$(cat prompt.txt)" < /dev/null
+# Or the wrapper (prompt file + workdir):
+scripts/direct-run.sh /path/to/prompt.txt /path/to/workdir
+```
+
+### 6.4 Harness workdir setups (F-005)
+
+With `FACTORY_CODING_CASCADE=off` (the default) the lane prepares no
+worktree, so the harness runs in `SF_MULTI_HARNESS_WORKDIR` as-is — but
+executor containment requires it to be a strict descendant of the
+`.factory-worktrees` root and fails closed otherwise. Dispatch now validates
+this **before** claiming the assignment and tells you which setup to pick:
+
+- **(a)** `FACTORY_CODING_CASCADE=enforce` + a local `target_repository` path
+  on the campaign ⇒ the lane prepares the worktree itself; or
+- **(b)** point `SF_MULTI_HARNESS_WORKDIR` at a worktree inside the factory
+  `.factory-worktrees` root.

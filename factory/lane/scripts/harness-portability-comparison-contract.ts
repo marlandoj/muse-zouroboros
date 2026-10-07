@@ -3,7 +3,7 @@ import {
   PORTABLE_HARNESS_IDS,
   type HarnessId,
   type PortableHarnessInventory,
-} from "../../../packages/swarm/src/executor/portability.ts";
+} from "../../../packages/zo-swarm-orchestrator/src/executor/portability.ts";
 import { canonicalize, CONTRACT_ID } from "./run-receipt-contract.ts";
 import {
   TRAJECTORY_CLAIM_FIELDS,

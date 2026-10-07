@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { prepareFactoryDiversityReview } from "./factory-diversity-review";
 import type { PersonaCallRequest, PersonaOrchestratorDeps } from "./persona-orchestrator";
-import type { SpecialistReviewerPolicy } from "../../../packages/swarm/src/persona/specialist-consult";
+import type { SpecialistReviewerPolicy } from "../../../packages/zo-swarm-orchestrator/src/persona/specialist-consult";
 
 const KIMI_MODEL = "byok:463350ac-4a49-4ceb-8653-042ecffa513f";
 // Reviewer identity is a policy input, never a constant. Pinning a specific

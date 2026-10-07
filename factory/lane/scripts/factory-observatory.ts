@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { factoryWorktreesRoot, factoryWorktreeReadRoots } from "../../../packages/swarm/src/transport/factory-path-profile";
+import { factoryWorktreesRoot, factoryWorktreeReadRoots } from "../../../packages/zo-swarm-orchestrator/src/transport/factory-path-profile";
 import { factoryStatePath, factoryStatePathForProject, factoryStateRoot, resolveFactoryStateOverride } from "./factory-state-root";
 /**
  * FR-09 (ZOU-1118) — Factory Observatory and outcome metrics.

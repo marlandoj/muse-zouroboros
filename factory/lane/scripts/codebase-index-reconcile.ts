@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { canonicalFactoryPath, factoryWorktreesRoot, loadFactoryPathProfile } from "../../../packages/swarm/src/transport/factory-path-profile";
+import { canonicalFactoryPath, factoryWorktreesRoot, loadFactoryPathProfile } from "../../../packages/zo-swarm-orchestrator/src/transport/factory-path-profile";
 import { factoryStatePath, factoryStatePathForProject, factoryStateRoot, resolveFactoryStateOverride } from "./factory-state-root";
 
 import { createHash } from "node:crypto";

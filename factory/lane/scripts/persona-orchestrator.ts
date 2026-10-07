@@ -13,7 +13,7 @@ import {
   resolveModelVendor,
   type SpecialistReviewerPolicy,
   type SpecialistReviewerSelection,
-} from "../../../packages/swarm/src/persona/specialist-consult";
+} from "../../../packages/zo-swarm-orchestrator/src/persona/specialist-consult";
 import type {
   Campaign,
   PersonaPhase,

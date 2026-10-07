@@ -6,7 +6,7 @@ import { consumeReleaseGrant, type ReleaseGrant } from "./release-grant";
  *
  * For SWARM/FORCE_SWARM tickets: dispatches a self-contained prompt (ticket
  * context + repo + AC + archetype) through the coder-executor chain
- * (claude-code → opencode → codex → gemini → pi → kimi; packages/swarm ExecutorClient over the
+ * (claude-code → opencode → codex → gemini → pi → kimi; packages/zo-swarm-orchestrator ExecutorClient over the
  * Skills/zo-swarm-executors bridges). The child agent does interview → seed →
  * eval → execute → post-flight → gap audit. Collects result + branch name.
  * Zouroboros System (de-Zo phase 2): the executor chain is the only execution

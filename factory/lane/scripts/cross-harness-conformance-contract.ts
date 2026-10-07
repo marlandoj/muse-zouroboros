@@ -3,7 +3,7 @@ import {
   PORTABLE_HARNESS_IDS,
   type HarnessId,
   type PortableHarnessInventory,
-} from "../../../packages/swarm/src/executor/portability.ts";
+} from "../../../packages/zo-swarm-orchestrator/src/executor/portability.ts";
 import { canonicalize } from "./run-receipt-contract.ts";
 
 export const CROSS_HARNESS_PROTOCOL = "cross-harness-conformance/v1" as const;

@@ -20,7 +20,7 @@
 import { spawnSync } from "node:child_process";
 import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { canonicalFactoryPath, EXTERNAL_FACTORY_RELEASES, insideFactoryPath, loadFactoryPathProfile } from "../../../packages/swarm/src/transport/factory-path-profile";
+import { canonicalFactoryPath, EXTERNAL_FACTORY_RELEASES, insideFactoryPath, loadFactoryPathProfile } from "../../../packages/zo-swarm-orchestrator/src/transport/factory-path-profile";
 
 export const INSTALL_TIMEOUT_MS = 300_000;
 export const BUILD_TIMEOUT_MS = 300_000;

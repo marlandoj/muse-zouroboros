@@ -205,7 +205,7 @@ export function resolveExecutionRepository(
 // ---------------------------------------------------------------------------
 
 const WORKTREES_DIRNAME = ".factory-worktrees";
-import { canonicalFactoryPath, factoryWorktreesRoot, factoryWorktreeReadRoots, insideFactoryPath, loadFactoryPathProfile } from "../../../packages/swarm/src/transport/factory-path-profile";
+import { canonicalFactoryPath, factoryWorktreesRoot, factoryWorktreeReadRoots, insideFactoryPath, loadFactoryPathProfile } from "../../../packages/zo-swarm-orchestrator/src/transport/factory-path-profile";
 const FULL_COMMIT_SHA = /^[0-9a-f]{40}$/i;
 
 export interface WorktreeLedgerRecord {

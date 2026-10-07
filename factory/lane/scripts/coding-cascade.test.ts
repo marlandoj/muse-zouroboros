@@ -82,3 +82,17 @@ describe("classifyCascadeFailure persona review classification (ZOU-1576 defect 
     expect(governance).toEqual({ kind: "governance", retryable: false, detail: "consensus rejected the change" });
   });
 });
+
+describe("classifyCascadeFailure dispatch kind (F-003)", () => {
+  test("a dispatch-time failure is retryable", () => {
+    const failure = classifyCascadeFailure({
+      cause: "dispatch",
+      detail: "harness never started; failing the stale claim",
+    });
+    expect(failure).toEqual({
+      kind: "dispatch",
+      retryable: true,
+      detail: "harness never started; failing the stale claim",
+    });
+  });
+});

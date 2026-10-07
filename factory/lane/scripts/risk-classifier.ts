@@ -418,7 +418,7 @@ function selfTest(): number {
     },
     {
       name: "feature w/ swarm scope → medium",
-      fields: { archetype: "feature", target_repo: "zouroboros", repro: "packages/swarm/src", acceptance_criteria: "webhook retry with backoff; dead-letter log; tests" },
+      fields: { archetype: "feature", target_repo: "zouroboros", repro: "packages/zo-swarm-orchestrator/src", acceptance_criteria: "webhook retry with backoff; dead-letter log; tests" },
       text: "Add webhook retry system across a.ts b.ts c.ts d.ts",
       gate: "SWARM",
       seed: 0.9,

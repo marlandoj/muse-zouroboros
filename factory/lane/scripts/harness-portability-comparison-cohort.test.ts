@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { buildPortableHarnessInventory } from "../../../packages/swarm/src/executor/portability.ts";
+import { buildPortableHarnessInventory } from "../../../packages/zo-swarm-orchestrator/src/executor/portability.ts";
 import { buildSyntheticHarnessPortabilityQualification } from "./harness-portability-comparison-cohort.ts";
 import { evaluateHarnessPortabilityComparison } from "./harness-portability-comparison-runner.ts";
 

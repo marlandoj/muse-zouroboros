@@ -1,1 +1,1 @@
-export * from "../../../packages/swarm/src/persona/directory";
+export * from "../../../packages/zo-swarm-orchestrator/src/persona/directory";

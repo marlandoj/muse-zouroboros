@@ -10,9 +10,9 @@ function checkout(): string {
   const root = mkdtempSync(join(tmpdir(), "factory-package-test-"));
   roots.push(root);
   mkdirSync(join(root, "packages"), { recursive: true });
-  const transport = join(root, 'packages/swarm/src/transport');
+  const transport = join(root, 'packages/zo-swarm-orchestrator/src/transport');
   mkdirSync(transport, { recursive: true });
-  copyFileSync(join(import.meta.dir, '../../../packages/swarm/src/transport/factory-path-profile.ts'), join(transport, 'factory-path-profile.ts'));
+  copyFileSync(join(import.meta.dir, '../../../packages/zo-swarm-orchestrator/src/transport/factory-path-profile.ts'), join(transport, 'factory-path-profile.ts'));
   mkdirSync(join(root, "Skills"), { recursive: true });
   writeFileSync(join(root, "package.json"), "{\"name\":\"test-checkout\",\"private\":true}\n");
   return root;

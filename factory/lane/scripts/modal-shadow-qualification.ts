@@ -5,8 +5,8 @@ import {
   type ProviderAdapter,
   type RoutingDecision,
 } from "../../../packages/core/src/compute";
-import { createComputeDispatcher } from "../../../packages/swarm/src/compute/dispatcher";
-import type { ComputeIntent, Task } from "../../../packages/swarm/src/types";
+import { createComputeDispatcher } from "../../../packages/zo-swarm-orchestrator/src/compute/dispatcher";
+import type { ComputeIntent, Task } from "../../../packages/zo-swarm-orchestrator/src/types";
 import { executionLaneForTicket } from "./execution-lane";
 
 interface ExpectedDecision {
