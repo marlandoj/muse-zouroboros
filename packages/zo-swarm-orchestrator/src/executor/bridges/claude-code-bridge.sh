@@ -17,8 +17,11 @@
 
 set -euo pipefail
 
+# Shared de-Zo defaults + harness binary resolver.
+source "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/bridge-env.sh"
+
 PROMPT="${1:?Usage: claude-code-bridge.sh \"prompt\" [workdir]}"
-WORKDIR="${2:-/opt/zouroboros/repo}"
+WORKDIR="${2:-$WORKSPACE_DEFAULT}"
 
 # --- Dynamic shared model resolution ---
 # Priority: SWARM_RESOLVED_MODEL → CLAUDE_CODE_MODEL → qualified catalog tier → floor
@@ -49,21 +52,12 @@ else
   esac
 fi
 
-# Resolve claude binary — check PATH, then known install locations
-CLAUDE_BIN="${CLAUDE_CODE_BIN:-}"
-if [ -z "$CLAUDE_BIN" ]; then
-  if command -v claude &>/dev/null; then
-    CLAUDE_BIN="claude"
-  elif [ -x "$HOME/.local/bin/claude" ]; then
-    CLAUDE_BIN="$HOME/.local/bin/claude"
-  elif [ -x "/root/.local/bin/claude" ]; then
-    CLAUDE_BIN="/root/.local/bin/claude"
-  elif [ -x "/usr/local/bin/claude" ]; then
-    CLAUDE_BIN="/usr/local/bin/claude"
-  else
-    echo "ERROR: claude binary not found. Install with: npm install -g @anthropic-ai/claude-code" >&2
-    exit 1
-  fi
+# Resolve claude binary — explicit CLAUDE_CODE_BIN, then local install paths, then PATH.
+# (The CLI in ~/workspace/.local/bin is the authenticated one; it must win
+# over any stale system copy.)
+if ! CLAUDE_BIN="$(resolve_harness_bin CLAUDE_CODE_BIN claude)"; then
+  echo "ERROR: claude binary not found (checked CLAUDE_CODE_BIN, ~/workspace/.local/bin, ~/.local/bin, PATH). Install with: npm install -g @anthropic-ai/claude-code" >&2
+  exit 1
 fi
 
 cd "$WORKDIR"

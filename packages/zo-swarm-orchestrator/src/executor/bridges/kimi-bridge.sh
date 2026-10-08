@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if ! command -v kimi >/dev/null 2>&1; then
-  echo "ERROR: kimi not found" >&2
+# Shared de-Zo defaults + harness binary resolver.
+source "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/bridge-env.sh"
+
+if ! KIMI_BIN="$(resolve_harness_bin KIMI_BIN kimi)"; then
+  echo "ERROR: kimi not found (checked KIMI_BIN, ~/workspace/.local/bin, ~/.local/bin, PATH)" >&2
   exit 1
 fi
 
@@ -37,11 +40,11 @@ if [ -r /etc/zouroboros/zouroboros.env ]; then
 fi
 
 if [[ "${1:-}" == "--acp" ]]; then
-  exec kimi acp
+  exec "$KIMI_BIN" acp
 fi
 
 PROMPT="${1:?Usage: kimi-bridge.sh \"prompt\" [workdir]}"
-WORKDIR="${2:-/opt/zouroboros/repo}"
+WORKDIR="${2:-$WORKSPACE_DEFAULT}"
 TIMEOUT="${KIMI_TIMEOUT:-600}"
 
 cd "$WORKDIR"
@@ -53,7 +56,7 @@ if [[ -n "$SELECTED_MODEL" ]]; then MODEL_ARGS=(--model "$SELECTED_MODEL"); fi
 OUTPUT_FILE="$(mktemp)"
 trap 'rm -f "$OUTPUT_FILE"' EXIT
 if timeout --signal=TERM --kill-after=10s "$TIMEOUT" \
-  kimi "${MODEL_ARGS[@]}" --prompt "$PROMPT" >"$OUTPUT_FILE"; then
+  "$KIMI_BIN" "${MODEL_ARGS[@]}" --prompt "$PROMPT" >"$OUTPUT_FILE"; then
   if [[ -n "$SELECTED_MODEL" ]]; then
     python3 "$SCRIPT_DIR/bridge-receipt.py" kimi "$OUTPUT_FILE" "$SELECTED_MODEL"
   else

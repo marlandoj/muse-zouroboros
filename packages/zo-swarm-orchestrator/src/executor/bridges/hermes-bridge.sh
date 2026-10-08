@@ -7,21 +7,24 @@
 #   ./hermes-bridge.sh "Your prompt here" /path/to/workdir
 #
 # Environment:
-#   HERMES_PROJECT_DIR — path to hermes-agent project (default: updater-selected checkout, otherwise /home/zouroboros/hermes-agent)
+#   HERMES_PROJECT_DIR — path to hermes-agent project (default: updater-selected checkout, otherwise $HOME/workspace/repos/hermes-agent)
 #   HERMES_VENV        — path to venv activate script (default: $HERMES_PROJECT_DIR/.venv/bin/activate)
 #   HERMES_BIN         — Hermes launcher (default: resolved from the activated venv)
 #   HERMES_TIMEOUT     — timeout in seconds (default: 300)
 
 set -euo pipefail
 
+# Shared de-Zo defaults + harness binary resolver.
+source "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/bridge-env.sh"
+
 PROMPT="${1:?Usage: hermes-bridge.sh \"prompt\" [workdir]}"
-WORKDIR="${2:-/home/zouroboros}"
+WORKDIR="${2:-$WORKSPACE_DEFAULT}"
 # Follow the updater-selected checkout before activating a venv. Explicit
 # HERMES_PROJECT_DIR/HERMES_VENV overrides retain their existing behavior.
-DEFAULT_PROJECT_DIR="/home/zouroboros/hermes-agent"
-SELECTED_HERMES="$(readlink -f /home/zouroboros/.local/bin/hermes 2>/dev/null || true)"
+DEFAULT_PROJECT_DIR="${HERMES_PROJECT_DIR:-$HOME/workspace/repos/hermes-agent}"
+SELECTED_HERMES="$(readlink -f "$HOME/.local/bin/hermes" 2>/dev/null || true)"
 case "$SELECTED_HERMES" in
-  /home/zouroboros/.local/share/harness-updater/releases/hermes/*/.venv/bin/hermes)
+  "$HOME"/.local/share/harness-updater/releases/hermes/*/.venv/bin/hermes)
     DEFAULT_PROJECT_DIR="${SELECTED_HERMES%/.venv/bin/hermes}" ;;
 esac
 PROJECT_DIR="${HERMES_PROJECT_DIR:-$DEFAULT_PROJECT_DIR}"

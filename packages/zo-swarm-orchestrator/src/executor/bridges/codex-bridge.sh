@@ -12,12 +12,15 @@
 
 set -euo pipefail
 
-PROMPT="${1:?Usage: codex-bridge.sh \"prompt\" [workdir]}"
-WORKDIR="${2:-/opt/zouroboros/repo}"
+# Shared de-Zo defaults + harness binary resolver.
+source "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/bridge-env.sh"
 
-# Pin codex to the operator profile: campaign sessions run with HOME=/opt/zouroboros/repo,
-# which has no auth.json (401 exit-1, item 5); codex honors CODEX_HOME ahead of $HOME/.codex.
-export CODEX_HOME="${CODEX_HOME:-/home/zouroboros/.codex}"
+PROMPT="${1:?Usage: codex-bridge.sh \"prompt\" [workdir]}"
+WORKDIR="${2:-$WORKSPACE_DEFAULT}"
+
+# Pin codex to the operator profile: campaign sessions run with a HOME that
+# may have no auth.json; codex honors CODEX_HOME ahead of $HOME/.codex.
+export CODEX_HOME="${CODEX_HOME:-$HOME/.codex}"
 
 # Load shared secrets (OPENAI_API_KEY, QDRANT_URL, QDRANT_API_KEY, ...) so MCP
 # servers spawned by codex inherit them. File is 0640 root:zouroboros; never printed.
@@ -61,15 +64,12 @@ case "$RAW_MODEL" in
   *)              CODEX_MODEL="$RAW_MODEL" ;;
 esac
 
-# Resolve codex binary — check PATH
-CODEX_BIN="${CODEX_BIN:-}"
-if [ -z "$CODEX_BIN" ]; then
-  if command -v codex &>/dev/null; then
-    CODEX_BIN="codex"
-  else
-    echo "ERROR: codex binary not found. Install with: npm install -g @openai/codex" >&2
-    exit 1
-  fi
+# Resolve codex binary — explicit CODEX_BIN, then local install paths, then PATH.
+# (The npm-installed codex in ~/workspace/.local/bin must win over any stale
+# system copy: it is the one with MCP support.)
+if ! CODEX_BIN="$(resolve_harness_bin CODEX_BIN codex)"; then
+  echo "ERROR: codex binary not found (checked CODEX_BIN, ~/workspace/.local/bin, ~/.local/bin, PATH)" >&2
+  exit 1
 fi
 
 cd "$WORKDIR"

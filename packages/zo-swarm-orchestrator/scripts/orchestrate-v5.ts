@@ -2556,7 +2556,7 @@ Consider approaching this as a "${stagnation.suggestedPersona}" would.
       HOME,
     };
 
-    const proc = spawn("bash", [bridge, prompt], { stdio: ["ignore", "pipe", "pipe"], env });
+    const proc = spawn("bash", [bridge, prompt, WORKSPACE], { stdio: ["ignore", "pipe", "pipe"], env });
 
     return new Promise((resolve, reject) => {
       let stdout = "";

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test";
-import { mkdtempSync, readFileSync, readdirSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
@@ -8,6 +8,7 @@ import {
   preparePersonaOrchestration,
   redactPersonaPromptData,
   resolvePersonaOrchestrationMode,
+  resolveCampaignPersonaOrchestrationMode,
   resolvePersonaZoAskAuthorization,
   parseReviewVerdict,
   personaReviewConcurrency,
@@ -394,6 +395,21 @@ describe("persona orchestrator", () => {
     expect(result.blocked_reason).toContain("cost ceiling");
     expect(calls).toHaveLength(0);
     expect(result.record?.invocations.find((entry) => entry.role_id === "advisor")?.cost_usd).toBeNull();
+  });
+
+  test("panel promotion bounds enforce mode to low-risk canary campaigns", () => {
+    const dir = tempDir();
+    const panelPath = join(dir, "panel.json");
+    const env = { FACTORY_PERSONA_ROUTING_MODE: "enforce", HOME: dir };
+    writeFileSync(panelPath, JSON.stringify({ schemaVersion: 2, profile: "consensus-persona-panel", status: "shadow" }));
+    expect(resolveCampaignPersonaOrchestrationMode({ risk_tier: "low" }, env, panelPath)).toBe("enforce");
+    expect(resolveCampaignPersonaOrchestrationMode({ risk_tier: "medium" }, env, panelPath)).toBe("shadow");
+    expect(resolveCampaignPersonaOrchestrationMode({ risk_tier: "high" }, env, panelPath)).toBe("shadow");
+    expect(resolveCampaignPersonaOrchestrationMode({ risk_tier: "critical" }, env, panelPath)).toBe("shadow");
+    expect(resolveCampaignPersonaOrchestrationMode({ risk_tier: null }, env, panelPath)).toBe("shadow");
+
+    writeFileSync(panelPath, JSON.stringify({ schemaVersion: 2, profile: "consensus-persona-panel", status: "promoted" }));
+    expect(resolveCampaignPersonaOrchestrationMode({ risk_tier: "critical" }, env, panelPath)).toBe("enforce");
   });
 
   test("payload and mode validation are explicit", () => {

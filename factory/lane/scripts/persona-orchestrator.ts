@@ -226,6 +226,34 @@ export function resolvePersonaOrchestrationMode(
   return mode;
 }
 
+/**
+ * The dashboard uses the persona panel's explicit promotion status as the
+ * boundary between bounded canary enforcement and full factory enforcement.
+ * An enforce flag with a shadow panel may invoke only low-risk campaigns;
+ * unknown, medium, high, and critical campaigns remain shadow-routed. A
+ * promoted panel is the operator's explicit authorization for full scope.
+ */
+export function resolveCampaignPersonaOrchestrationMode(
+  campaign: Pick<Campaign, "risk_tier">,
+  env: Record<string, string | undefined> = process.env,
+  panelPath = `${env.HOME ?? process.env.HOME ?? "/home/hatch"}/.zouroboros/lineup.consensus.panel.json`,
+): PersonaOrchestrationMode {
+  const mode = resolvePersonaOrchestrationMode(env);
+  if (mode !== "enforce") return mode;
+
+  let panelStatus: "shadow" | "promoted" = "shadow";
+  try {
+    const panel = JSON.parse(readFileSync(panelPath, "utf8")) as Record<string, unknown>;
+    if (panel.profile === "consensus-persona-panel" && panel.schemaVersion === 2 && panel.status === "promoted") {
+      panelStatus = "promoted";
+    }
+  } catch {
+    // Missing or malformed promotion evidence fails closed to canary scope.
+  }
+  if (panelStatus === "promoted") return "enforce";
+  return campaign.risk_tier?.trim().toLowerCase() === "low" ? "enforce" : "shadow";
+}
+
 export function personaTimeoutMs(env: Record<string, string | undefined> = process.env): number {
   const raw = env.FACTORY_PERSONA_TIMEOUT_MS;
   if (!raw) return DEFAULT_TIMEOUT_MS;
@@ -750,7 +778,7 @@ export async function preparePersonaOrchestration(input: {
   deps?: PersonaOrchestratorDeps;
 }): Promise<PersonaPreparation> {
   const deps = input.deps ?? {};
-  const mode = deps.mode ?? resolvePersonaOrchestrationMode();
+  const mode = deps.mode ?? resolveCampaignPersonaOrchestrationMode(input.campaign);
   if (mode === "off" || !input.campaign.persona_association || !input.item.persona_assignments?.length) {
     return { record: null, advice: [], main_persona_id: null, main_owned_paths: [], new_cost_usd: 0, blocked_reason: null };
   }
