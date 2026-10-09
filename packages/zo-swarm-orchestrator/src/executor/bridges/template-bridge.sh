@@ -20,7 +20,7 @@
 set -euo pipefail
 
 PROMPT="${1:?Usage: my-executor-bridge.sh \"prompt\" [workdir]}"
-WORKDIR="${2:-/opt/zouroboros/repo}"
+WORKDIR="${2:-${HOME}/workspace}"
 TIMEOUT="${MY_EXECUTOR_TIMEOUT:-300}"
 
 # --- Prerequisite checks ---

@@ -63,9 +63,10 @@ source "$VENV_ACTIVATE"
 
 # Load shared secrets (OPENAI_API_KEY, QDRANT_URL, QDRANT_API_KEY, ...) so MCP
 # servers spawned by hermes inherit them. File is 0640 root:zouroboros; never printed.
-# Pin hermes to the operator profile: campaign sessions run with HOME=/opt/zouroboros/repo;
-# get_hermes_home() honors HERMES_HOME env ahead of the HOME default (hermes_constants.py:71,118).
-export HERMES_HOME="${HERMES_HOME:-/home/zouroboros/.hermes}"
+# Pin hermes to the operator profile: get_hermes_home() honors HERMES_HOME env
+# ahead of the HOME default (hermes_constants.py:71,118). Default to the
+# operator's local config where the MCP servers are wired.
+export HERMES_HOME="${HERMES_HOME:-$HOME/.hermes}"
 
 if [ -r /etc/zouroboros/zouroboros.env ]; then
   set -a

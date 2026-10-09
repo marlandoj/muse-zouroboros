@@ -19,7 +19,7 @@ set -euo pipefail
 export GEMINI_CLI_TRUST_WORKSPACE="${GEMINI_CLI_TRUST_WORKSPACE:-true}"
 
 PROMPT="${1:?Usage: gemini-bridge.sh \"prompt\" [workdir]}"
-WORKDIR="${2:-/opt/zouroboros/repo}"
+WORKDIR="${2:-${HOME}/workspace}"
 DEFAULT_MODEL="gemini-3.8-flash"
 
 # Priority: SWARM_RESOLVED_MODEL > GEMINI_MODEL > default

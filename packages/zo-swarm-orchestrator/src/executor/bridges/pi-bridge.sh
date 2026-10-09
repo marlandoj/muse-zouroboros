@@ -2,7 +2,7 @@
 set -euo pipefail
 
 PROMPT="${1:?Usage: pi-bridge.sh \"prompt\" [workdir]}"
-WORKDIR="${2:-/opt/zouroboros/repo}"
+WORKDIR="${2:-${HOME}/workspace}"
 TIMEOUT="${PI_TIMEOUT:-600}"
 MODEL="${SWARM_RESOLVED_MODEL:-${PI_MODEL:-openrouter/moonshotai/kimi-k3}}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
