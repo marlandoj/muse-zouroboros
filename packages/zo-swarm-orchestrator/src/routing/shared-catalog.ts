@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
+import type { ModelCatalog, CatalogTier } from './model-catalog.js';
 
 // 'consensus' remains readable for historical evidence, but is never an active consumer.
 export type Consumer = 'swarm' | 'chat' | 'automation' | 'consensus' | 'factory';
@@ -20,7 +21,10 @@ export interface SharedCatalog {
   version: 1; generatedAt: string; routes: Route[]; sources: Record<string,{at:string;count:number;error?:string}>;
   nominations: unknown[]; sha256: string;
 }
-export const sharedPath = () => process.env.ZOUROBOROS_MODEL_CATALOG_PATH || '/var/lib/zouroboros/model-routing/current.json';
+// Unified catalog path (2026-10-09): the model-intelligence pipeline writes the
+// ModelCatalog schema to .../model-routing/swarm/current.json. ZOUROBOROS_MODEL_CATALOG_PATH
+// is kept as a deprecated fallback; SWARM_MODEL_CATALOG_PATH wins when both are set.
+export const sharedPath = () => process.env.SWARM_MODEL_CATALOG_PATH || process.env.ZOUROBOROS_MODEL_CATALOG_PATH || '/var/lib/zouroboros/model-routing/swarm/current.json';
 export function digest(c: Omit<SharedCatalog,'sha256'>|SharedCatalog): string {
   const {sha256: _, ...body}=c as SharedCatalog;
   return createHash('sha256').update(JSON.stringify(body)).digest('hex');
@@ -28,9 +32,55 @@ export function digest(c: Omit<SharedCatalog,'sha256'>|SharedCatalog): string {
 export function validCatalog(c: any): c is SharedCatalog {
   return c?.version===1 && Array.isArray(c.routes) && c.routes.every((r:any)=>typeof r.id==='string'&&typeof r.model==='string'&&typeof r.family==='string'&&r.qualifications&&Array.isArray(r.health)) && new Set(c.routes.map((r:Route)=>r.id)).size===c.routes.length && c.sha256===digest(c);
 }
+const ADAPTER_TIERS: CatalogTier[] = ['light','mid','heavy'];
+function adapterTransportFor(harness: string): string {
+  // Mirror the transport resolution in qualified(): ACP executors need a
+  // 'swarm:acp:'-prefixed transport or the adapted route is rejected.
+  try {
+    const registry=JSON.parse(readFileSync(new URL('../executor/registry/executor-registry.json',import.meta.url),'utf8'));
+    const entry=registry.executors.find((e:any)=>e.id===harness);
+    const actual=entry?.transportFallback&&process.env[entry.transportFallback.envVar]===entry.transportFallback.equals?entry.transportFallback.transport:entry?.transport||'bridge';
+    return actual==='acp' ? 'swarm:acp:pipeline' : 'swarm:bridge:pipeline';
+  } catch { return 'swarm:bridge'; }
+}
+// The pipeline writes ModelCatalog (schema_version, routes keyed by executor);
+// nothing writes the legacy SharedCatalog shape. Translate so selectShared()
+// keeps working against the real pipeline output.
+export function adaptModelCatalog(mc: any): SharedCatalog|null {
+  if(!mc || typeof mc.schema_version!=='string' || !mc.routes || Array.isArray(mc.routes)) return null;
+  const routes: Route[] = [];
+  for(const [executorId,cr] of Object.entries(mc.routes as Record<string,any>)) {
+    for(const tier of ADAPTER_TIERS) {
+      const winner: string|undefined = cr?.winner?.[tier];
+      if(!winner) continue;
+      const qual = cr?.qualification?.[tier];
+      const candidate = cr?.candidates?.[tier]?.find((c:any)=>c.model===winner||c.sourceModel===winner);
+      const at: string = qual?.qualifiedAt || mc.generated_at || new Date().toISOString();
+      const transport = adapterTransportFor(executorId);
+      const probes: Probe[] = [0,1,2].map(i=>({at,category:'ok' as Failure,latencyMs:null,passed:true,caseId:`pipeline:${executorId}:${tier}:${i}`,transport}));
+      routes.push({
+        id:`${executorId}/${tier}`, harness:executorId, provider:'pipeline', model:winner, providerModel:candidate?.sourceModel||winner,
+        family:candidate?.family||family(winner), tier, openWeight:false,
+        price:{inputPerMillion:null,outputPerMillion:candidate?.outputPricePerMillion??null,evidence:qual?.evidence||null,at},
+        capabilities:{context:null,advertised:[],verified:[]},
+        availability:qual?.qualified===false?'unavailable':'unverified', discoveredAt:at,
+        qualifications:{swarm:{at,transport,probes}},
+        health:[],
+      });
+    }
+  }
+  if(!routes.length) return null;
+  const body = {version:1 as const,generatedAt:mc.generated_at||new Date().toISOString(),routes,sources:{pipeline:{at:mc.generated_at||'',count:routes.length}},nominations:[]};
+  return {...body,sha256:digest(body)};
+}
 export function readSharedCatalog(path=sharedPath()): SharedCatalog|null {
   for(const p of [path,join(dirname(path),'last-known-good.json')]) {
-    try {const c=JSON.parse(readFileSync(p,'utf8'));if(validCatalog(c)) return c;} catch {}
+    try {
+      const c=JSON.parse(readFileSync(p,'utf8'));
+      if(validCatalog(c)) return c;
+      const adapted=adaptModelCatalog(c);
+      if(adapted) return adapted;
+    } catch {}
   }
   return null;
 }
