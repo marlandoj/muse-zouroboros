@@ -16,17 +16,23 @@ import {
   buildAcpPrompt,
   buildCgroupGuardedAdapterSpawn,
   buildResourceGuardedAdapterSpawn,
+  dispatchWayfinderShadow,
+  evaluateWayfinderShadow,
   findAcpModelConfig,
+  formatWayfinderPromptSuffix,
   isAcpSuccessfulOutput,
   loadAcpMcpServers,
   parseProcSmapsRollupPssBytes,
   parseProcStatmRssBytes,
   processTreeUsage,
   readExecutorResourceUsage,
+  readWayfinderShadowRow,
   replayPathSegment,
   resolveACPModel,
   resolveHermesSessionModel,
+  resolveWayfinderLivePick,
   selectAcpPermissionOption,
+  wayfinderInjectionArmed,
 } from '../transport/acp-transport.js';
 import {
   createTransport,
@@ -835,5 +841,250 @@ describe('ExecutorTransport interface compliance', () => {
       expect(typeof t.healthCheck).toBe('function');
       expect(typeof t.shutdown).toBe('function');
     }
+  });
+});
+describe('Wayfinder shadow integration', () => {
+  const engineDir = '/tmp/wayfinder-test';
+  const entrypoint = `${engineDir}/engine/run.py`;
+  const base = {
+    enabled: true,
+    mode: 'shadow' as const,
+    engineDir,
+    harness: 'factory',
+    home: '/tmp/test-workspace/.wayfinder',
+    skillsRoots: ['/tmp/test-workspace/Skills'],
+  };
+  const task = {
+    id: 'task-1',
+    persona: 'kimi',
+    task: 'Render a promotional video for the quarterly earnings deck',
+    priority: 'low' as const,
+  };
+
+  describe('the program it runs', () => {
+    const script = wayfinderRankScript({
+      entrypoint,
+      harness: 'factory',
+      stateHome: '/tmp/test-workspace/.wayfinder',
+      roots: '/tmp/test-workspace/Skills',
+      cwd: '/tmp/test-workspace/.factory-worktrees/wt-1',
+      timeoutMs: 15_000,
+      invocationId: 'inv-1',
+      event: { prompt: task.task, session_id: 'task-1', cwd: '/tmp/test-workspace/.factory-worktrees/wt-1' },
+    });
+
+    test('passes the event in argv so the child needs no stdin pipe', () => {
+      expect(script).toContain('--event-json');
+      expect(script).toContain('--invocation-id');
+      expect(script).toContain('inv-1');
+      // A pipe would have to stay owned by this process until the child exits.
+      expect(script).not.toContain('printf');
+      expect(script).not.toContain('<<');
+    });
+
+    test('carries state, roots, cwd and a hard timeout', () => {
+      expect(script).toContain(`export WAYFINDER_HOME='/tmp/test-workspace/.wayfinder'`);
+      expect(script).toContain(`export WAYFINDER_SKILLS_ROOTS='/tmp/test-workspace/Skills'`);
+      expect(script).toContain(`cd '/tmp/test-workspace/.factory-worktrees/wt-1' || exit 0`);
+      expect(script).toContain('timeout 15 python3');
+    });
+
+    test('shell-quotes values rather than trusting them', () => {
+      const quoted = wayfinderRankScript({
+        entrypoint,
+        harness: 'factory',
+        stateHome: "/tmp/it's here",
+        roots: '',
+        cwd: '/tmp',
+        timeoutMs: 15_000,
+        invocationId: 'inv-2',
+        event: { prompt: 'a $(rm -rf /) prompt', session_id: 's', cwd: '/tmp' },
+      });
+      expect(quoted).toContain("'\\''");
+      expect(quoted).toContain(`rm -rf /`);
+      // An empty root list must not export an empty override.
+      expect(quoted).not.toContain('WAYFINDER_SKILLS_ROOTS');
+    });
+  });
+
+  describe('row lookup', () => {
+    test('reads the per-invocation file the engine writes', () => {
+      const home = mkdtempSync(join(tmpdir(), 'wayfinder-row-'));
+      try {
+        const rowPath = join(home, 'invocations', 'inv-9', 'shadow.jsonl');
+        mkdirSync(join(home, 'invocations', 'inv-9'), { recursive: true, mode: 0o700 });
+        writeFileSync(rowPath, JSON.stringify({
+          pick: 'fal-ai-media',
+          pick_path: '/tmp/test-workspace/Skills/fal-ai-media/SKILL.md',
+          candidates: [{ id: 'fal-ai-media', source: '/tmp/test-workspace/Skills/fal-ai-media/SKILL.md' }],
+        }) + '\n');
+        const row = readWayfinderShadowRow(rowPath);
+        expect(row?.pick).toBe('fal-ai-media');
+        expect(row?.pickPath).toBe('/tmp/test-workspace/Skills/fal-ai-media/SKILL.md');
+      } finally {
+        rmSync(home, { recursive: true, force: true });
+      }
+    });
+
+    test('returns nothing when the ranking never landed', () => {
+      expect(readWayfinderShadowRow('/nonexistent/inv-1/shadow.jsonl')).toBeUndefined();
+    });
+
+    test('derives the row path from state home and invocation id', () => {
+      expect(wayfinderRowPath('/tmp/test-workspace/.wayfinder', 'inv-1'))
+        .toBe('/tmp/test-workspace/.wayfinder/invocations/inv-1/shadow.jsonl');
+    });
+  });
+
+  describe('adoption labelling', () => {
+    const row = {
+      pick: 'fal-ai-media',
+      pickPath: '/tmp/test-workspace/Skills/fal-ai-media/SKILL.md',
+      candidates: [{ id: 'fal-ai-media', source: '/tmp/test-workspace/Skills/fal-ai-media/SKILL.md' }],
+    };
+
+    test('counts a suggestion as adopted when the agent read the skill', () => {
+      const result = evaluateWayfinderShadow(row, new Set(['/tmp/test-workspace/Skills/fal-ai-media/SKILL.md']));
+      expect(result).toEqual({
+        pick: 'fal-ai-media',
+        used: true,
+        readSkills: ['/tmp/test-workspace/Skills/fal-ai-media/SKILL.md'],
+      });
+    });
+
+    test('prefers the candidate path over pick_path', () => {
+      const stale = { ...row, pickPath: '/old/path/SKILL.md' };
+      const result = evaluateWayfinderShadow(stale, new Set(['/old/path/SKILL.md']));
+      expect(result?.used).toBe(false);
+    });
+
+    test('labels a read-but-ignored suggestion as not adopted', () => {
+      const result = evaluateWayfinderShadow(row, new Set(['/tmp/test-workspace/AGENTS.md']));
+      expect(result?.used).toBe(false);
+      expect(result?.readSkills).toEqual([]);
+    });
+
+    test('produces no label when nothing was picked', () => {
+      expect(evaluateWayfinderShadow({ pick: undefined, candidates: [] }, new Set())).toBeUndefined();
+    });
+  });
+
+  describe('dispatch guards', () => {
+    test('does nothing when the integration is not enabled', () => {
+      expect(dispatchWayfinderShadow(task, { ...base, enabled: false }, {}, '/tmp')).toBeUndefined();
+    });
+
+    test('the shadow path refuses canary/live configs', () => {
+      expect(dispatchWayfinderShadow(
+        task,
+        { ...base, mode: 'live' },
+        {},
+        '/tmp',
+      )).toBeUndefined();
+      expect(dispatchWayfinderShadow(
+        task,
+        { ...base, mode: 'canary' },
+        {},
+        '/tmp',
+      )).toBeUndefined();
+    });
+
+    test('does nothing when the engine is not on disk', () => {
+      expect(dispatchWayfinderShadow(
+        task,
+        { ...base, engineDir: '/nonexistent/wayfinder' },
+        {},
+        '/tmp',
+      )).toBeUndefined();
+    });
+
+    test('prompts are never altered in shadow mode', async () => {
+      const prompt = await buildAcpPrompt(task, undefined, {}, undefined);
+      expect(prompt).toBe(task.task);
+    });
+  });
+
+  describe('live injection seam', () => {
+    const liveBase = { ...base, mode: 'live' as const };
+    const canaryBase = { ...base, mode: 'canary' as const, harness: 'opencode', canaryHarness: 'opencode' };
+
+    describe('wayfinderInjectionArmed', () => {
+      test('live is armed only with the flag', () => {
+        expect(wayfinderInjectionArmed(liveBase, { WAYFINDER_LIVE_INJECT: '1' })).toBe(true);
+        expect(wayfinderInjectionArmed(liveBase, {})).toBe(false);
+      });
+
+      test('canary requires the harness to match the canary harness', () => {
+        expect(wayfinderInjectionArmed(canaryBase, { WAYFINDER_LIVE_INJECT: '1' })).toBe(true);
+        expect(wayfinderInjectionArmed(
+          { ...canaryBase, harness: 'claude' },
+          { WAYFINDER_LIVE_INJECT: '1' },
+        )).toBe(false);
+      });
+
+      test('shadow never arms, even with the flag', () => {
+        expect(wayfinderInjectionArmed(base, { WAYFINDER_LIVE_INJECT: '1' })).toBe(false);
+        expect(wayfinderInjectionArmed(undefined, { WAYFINDER_LIVE_INJECT: '1' })).toBe(false);
+      });
+    });
+
+    describe('formatWayfinderPromptSuffix', () => {
+      test('names the skill and its path', () => {
+        const suffix = formatWayfinderPromptSuffix({ pick: 'fal-ai-media', pickPath: '/s/fal-ai-media' });
+        expect(suffix).toContain('[WAYFINDER SUGGESTION]');
+        expect(suffix).toContain('fal-ai-media');
+        expect(suffix).toContain('/s/fal-ai-media');
+      });
+
+      test('omits the path when absent', () => {
+        expect(formatWayfinderPromptSuffix({ pick: 'x' })).not.toContain('(');
+      });
+    });
+
+    describe('resolveWayfinderLivePick', () => {
+      test('degrades to nothing without the flag', async () => {
+        await expect(resolveWayfinderLivePick(task, liveBase, {}, '/tmp')).resolves.toBeUndefined();
+      });
+
+      test('degrades to nothing when the engine is missing', async () => {
+        await expect(resolveWayfinderLivePick(
+          task,
+          { ...liveBase, engineDir: '/nonexistent/wayfinder' },
+          { WAYFINDER_LIVE_INJECT: '1' },
+          '/tmp',
+        )).resolves.toBeUndefined();
+      });
+
+      test('resolves the pick through a fake engine', async () => {
+        const dir = mkdtempSync(join(tmpdir(), 'wayfinder-live-'));
+        try {
+          // engineDir is the checkout root: the entrypoint is <engineDir>/engine/run.py.
+          const engineSubdir = join(dir, 'engine');
+          mkdirSync(engineSubdir, { recursive: true });
+          // Fake engine: parses --invocation-id, writes the row the real engine would.
+          writeFileSync(join(engineSubdir, 'run.py'), [
+            'import json, os, sys',
+            'inv = sys.argv[sys.argv.index("--invocation-id") + 1]',
+            'home = os.environ["WAYFINDER_HOME"]',
+            'd = os.path.join(home, "invocations", inv)',
+            'os.makedirs(d, exist_ok=True)',
+            'row = {"pick": "test-skill", "pick_path": "/tmp/test-skill",',
+            '       "candidates": [{"id": "test-skill", "source": "/tmp/test-skill"}]}',
+            'open(os.path.join(d, "shadow.jsonl"), "w").write(json.dumps(row) + "\\n")',
+          ].join('\n'));
+          const pick = await resolveWayfinderLivePick(
+            task,
+            { ...liveBase, engineDir: dir, home: join(dir, 'state'), timeoutMs: 10_000 },
+            { WAYFINDER_LIVE_INJECT: '1' },
+            dir,
+          );
+          expect(pick?.pick).toBe('test-skill');
+          expect(pick?.pickPath).toBe('/tmp/test-skill');
+          expect(pick?.rowPath).toContain('shadow.jsonl');
+        } finally {
+          rmSync(dir, { recursive: true, force: true });
+        }
+      });
+    });
   });
 });
