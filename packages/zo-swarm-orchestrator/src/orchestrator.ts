@@ -479,7 +479,11 @@ export class SwarmOrchestrator {
 
   async run(tasks: Task[]): Promise<TaskResult[]> {
     const gates = this.getPipelineGates();
+    // Model attribution: every task in this run shares one run id so the
+    // ledger can answer "which model executed which task".
+    const runId = `swarm_${Date.now()}`;
     console.log(`Starting swarm execution with ${tasks.length} tasks`);
+    console.log(`Run id: ${runId}`);
     console.log(`Mode: ${this.config.dagMode}, Concurrency: ${this.config.localConcurrency}`);
     console.log(`Pipeline gates: seed=${gates.seedValidation}, postFlight=${gates.postFlightEval}, gapAudit=${gates.gapAuditLoop}`);
 
@@ -778,22 +782,24 @@ export class SwarmOrchestrator {
       }
     }
 
-    // Post-flight 2: Record budget usage from results
+    // Post-flight 2: Record budget usage + model attribution from results.
+    // Attribution rows are written for EVERY task (even with zero reported
+    // tokens) so the ledger always shows which model executed which task.
     for (const result of results) {
-      if (result.tokensUsed && result.tokensUsed > 0) {
-        const executor = result.effectiveExecutor ?? result.task.executor ?? 'claude-code';
-        const model = result.modelUsed
-          ?? this.resolveModelFor(result.task, executor)
-          ?? result.task.model
-          ?? 'sonnet';
-        const bridgeReported = result.inputTokens != null && result.outputTokens != null;
-        const inputTokens = bridgeReported ? result.inputTokens! : Math.round(result.tokensUsed * 0.7);
-        const outputTokens = bridgeReported ? result.outputTokens! : Math.round(result.tokensUsed * 0.3);
-        budgetGov.recordUsage('current', executor, model, inputTokens, outputTokens, {
-          label: result.task.id,
-          estimated: !bridgeReported,
-        });
-      }
+      const executor = result.effectiveExecutor ?? result.task.executor ?? 'claude-code';
+      const model = result.modelUsed
+        ?? this.resolveModelFor(result.task, executor)
+        ?? result.task.model
+        ?? 'sonnet';
+      const bridgeReported = result.inputTokens != null && result.outputTokens != null;
+      const tokens = result.tokensUsed ?? 0;
+      const inputTokens = bridgeReported ? result.inputTokens! : Math.round(tokens * 0.7);
+      const outputTokens = bridgeReported ? result.outputTokens! : Math.round(tokens * 0.3);
+      budgetGov.recordUsage('current', executor, model, inputTokens, outputTokens, {
+        runId,
+        label: result.task.id,
+        estimated: !bridgeReported,
+      });
     }
 
     const successCount = results.filter(r => r.success).length;
