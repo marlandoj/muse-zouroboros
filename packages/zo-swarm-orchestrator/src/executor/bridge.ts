@@ -5,7 +5,7 @@
  */
 
 import { spawn } from 'child_process';
-import { isAbsolute, join } from 'path';
+import { isAbsolute, join, dirname } from 'path';
 import { existsSync, readFileSync, unlinkSync } from 'fs';
 import { randomUUID } from 'crypto';
 import { getWorkspaceRoot } from 'zouroboros-core';
@@ -16,6 +16,70 @@ import {
   prepareFilesystemContainedSpawn,
   type AdapterSpawnSpec,
 } from '../transport/agent-containment.js';
+
+// --- Persona resolution (F-007) ---
+// Resolves task.persona against the persona registry and builds a prompt
+// prefix that injects the persona's domain expertise. Previously the persona
+// field was a ledger-only label; now it actually shapes the prompt.
+
+interface PersonaEntry {
+  id: string;
+  name: string;
+  expertise?: string[];
+  best_for?: string[];
+}
+
+let personaCache: PersonaEntry[] | null = null;
+
+function loadPersonas(): PersonaEntry[] {
+  if (personaCache !== null) return personaCache;
+  const loaded: PersonaEntry[] = [];
+  try {
+    // bridge.ts lives at packages/swarm/src/executor/bridge.ts;
+    // registry is at packages/swarm/assets/persona-registry.json
+    const here = dirname(new URL(import.meta.url).pathname);
+    const registryPath = join(here, '..', '..', 'assets', 'persona-registry.json');
+    if (existsSync(registryPath)) {
+      const raw = JSON.parse(readFileSync(registryPath, 'utf-8'));
+      const list = raw.personas || [];
+      for (const p of list) {
+        if (p && typeof p.name === 'string') loaded.push(p);
+      }
+    }
+  } catch {
+    // fall through with empty list
+  }
+  personaCache = loaded;
+  return loaded;
+}
+
+// Harness names that are executor labels, not domain personas.
+// These pass through unchanged for backward compatibility.
+const HARNESS_PERSONAS = new Set([
+  'codex', 'claude-code', 'hermes', 'gemini', 'kimi', 'opencode', 'pi',
+  'codex-cli', 'claude code', 'hermes agent', 'gemini cli', 'codex cli',
+  'kimi code cli', 'pi coding agent', 'opencode',
+]);
+
+export function resolvePersonaPrompt(personaName: string | undefined): string | null {
+  if (!personaName) return null;
+  const normalized = personaName.trim().toLowerCase();
+  if (HARNESS_PERSONAS.has(normalized)) return null; // harness label, not a domain persona
+  const personas = loadPersonas();
+  const match = personas.find(p =>
+    p.name.toLowerCase() === normalized ||
+    p.id.toLowerCase() === normalized
+  );
+  if (!match) return null;
+  const expertise = (match.expertise || []).join(', ');
+  const bestFor = (match.best_for || []).join(', ');
+  let prefix = `[Persona: ${match.name}]\n`;
+  prefix += `You are operating with the expertise of a ${match.name}.\n`;
+  if (expertise) prefix += `Areas of expertise: ${expertise}.\n`;
+  if (bestFor) prefix += `Best applied to: ${bestFor}.\n`;
+  prefix += `Bring this domain expertise to bear on the task below. Prefer idiomatic, production-quality approaches from your domain over generic solutions.\n\n---\n\n`;
+  return prefix;
+}
 
 export interface BridgeExecutionOptions {
   timeoutMs: number;
@@ -63,6 +127,10 @@ export class BridgeExecutor {
       ? bridgePath
       : join(getWorkspaceRoot(), bridgePath);
     const workdir = options.workdir || getWorkspaceRoot();
+    // F-007: resolve the task persona and inject its expertise into the prompt.
+    // Previously SWARM_PERSONA was set but never consumed by any bridge.
+    const personaPrefix = resolvePersonaPrompt(task.persona);
+    const effectivePrompt = personaPrefix ? personaPrefix + task.task : task.task;
     const childEnv = {
       ...process.env,
       ...options.env,
@@ -73,7 +141,7 @@ export class BridgeExecutor {
     let spawnSpec: AdapterSpawnSpec;
     try {
       spawnSpec = prepareFilesystemContainedSpawn(
-        { command: 'bash', args: [fullBridgePath, task.task, workdir] },
+        { command: 'bash', args: [fullBridgePath, effectivePrompt, workdir] },
         workdir,
         childEnv,
       );

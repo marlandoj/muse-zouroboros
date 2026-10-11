@@ -56,13 +56,7 @@
         "wayfinder": {
           "enabled": true,
           "mode": "shadow",
-          "engineDir": "$HOME/workspace/repos/wayfinder",
           "harness": "factory",
-          "home": "$HOME/.wayfinder",
-          "skillsRoots": [
-            "$HOME/workspace/skills",
-            "$HOME/workspace/repos/zouroboros-monorepo/Skills"
-          ],
           "timeoutMs": 15000
         }
       },
@@ -124,6 +118,11 @@
         "heavy": "claude-fable-5-1",
         "mid": "claude-opus-5",
         "light": "claude-haiku-4-5-20251001"
+      },
+      "transportFallback": {
+        "envVar": "CLAUDE_CODE_ACP_ENABLED",
+        "equals": "0",
+        "transport": "bridge"
       }
     },
     {
@@ -208,13 +207,7 @@
         "wayfinder": {
           "enabled": true,
           "mode": "shadow",
-          "engineDir": "$HOME/workspace/repos/wayfinder",
           "harness": "factory",
-          "home": "$HOME/.wayfinder",
-          "skillsRoots": [
-            "$HOME/workspace/skills",
-            "$HOME/workspace/repos/zouroboros-monorepo/Skills"
-          ],
           "timeoutMs": 15000
         }
       },
@@ -357,13 +350,7 @@
         "wayfinder": {
           "enabled": true,
           "mode": "shadow",
-          "engineDir": "$HOME/workspace/repos/wayfinder",
           "harness": "factory",
-          "home": "$HOME/.wayfinder",
-          "skillsRoots": [
-            "$HOME/workspace/skills",
-            "$HOME/workspace/repos/zouroboros-monorepo/Skills"
-          ],
           "timeoutMs": 15000
         }
       },
@@ -479,13 +466,7 @@
         "wayfinder": {
           "enabled": true,
           "mode": "shadow",
-          "engineDir": "$HOME/workspace/repos/wayfinder",
           "harness": "factory",
-          "home": "$HOME/.wayfinder",
-          "skillsRoots": [
-            "$HOME/workspace/skills",
-            "$HOME/workspace/repos/zouroboros-monorepo/Skills"
-          ],
           "timeoutMs": 15000
         }
       },
@@ -539,6 +520,11 @@
           "swarm-heavy": "gpt-6-astra",
           "swarm-failover": "gpt-5.6-luna"
         }
+      },
+      "transportFallback": {
+        "envVar": "CODEX_ACP_ENABLED",
+        "equals": "0",
+        "transport": "bridge"
       }
     },
     {
@@ -655,13 +641,7 @@
         "wayfinder": {
           "enabled": true,
           "mode": "shadow",
-          "engineDir": "$HOME/workspace/repos/wayfinder",
           "harness": "factory",
-          "home": "$HOME/.wayfinder",
-          "skillsRoots": [
-            "$HOME/workspace/skills",
-            "$HOME/workspace/repos/zouroboros-monorepo/Skills"
-          ],
           "timeoutMs": 15000
         }
       },
@@ -726,7 +706,12 @@
             "meta-llama/"
           ]
         }
-      ]
+      ],
+      "transportFallback": {
+        "envVar": "OPENCODE_ACP_ENABLED",
+        "equals": "0",
+        "transport": "bridge"
+      }
     },
     {
       "id": "kimi",
@@ -791,13 +776,7 @@
         "wayfinder": {
           "enabled": true,
           "mode": "shadow",
-          "engineDir": "$HOME/workspace/repos/wayfinder",
           "harness": "factory",
-          "home": "$HOME/.wayfinder",
-          "skillsRoots": [
-            "$HOME/workspace/skills",
-            "$HOME/workspace/repos/zouroboros-monorepo/Skills"
-          ],
           "timeoutMs": 15000
         }
       },
