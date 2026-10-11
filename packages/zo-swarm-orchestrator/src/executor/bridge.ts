@@ -27,6 +27,9 @@ interface PersonaEntry {
   name: string;
   expertise?: string[];
   best_for?: string[];
+  mcp_capabilities?: string[];
+  skills?: string[];
+  system_prompt?: string;
 }
 
 let personaCache: PersonaEntry[] | null = null;
@@ -71,14 +74,43 @@ export function resolvePersonaPrompt(personaName: string | undefined): string | 
     p.id.toLowerCase() === normalized
   );
   if (!match) return null;
-  const expertise = (match.expertise || []).join(', ');
-  const bestFor = (match.best_for || []).join(', ');
   let prefix = `[Persona: ${match.name}]\n`;
-  prefix += `You are operating with the expertise of a ${match.name}.\n`;
-  if (expertise) prefix += `Areas of expertise: ${expertise}.\n`;
-  if (bestFor) prefix += `Best applied to: ${bestFor}.\n`;
-  prefix += `Bring this domain expertise to bear on the task below. Prefer idiomatic, production-quality approaches from your domain over generic solutions.\n\n---\n\n`;
+  // Prefer a curated system prompt when the registry provides one (F-009).
+  if (match.system_prompt) {
+    prefix += `${match.system_prompt}\n`;
+  } else {
+    prefix += `You are operating with the expertise of a ${match.name}.\n`;
+    const expertise = (match.expertise || []).join(', ');
+    const bestFor = (match.best_for || []).join(', ');
+    if (expertise) prefix += `Areas of expertise: ${expertise}.\n`;
+    if (bestFor) prefix += `Best applied to: ${bestFor}.\n`;
+    prefix += `Bring this domain expertise to bear on the task below. Prefer idiomatic, production-quality approaches from your domain over generic solutions.\n`;
+  }
+  // Surface relevant workspace skills so the agent knows what to reach for.
+  const skills = match.skills || [];
+  if (skills.length > 0) {
+    prefix += `Relevant workspace skills (in ~/workspace/skills/): ${skills.join(', ')}. Consult the skill's SKILL.md before using it.\n`;
+  }
+  prefix += `\n---\n\n`;
   return prefix;
+}
+
+/**
+ * Resolve the MCP servers a persona needs (F-009).
+ * Returns null when the persona is a harness label or unknown,
+ * in which case the bridge falls back to its default MCP set.
+ */
+export function resolvePersonaMCPs(personaName: string | undefined): string[] | null {
+  if (!personaName) return null;
+  const normalized = personaName.trim().toLowerCase();
+  if (HARNESS_PERSONAS.has(normalized)) return null;
+  const personas = loadPersonas();
+  const match = personas.find(p =>
+    p.name.toLowerCase() === normalized ||
+    p.id.toLowerCase() === normalized
+  );
+  if (!match || !match.mcp_capabilities) return null;
+  return match.mcp_capabilities;
 }
 
 export interface BridgeExecutionOptions {
@@ -131,12 +163,15 @@ export class BridgeExecutor {
     // Previously SWARM_PERSONA was set but never consumed by any bridge.
     const personaPrefix = resolvePersonaPrompt(task.persona);
     const effectivePrompt = personaPrefix ? personaPrefix + task.task : task.task;
+    // F-009: resolve persona MCP capabilities so the bridge only wires needed servers.
+    const personaMCPs = resolvePersonaMCPs(task.persona);
     const childEnv = {
       ...process.env,
       ...options.env,
       SWARM_TASK_ID: task.id,
       SWARM_EXECUTOR_ID: this.registryEntry.id,
       SWARM_PERSONA: task.persona,
+      ...(personaMCPs ? { SWARM_PERSONA_MCPS: personaMCPs.join(',') } : {}),
     } as Record<string, string>;
     let spawnSpec: AdapterSpawnSpec;
     try {

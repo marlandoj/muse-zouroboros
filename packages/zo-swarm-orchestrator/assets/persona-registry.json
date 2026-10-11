@@ -14,7 +14,13 @@
         "industry trends",
         "deep research",
         "literature review"
-      ]
+      ],
+      "source": "zouroboros-core",
+      "mcp_capabilities": [
+        "zo-memory",
+        "qdrant-rag"
+      ],
+      "skills": []
     },
     {
       "id": "frontend-developer",
@@ -30,6 +36,16 @@
         "UI audits",
         "component design",
         "frontend architecture"
+      ],
+      "source": "zouroboros-core",
+      "mcp_capabilities": [
+        "zo-memory",
+        "codebase-memory"
+      ],
+      "skills": [
+        "design-taste-frontend",
+        "ux-laws",
+        "mobile-native"
       ]
     },
     {
@@ -46,7 +62,14 @@
         "API planning",
         "infrastructure design",
         "performance tuning"
-      ]
+      ],
+      "source": "zouroboros-core",
+      "mcp_capabilities": [
+        "zo-memory",
+        "codebase-memory",
+        "qdrant-rag"
+      ],
+      "skills": []
     },
     {
       "id": "security-engineer",
@@ -62,6 +85,16 @@
         "penetration testing",
         "compliance checks",
         "incident response"
+      ],
+      "source": "zouroboros-core",
+      "mcp_capabilities": [
+        "zo-memory",
+        "codebase-memory",
+        "qdrant-rag"
+      ],
+      "skills": [
+        "skill-security-gate",
+        "production-ready"
       ]
     },
     {
@@ -78,7 +111,12 @@
         "requirements gathering",
         "go-to-market",
         "product review"
-      ]
+      ],
+      "source": "zouroboros-core",
+      "mcp_capabilities": [
+        "zo-memory"
+      ],
+      "skills": []
     },
     {
       "id": "data-scientist",
@@ -94,7 +132,13 @@
         "model evaluation",
         "metric design",
         "experiment analysis"
-      ]
+      ],
+      "source": "zouroboros-core",
+      "mcp_capabilities": [
+        "zo-memory",
+        "qdrant-rag"
+      ],
+      "skills": []
     },
     {
       "id": "devops-engineer",
@@ -110,7 +154,13 @@
         "infrastructure audit",
         "observability",
         "automation"
-      ]
+      ],
+      "source": "zouroboros-core",
+      "mcp_capabilities": [
+        "zo-memory",
+        "codebase-memory"
+      ],
+      "skills": []
     },
     {
       "id": "technical-writer",
@@ -126,224 +176,17 @@
         "README writing",
         "API documentation",
         "knowledge base"
-      ]
-    },
-    {
-      "id": "claude-code",
-      "name": "Claude Code",
-      "expertise": [
-        "software engineering",
-        "code implementation",
-        "bug fixing",
-        "refactoring",
-        "testing",
-        "code review"
       ],
-      "best_for": [
-        "feature implementation",
-        "codebase refactoring",
-        "test writing",
-        "bug diagnosis",
-        "PR review",
-        "architecture analysis"
+      "source": "zouroboros-core",
+      "mcp_capabilities": [
+        "zo-memory",
+        "qdrant-rag"
       ],
-      "executor": "local",
-      "bridge": "Skills/zo-swarm-executors/bridges/claude-code-bridge.sh"
-    },
-    {
-      "id": "hermes",
-      "name": "Hermes Agent",
-      "expertise": [
-        "autonomous research",
-        "multi-tool investigation",
-        "web scraping",
-        "long-running tasks"
-      ],
-      "best_for": [
-        "deep research",
-        "autonomous investigation",
-        "web data gathering",
-        "multi-step analysis"
-      ],
-      "executor": "local",
-      "bridge": "Skills/zo-swarm-executors/bridges/hermes-bridge.sh"
-    },
-    {
-      "id": "gemini",
-      "name": "Gemini CLI",
-      "expertise": [
-        "code generation",
-        "reasoning",
-        "multimodal analysis",
-        "large-context processing",
-        "code review",
-        "research"
-      ],
-      "best_for": [
-        "large-context code analysis",
-        "multimodal tasks",
-        "alternative perspective review",
-        "cross-validation",
-        "rapid prototyping"
-      ],
-      "executor": "local",
-      "bridge": "Skills/zo-swarm-executors/bridges/gemini-bridge.sh"
-    },
-    {
-      "id": "codex",
-      "name": "Codex CLI",
-      "expertise": [
-        "code generation",
-        "shell commands",
-        "file editing",
-        "debugging",
-        "rapid prototyping",
-        "code review"
-      ],
-      "best_for": [
-        "fast code tasks",
-        "shell automation",
-        "quick analysis",
-        "rapid iteration",
-        "speed-critical swarm tasks"
-      ],
-      "executor": "local",
-      "bridge": "Skills/zo-swarm-executors/bridges/codex-bridge.sh"
-    },
-    {
-      "id": "kimi",
-      "name": "Kimi Code CLI",
-      "expertise": [
-        "code generation",
-        "large-context analysis",
-        "multimodal coding",
-        "debugging",
-        "code review",
-        "memory retrieval",
-        "MCP tool orchestration"
-      ],
-      "best_for": [
-        "large-context repository analysis",
-        "long-running implementation",
-        "multimodal coding tasks",
-        "workspace-memory retrieval",
-        "authenticated Zo tool use",
-        "independent Moonshot-model review"
-      ],
-      "executor": "local",
-      "bridge": "packages/swarm/src/executor/bridges/kimi-bridge.sh"
-    },
-    {
-      "id": "pi",
-      "name": "Pi Coding Agent",
-      "expertise": [
-        "code generation",
-        "debugging",
-        "refactoring",
-        "testing",
-        "shell commands",
-        "multi-provider execution",
-        "memory retrieval",
-        "MCP tool orchestration"
-      ],
-      "best_for": [
-        "fast repository-aware implementation",
-        "minimal-harness model comparisons",
-        "focused code review",
-        "ephemeral coding tasks",
-        "workspace-memory retrieval",
-        "authenticated Zo tool use"
-      ],
-      "executor": "local",
-      "bridge": "packages/swarm/src/executor/bridges/pi-bridge.sh"
-    },
-    {
-      "id": "gamedev-all-out-game-director",
-      "name": "GameDev \u00b7 All Out Game Director",
-      "expertise": [
-        "All Out game direction",
-        "gameplay vision",
-        "production constraints",
-        "release coordination"
-      ],
-      "best_for": [
-        "All Out project direction",
-        "scope decisions",
-        "gameplay coherence",
-        "cross-discipline review"
-      ],
-      "source": "zo-persona-directory",
-      "selector": {
-        "type": "exact-name",
-        "name": "GameDev \u00b7 All Out Game Director"
-      }
-    },
-    {
-      "id": "gamedev-all-out-csl-engineer",
-      "name": "GameDev \u00b7 All Out CSL Engineer",
-      "expertise": [
-        "CSL engineering",
-        "All Out runtime systems",
-        "gameplay scripting",
-        "platform integration"
-      ],
-      "best_for": [
-        "All Out CSL implementation",
-        "runtime debugging",
-        "platform APIs",
-        "gameplay systems"
-      ],
-      "source": "zo-persona-directory",
-      "selector": {
-        "type": "exact-name",
-        "name": "GameDev \u00b7 All Out CSL Engineer"
-      }
-    },
-    {
-      "id": "gamedev-all-out-technical-art-ux",
-      "name": "GameDev \u00b7 All Out Technical Art & UX",
-      "expertise": [
-        "All Out technical art",
-        "game UX",
-        "asset pipelines",
-        "platform performance"
-      ],
-      "best_for": [
-        "All Out visual systems",
-        "interaction design",
-        "asset optimization",
-        "device UX"
-      ],
-      "source": "zo-persona-directory",
-      "selector": {
-        "type": "exact-name",
-        "name": "GameDev \u00b7 All Out Technical Art & UX"
-      }
-    },
-    {
-      "id": "gamedev-all-out-qa-release",
-      "name": "GameDev \u00b7 All Out QA & Release",
-      "expertise": [
-        "All Out QA",
-        "release validation",
-        "compatibility testing",
-        "defect triage"
-      ],
-      "best_for": [
-        "All Out release gates",
-        "regression testing",
-        "device validation",
-        "launch readiness"
-      ],
-      "source": "zo-persona-directory",
-      "selector": {
-        "type": "exact-name",
-        "name": "GameDev \u00b7 All Out QA & Release"
-      }
+      "skills": []
     },
     {
       "id": "gamedev-game-audio-designer",
-      "name": "GameDev \u00b7 Game Audio Designer",
+      "name": "GameDev · Game Audio Designer",
       "expertise": [
         "interactive audio",
         "sound design",
@@ -359,12 +202,16 @@
       "source": "zo-persona-directory",
       "selector": {
         "type": "exact-name",
-        "name": "GameDev \u00b7 Game Audio Designer"
-      }
+        "name": "GameDev · Game Audio Designer"
+      },
+      "mcp_capabilities": [
+        "zo-memory"
+      ],
+      "skills": []
     },
     {
       "id": "gamedev-game-designer",
-      "name": "GameDev \u00b7 Game Designer",
+      "name": "GameDev · Game Designer",
       "expertise": [
         "game mechanics",
         "systems design",
@@ -380,12 +227,18 @@
       "source": "zo-persona-directory",
       "selector": {
         "type": "exact-name",
-        "name": "GameDev \u00b7 Game Designer"
-      }
+        "name": "GameDev · Game Designer"
+      },
+      "mcp_capabilities": [
+        "zo-memory",
+        "qdrant-rag"
+      ],
+      "skills": [],
+      "system_prompt": "You are a systems game designer. You think in loops: core loop, progression loop, retention loop. You define mechanics precisely — inputs, rules, feedback, fail states. You balance by reasoning about player skill curves, not by guessing numbers. You write mechanics specs that an engineer can implement without ambiguity."
     },
     {
       "id": "gamedev-godot-gameplay-scripter",
-      "name": "GameDev \u00b7 Godot Gameplay Scripter",
+      "name": "GameDev · Godot Gameplay Scripter",
       "expertise": [
         "Godot",
         "GDScript",
@@ -401,12 +254,21 @@
       "source": "zo-persona-directory",
       "selector": {
         "type": "exact-name",
-        "name": "GameDev \u00b7 Godot Gameplay Scripter"
-      }
+        "name": "GameDev · Godot Gameplay Scripter"
+      },
+      "mcp_capabilities": [
+        "zo-memory",
+        "codebase-memory",
+        "qdrant-rag"
+      ],
+      "skills": [
+        "godot-gdscript"
+      ],
+      "system_prompt": "You are a Godot 4 gameplay programmer with deep GDScript expertise. You architect scene trees cleanly: nodes for structure, scripts for behavior, signals for decoupling. You prefer composition over inheritance, use autoloads sparingly, and profile before optimizing. You write GDScript idiomatically — snake_case, static typing where it helps, no Python-isms. You know the Godot 4 API cold: SceneTree, Node lifecycle (_ready/_process/_physics_process), input handling, animation players, and the export system for Android."
     },
     {
       "id": "gamedev-godot-shader-developer",
-      "name": "GameDev \u00b7 Godot Shader Developer",
+      "name": "GameDev · Godot Shader Developer",
       "expertise": [
         "Godot shaders",
         "rendering",
@@ -422,12 +284,21 @@
       "source": "zo-persona-directory",
       "selector": {
         "type": "exact-name",
-        "name": "GameDev \u00b7 Godot Shader Developer"
-      }
+        "name": "GameDev · Godot Shader Developer"
+      },
+      "mcp_capabilities": [
+        "zo-memory",
+        "qdrant-rag"
+      ],
+      "skills": [
+        "godot-shaders",
+        "godot-gdscript"
+      ],
+      "system_prompt": "You are a Godot shader specialist working with canvas_item and spatial shaders in Godot 4. You write efficient GLSL-style shader code, understand the render pipeline, and optimize for mobile GPUs. You prefer procedural approaches over texture dependencies for stylized looks. You know how to debug shaders visually, profile GPU cost, and provide fallbacks for low-end devices. You think in terms of visual impact per GPU cycle."
     },
     {
       "id": "gamedev-level-designer",
-      "name": "GameDev \u00b7 Level Designer",
+      "name": "GameDev · Level Designer",
       "expertise": [
         "level design",
         "encounter design",
@@ -443,12 +314,17 @@
       "source": "zo-persona-directory",
       "selector": {
         "type": "exact-name",
-        "name": "GameDev \u00b7 Level Designer"
-      }
+        "name": "GameDev · Level Designer"
+      },
+      "mcp_capabilities": [
+        "zo-memory"
+      ],
+      "skills": [],
+      "system_prompt": "You are a level designer focused on spatial progression and player guidance. You design difficulty as a curve, not a cliff — introducing mechanics safely before testing mastery. You use sightlines, landmarks, and pacing to guide players without handholding. Every level teaches something, tests something, or delights — preferably all three."
     },
     {
       "id": "gamedev-narrative-designer",
-      "name": "GameDev \u00b7 Narrative Designer",
+      "name": "GameDev · Narrative Designer",
       "expertise": [
         "interactive narrative",
         "dialogue systems",
@@ -464,12 +340,17 @@
       "source": "zo-persona-directory",
       "selector": {
         "type": "exact-name",
-        "name": "GameDev \u00b7 Narrative Designer"
-      }
+        "name": "GameDev · Narrative Designer"
+      },
+      "mcp_capabilities": [
+        "zo-memory",
+        "qdrant-rag"
+      ],
+      "skills": []
     },
     {
       "id": "gamedev-roblox-avatar-creator",
-      "name": "GameDev \u00b7 Roblox Avatar Creator",
+      "name": "GameDev · Roblox Avatar Creator",
       "expertise": [
         "Roblox avatars",
         "UGC pipelines",
@@ -485,12 +366,16 @@
       "source": "zo-persona-directory",
       "selector": {
         "type": "exact-name",
-        "name": "GameDev \u00b7 Roblox Avatar Creator"
-      }
+        "name": "GameDev · Roblox Avatar Creator"
+      },
+      "mcp_capabilities": [
+        "zo-memory"
+      ],
+      "skills": []
     },
     {
       "id": "gamedev-roblox-experience-designer",
-      "name": "GameDev \u00b7 Roblox Experience Designer",
+      "name": "GameDev · Roblox Experience Designer",
       "expertise": [
         "Roblox experience design",
         "social gameplay",
@@ -506,12 +391,16 @@
       "source": "zo-persona-directory",
       "selector": {
         "type": "exact-name",
-        "name": "GameDev \u00b7 Roblox Experience Designer"
-      }
+        "name": "GameDev · Roblox Experience Designer"
+      },
+      "mcp_capabilities": [
+        "zo-memory"
+      ],
+      "skills": []
     },
     {
       "id": "gamedev-roblox-systems-scripter",
-      "name": "GameDev \u00b7 Roblox Systems Scripter",
+      "name": "GameDev · Roblox Systems Scripter",
       "expertise": [
         "Roblox Luau",
         "server authority",
@@ -527,12 +416,16 @@
       "source": "zo-persona-directory",
       "selector": {
         "type": "exact-name",
-        "name": "GameDev \u00b7 Roblox Systems Scripter"
-      }
+        "name": "GameDev · Roblox Systems Scripter"
+      },
+      "mcp_capabilities": [
+        "zo-memory"
+      ],
+      "skills": []
     },
     {
       "id": "gamedev-unity-multiplayer-engineer",
-      "name": "GameDev \u00b7 Unity Multiplayer Engineer",
+      "name": "GameDev · Unity Multiplayer Engineer",
       "expertise": [
         "Unity multiplayer",
         "network authority",
@@ -548,12 +441,16 @@
       "source": "zo-persona-directory",
       "selector": {
         "type": "exact-name",
-        "name": "GameDev \u00b7 Unity Multiplayer Engineer"
-      }
+        "name": "GameDev · Unity Multiplayer Engineer"
+      },
+      "mcp_capabilities": [
+        "zo-memory"
+      ],
+      "skills": []
     },
     {
       "id": "gamedev-unity-shader-graph-artist",
-      "name": "GameDev \u00b7 Unity Shader Graph Artist",
+      "name": "GameDev · Unity Shader Graph Artist",
       "expertise": [
         "Unity Shader Graph",
         "URP and HDRP",
@@ -569,12 +466,16 @@
       "source": "zo-persona-directory",
       "selector": {
         "type": "exact-name",
-        "name": "GameDev \u00b7 Unity Shader Graph Artist"
-      }
+        "name": "GameDev · Unity Shader Graph Artist"
+      },
+      "mcp_capabilities": [
+        "zo-memory"
+      ],
+      "skills": []
     },
     {
       "id": "gamedev-unreal-multiplayer-architect",
-      "name": "GameDev \u00b7 Unreal Multiplayer Architect",
+      "name": "GameDev · Unreal Multiplayer Architect",
       "expertise": [
         "Unreal multiplayer",
         "replication",
@@ -590,12 +491,16 @@
       "source": "zo-persona-directory",
       "selector": {
         "type": "exact-name",
-        "name": "GameDev \u00b7 Unreal Multiplayer Architect"
-      }
+        "name": "GameDev · Unreal Multiplayer Architect"
+      },
+      "mcp_capabilities": [
+        "zo-memory"
+      ],
+      "skills": []
     },
     {
       "id": "gamedev-unity-editor-tool-developer",
-      "name": "GameDev \u00b7 Unity Editor Tool Developer",
+      "name": "GameDev · Unity Editor Tool Developer",
       "expertise": [
         "Unity editor tooling",
         "asset automation",
@@ -611,12 +516,16 @@
       "source": "zo-persona-directory",
       "selector": {
         "type": "exact-name",
-        "name": "GameDev \u00b7 Unity Editor Tool Developer"
-      }
+        "name": "GameDev · Unity Editor Tool Developer"
+      },
+      "mcp_capabilities": [
+        "zo-memory"
+      ],
+      "skills": []
     },
     {
       "id": "gamedev-unreal-systems-engineer",
-      "name": "GameDev \u00b7 Unreal Systems Engineer",
+      "name": "GameDev · Unreal Systems Engineer",
       "expertise": [
         "Unreal C++",
         "Blueprint APIs",
@@ -632,12 +541,16 @@
       "source": "zo-persona-directory",
       "selector": {
         "type": "exact-name",
-        "name": "GameDev \u00b7 Unreal Systems Engineer"
-      }
+        "name": "GameDev · Unreal Systems Engineer"
+      },
+      "mcp_capabilities": [
+        "zo-memory"
+      ],
+      "skills": []
     },
     {
       "id": "gamedev-unity-architect",
-      "name": "GameDev \u00b7 Unity Architect",
+      "name": "GameDev · Unity Architect",
       "expertise": [
         "Unity architecture",
         "C#",
@@ -653,12 +566,16 @@
       "source": "zo-persona-directory",
       "selector": {
         "type": "exact-name",
-        "name": "GameDev \u00b7 Unity Architect"
-      }
+        "name": "GameDev · Unity Architect"
+      },
+      "mcp_capabilities": [
+        "zo-memory"
+      ],
+      "skills": []
     },
     {
       "id": "gamedev-unreal-world-builder",
-      "name": "GameDev \u00b7 Unreal World Builder",
+      "name": "GameDev · Unreal World Builder",
       "expertise": [
         "Unreal environments",
         "World Partition",
@@ -674,12 +591,16 @@
       "source": "zo-persona-directory",
       "selector": {
         "type": "exact-name",
-        "name": "GameDev \u00b7 Unreal World Builder"
-      }
+        "name": "GameDev · Unreal World Builder"
+      },
+      "mcp_capabilities": [
+        "zo-memory"
+      ],
+      "skills": []
     },
     {
       "id": "gamedev-unreal-technical-artist",
-      "name": "GameDev \u00b7 Unreal Technical Artist",
+      "name": "GameDev · Unreal Technical Artist",
       "expertise": [
         "Unreal technical art",
         "materials",
@@ -695,12 +616,16 @@
       "source": "zo-persona-directory",
       "selector": {
         "type": "exact-name",
-        "name": "GameDev \u00b7 Unreal Technical Artist"
-      }
+        "name": "GameDev · Unreal Technical Artist"
+      },
+      "mcp_capabilities": [
+        "zo-memory"
+      ],
+      "skills": []
     },
     {
       "id": "gamedev-technical-artist",
-      "name": "GameDev \u00b7 Technical Artist",
+      "name": "GameDev · Technical Artist",
       "expertise": [
         "technical art",
         "asset pipelines",
@@ -716,12 +641,21 @@
       "source": "zo-persona-directory",
       "selector": {
         "type": "exact-name",
-        "name": "GameDev \u00b7 Technical Artist"
-      }
+        "name": "GameDev · Technical Artist"
+      },
+      "mcp_capabilities": [
+        "zo-memory",
+        "qdrant-rag"
+      ],
+      "skills": [
+        "godot-shaders",
+        "imagegen-frontend-mobile"
+      ],
+      "system_prompt": "You are a technical artist bridging art direction and engineering. You establish visual pipelines, define asset budgets, and build tools that let artists work efficiently. You judge visuals against references with a critical eye for silhouette, color harmony, and readability at target resolution. You optimize without compromising the art vision — every polygon and draw call earns its place."
     },
     {
       "id": "gamedev-threejs-designer",
-      "name": "GameDev \u00b7 Three.js Designer",
+      "name": "GameDev · Three.js Designer",
       "expertise": [
         "Three.js game design",
         "browser-native interaction",
@@ -737,12 +671,16 @@
       "source": "zo-persona-directory",
       "selector": {
         "type": "exact-name",
-        "name": "GameDev \u00b7 Three.js Designer"
-      }
+        "name": "GameDev · Three.js Designer"
+      },
+      "mcp_capabilities": [
+        "zo-memory"
+      ],
+      "skills": []
     },
     {
       "id": "gamedev-threejs-engineer",
-      "name": "GameDev \u00b7 Three.js Engineer",
+      "name": "GameDev · Three.js Engineer",
       "expertise": [
         "Three.js",
         "TypeScript",
@@ -758,12 +696,16 @@
       "source": "zo-persona-directory",
       "selector": {
         "type": "exact-name",
-        "name": "GameDev \u00b7 Three.js Engineer"
-      }
+        "name": "GameDev · Three.js Engineer"
+      },
+      "mcp_capabilities": [
+        "zo-memory"
+      ],
+      "skills": []
     },
     {
       "id": "gamedev-threejs-artist",
-      "name": "GameDev \u00b7 Three.js Artist",
+      "name": "GameDev · Three.js Artist",
       "expertise": [
         "Three.js technical art",
         "glTF asset pipelines",
@@ -779,12 +721,16 @@
       "source": "zo-persona-directory",
       "selector": {
         "type": "exact-name",
-        "name": "GameDev \u00b7 Three.js Artist"
-      }
+        "name": "GameDev · Three.js Artist"
+      },
+      "mcp_capabilities": [
+        "zo-memory"
+      ],
+      "skills": []
     },
     {
       "id": "gamedev-threejs-architect",
-      "name": "GameDev \u00b7 Three.js Architect",
+      "name": "GameDev · Three.js Architect",
       "expertise": [
         "Three.js architecture",
         "simulation and rendering boundaries",
@@ -800,37 +746,61 @@
       "source": "zo-persona-directory",
       "selector": {
         "type": "exact-name",
-        "name": "GameDev \u00b7 Three.js Architect"
-      }
+        "name": "GameDev · Three.js Architect"
+      },
+      "mcp_capabilities": [
+        "zo-memory"
+      ],
+      "skills": []
     },
     {
-      "id": "opencode",
-      "name": "OpenCode",
+      "id": "gamedev-mobile-game-director",
+      "name": "GameDev · Mobile Game Director",
       "expertise": [
-        "code generation",
-        "debugging",
-        "refactoring",
-        "testing",
-        "shell commands",
-        "multi-provider execution",
-        "memory retrieval",
-        "MCP tool orchestration"
+        "mobile game direction",
+        "gameplay vision",
+        "scope management",
+        "cross-discipline review"
       ],
       "best_for": [
-        "fast repository-aware implementation",
-        "minimal-harness model comparisons",
-        "focused code review",
-        "ephemeral coding tasks",
-        "workspace-memory retrieval",
-        "authenticated Zo tool use"
+        "mobile game vision",
+        "scope decisions",
+        "gameplay coherence",
+        "Godot/Android production"
       ],
-      "executor": "local",
-      "bridge": "Skills/zo-swarm-executors/bridges/opencode-bridge.sh",
-      "role": "Multi-provider coding executor for independent implementation passes.",
-      "capabilities": [
-        "multi-provider coding",
-        "independent implementation"
-      ]
+      "source": "muse-platform-2026-10",
+      "mcp_capabilities": [
+        "zo-memory"
+      ],
+      "skills": [
+        "godot-gdscript"
+      ],
+      "system_prompt": "You are a mobile game director with deep experience shipping Godot games on Android. You think in terms of player experience first: core loops, moment-to-moment feel, progression pacing, and retention. You make scope decisions ruthlessly — cutting what doesn't serve the core fantasy. You review cross-discipline work for coherence: does the art serve the mechanics? Does the audio reinforce the fantasy? You speak in terms of player outcomes, not implementation details."
+    },
+    {
+      "id": "gamedev-mobile-qa-release",
+      "name": "GameDev · Mobile QA & Release",
+      "expertise": [
+        "mobile QA",
+        "release validation",
+        "Android compatibility",
+        "defect triage"
+      ],
+      "best_for": [
+        "release gates",
+        "regression testing",
+        "device validation",
+        "Play Store readiness"
+      ],
+      "source": "muse-platform-2026-10",
+      "mcp_capabilities": [
+        "zo-memory"
+      ],
+      "skills": [
+        "godot-gdscript",
+        "production-ready"
+      ],
+      "system_prompt": "You are a mobile QA and release specialist focused on Godot Android games. You think in terms of release gates: what must pass before this ships? You validate across the matrix that matters — different screen sizes, OS versions, performance tiers. You triage defects by player impact, not by ease of fixing. You know the Google Play review process and flag policy risks early."
     }
   ],
   "schemaVersion": 2,
@@ -1683,12 +1653,12 @@
     {
       "slug": "zo-alaric-fast-a686c117",
       "id": "a686c117-9d81-4ffe-8b69-ce566bd3995d",
-      "name": "Alaric \u00b7 Fast",
+      "name": "Alaric · Fast",
       "model": "byok:461d8d6f-9616-4391-960e-3caea2a27829",
       "scopes": [
         "all"
       ],
-      "purpose": "Platform persona for Alaric \u00b7 Fast work.",
+      "purpose": "Platform persona for Alaric · Fast work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -1697,12 +1667,12 @@
     {
       "slug": "zo-alaric-light-0c6c5c34",
       "id": "0c6c5c34-c4e3-4591-ad0c-8df8f65fcb81",
-      "name": "Alaric \u00b7 Light",
+      "name": "Alaric · Light",
       "model": "byok:63a73cf2-224a-4641-8dcb-c3313270d08a",
       "scopes": [
         "all"
       ],
-      "purpose": "Platform persona for Alaric \u00b7 Light work.",
+      "purpose": "Platform persona for Alaric · Light work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -1711,12 +1681,12 @@
     {
       "slug": "zo-alaric-deep-7c1544eb",
       "id": "7c1544eb-3d24-419c-897a-5163d3d32c05",
-      "name": "Alaric \u00b7 Deep",
+      "name": "Alaric · Deep",
       "model": "byok:b74479bc-ec30-494d-a8c8-b2ff6218e1c0",
       "scopes": [
         "all"
       ],
-      "purpose": "Platform persona for Alaric \u00b7 Deep work.",
+      "purpose": "Platform persona for Alaric · Deep work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -1868,12 +1838,12 @@
     {
       "slug": "zo-alaric-ext-311d1136",
       "id": "311d1136-38c8-4265-bf1e-6e91700f065f",
-      "name": "Alaric \u00b7 Ext",
+      "name": "Alaric · Ext",
       "model": "byok:12c6d41a-a8b4-45e3-b495-7df391f190ce",
       "scopes": [
         "all"
       ],
-      "purpose": "Platform persona for Alaric \u00b7 Ext work.",
+      "purpose": "Platform persona for Alaric · Ext work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -1938,10 +1908,10 @@
     {
       "slug": "zo-alaric-consult-77bfa6fa",
       "id": "77bfa6fa-5249-41a9-961f-37749db877a0",
-      "name": "Alaric \u00b7 Consult",
+      "name": "Alaric · Consult",
       "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
       "scopes": [],
-      "purpose": "Platform persona for Alaric \u00b7 Consult work.",
+      "purpose": "Platform persona for Alaric · Consult work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -1950,7 +1920,7 @@
     {
       "slug": "zo-gamedev-all-out-game-director-781113cb",
       "id": "781113cb-3102-4aff-8c48-59f282af4d41",
-      "name": "GameDev \u00b7 All Out Game Director",
+      "name": "GameDev · All Out Game Director",
       "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
       "scopes": [
         "files:read",
@@ -1958,7 +1928,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 All Out Game Director work.",
+      "purpose": "Platform persona for GameDev · All Out Game Director work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -1967,7 +1937,7 @@
     {
       "slug": "zo-gamedev-all-out-csl-engineer-14fb53cf",
       "id": "14fb53cf-8bb2-42b4-88c2-7ac1dae30d8a",
-      "name": "GameDev \u00b7 All Out CSL Engineer",
+      "name": "GameDev · All Out CSL Engineer",
       "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
       "scopes": [
         "device:use",
@@ -1977,7 +1947,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 All Out CSL Engineer work.",
+      "purpose": "Platform persona for GameDev · All Out CSL Engineer work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -1986,7 +1956,7 @@
     {
       "slug": "zo-gamedev-all-out-technical-art-ux-21d4701a",
       "id": "21d4701a-726a-4102-a09d-69d7ca11d618",
-      "name": "GameDev \u00b7 All Out Technical Art & UX",
+      "name": "GameDev · All Out Technical Art & UX",
       "model": "byok:ef1faca8-a70d-46d3-88d3-b78f96635885",
       "scopes": [
         "device:use",
@@ -1997,7 +1967,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 All Out Technical Art & UX work.",
+      "purpose": "Platform persona for GameDev · All Out Technical Art & UX work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -2006,7 +1976,7 @@
     {
       "slug": "zo-gamedev-all-out-qa-release-c1d4e886",
       "id": "c1d4e886-c4bc-4662-acf2-8a197663b5b9",
-      "name": "GameDev \u00b7 All Out QA & Release",
+      "name": "GameDev · All Out QA & Release",
       "model": "byok:ef1faca8-a70d-46d3-88d3-b78f96635885",
       "scopes": [
         "device:use",
@@ -2016,7 +1986,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 All Out QA & Release work.",
+      "purpose": "Platform persona for GameDev · All Out QA & Release work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -2025,7 +1995,7 @@
     {
       "slug": "zo-gamedev-game-audio-designer-854bfeaa",
       "id": "854bfeaa-c28e-4d8c-9d93-e6a6eafc41e8",
-      "name": "GameDev \u00b7 Game Audio Designer",
+      "name": "GameDev · Game Audio Designer",
       "model": "byok:ef1faca8-a70d-46d3-88d3-b78f96635885",
       "scopes": [
         "files:read",
@@ -2036,7 +2006,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 Game Audio Designer work.",
+      "purpose": "Platform persona for GameDev · Game Audio Designer work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -2045,7 +2015,7 @@
     {
       "slug": "zo-gamedev-game-designer-906afdd6",
       "id": "906afdd6-e37f-4a4c-a827-e5f1fd3e757a",
-      "name": "GameDev \u00b7 Game Designer",
+      "name": "GameDev · Game Designer",
       "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
       "scopes": [
         "files:read",
@@ -2053,7 +2023,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 Game Designer work.",
+      "purpose": "Platform persona for GameDev · Game Designer work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -2062,7 +2032,7 @@
     {
       "slug": "zo-gamedev-godot-gameplay-scripter-d3bd91c2",
       "id": "d3bd91c2-7ffd-4bba-8579-7597f496c4f9",
-      "name": "GameDev \u00b7 Godot Gameplay Scripter",
+      "name": "GameDev · Godot Gameplay Scripter",
       "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
       "scopes": [
         "device:use",
@@ -2072,7 +2042,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 Godot Gameplay Scripter work.",
+      "purpose": "Platform persona for GameDev · Godot Gameplay Scripter work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -2081,7 +2051,7 @@
     {
       "slug": "zo-gamedev-godot-shader-developer-7a5c4e0b",
       "id": "7a5c4e0b-0266-4880-a05b-3d428f3ad49c",
-      "name": "GameDev \u00b7 Godot Shader Developer",
+      "name": "GameDev · Godot Shader Developer",
       "model": "byok:ef1faca8-a70d-46d3-88d3-b78f96635885",
       "scopes": [
         "device:use",
@@ -2092,7 +2062,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 Godot Shader Developer work.",
+      "purpose": "Platform persona for GameDev · Godot Shader Developer work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -2101,7 +2071,7 @@
     {
       "slug": "zo-gamedev-level-designer-eadf9e3a",
       "id": "eadf9e3a-498b-42d2-828b-bcb64e9c82e6",
-      "name": "GameDev \u00b7 Level Designer",
+      "name": "GameDev · Level Designer",
       "model": "byok:ef1faca8-a70d-46d3-88d3-b78f96635885",
       "scopes": [
         "device:use",
@@ -2112,7 +2082,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 Level Designer work.",
+      "purpose": "Platform persona for GameDev · Level Designer work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -2121,7 +2091,7 @@
     {
       "slug": "zo-gamedev-narrative-designer-b13bd4e1",
       "id": "b13bd4e1-52c6-4ab9-aa33-0972b6fcac8d",
-      "name": "GameDev \u00b7 Narrative Designer",
+      "name": "GameDev · Narrative Designer",
       "model": "byok:ef1faca8-a70d-46d3-88d3-b78f96635885",
       "scopes": [
         "files:read",
@@ -2129,7 +2099,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 Narrative Designer work.",
+      "purpose": "Platform persona for GameDev · Narrative Designer work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -2138,7 +2108,7 @@
     {
       "slug": "zo-gamedev-roblox-avatar-creator-a459a190",
       "id": "a459a190-95a2-425f-9859-337f047f34be",
-      "name": "GameDev \u00b7 Roblox Avatar Creator",
+      "name": "GameDev · Roblox Avatar Creator",
       "model": "byok:ef1faca8-a70d-46d3-88d3-b78f96635885",
       "scopes": [
         "device:use",
@@ -2149,7 +2119,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 Roblox Avatar Creator work.",
+      "purpose": "Platform persona for GameDev · Roblox Avatar Creator work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -2158,7 +2128,7 @@
     {
       "slug": "zo-gamedev-roblox-experience-designer-de93d485",
       "id": "de93d485-2103-4bd2-848a-6a590a485e83",
-      "name": "GameDev \u00b7 Roblox Experience Designer",
+      "name": "GameDev · Roblox Experience Designer",
       "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
       "scopes": [
         "files:read",
@@ -2166,7 +2136,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 Roblox Experience Designer work.",
+      "purpose": "Platform persona for GameDev · Roblox Experience Designer work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -2175,7 +2145,7 @@
     {
       "slug": "zo-gamedev-roblox-systems-scripter-a620b95f",
       "id": "a620b95f-fefb-43de-8fb5-3f9e4f9e0ebc",
-      "name": "GameDev \u00b7 Roblox Systems Scripter",
+      "name": "GameDev · Roblox Systems Scripter",
       "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
       "scopes": [
         "device:use",
@@ -2185,7 +2155,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 Roblox Systems Scripter work.",
+      "purpose": "Platform persona for GameDev · Roblox Systems Scripter work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -2194,7 +2164,7 @@
     {
       "slug": "zo-gamedev-unity-multiplayer-engineer-22c282ab",
       "id": "22c282ab-074a-44bb-9386-fc227a817950",
-      "name": "GameDev \u00b7 Unity Multiplayer Engineer",
+      "name": "GameDev · Unity Multiplayer Engineer",
       "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
       "scopes": [
         "device:use",
@@ -2204,7 +2174,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 Unity Multiplayer Engineer work.",
+      "purpose": "Platform persona for GameDev · Unity Multiplayer Engineer work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -2213,7 +2183,7 @@
     {
       "slug": "zo-gamedev-unity-shader-graph-artist-856fd9d0",
       "id": "856fd9d0-ab0f-4e28-ace4-da0ed12cc2ca",
-      "name": "GameDev \u00b7 Unity Shader Graph Artist",
+      "name": "GameDev · Unity Shader Graph Artist",
       "model": "byok:ef1faca8-a70d-46d3-88d3-b78f96635885",
       "scopes": [
         "device:use",
@@ -2224,7 +2194,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 Unity Shader Graph Artist work.",
+      "purpose": "Platform persona for GameDev · Unity Shader Graph Artist work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -2233,7 +2203,7 @@
     {
       "slug": "zo-gamedev-unreal-multiplayer-architect-0cd917f5",
       "id": "0cd917f5-bb29-43aa-bd5e-a3ab7ce29a4f",
-      "name": "GameDev \u00b7 Unreal Multiplayer Architect",
+      "name": "GameDev · Unreal Multiplayer Architect",
       "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
       "scopes": [
         "device:use",
@@ -2243,7 +2213,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 Unreal Multiplayer Architect work.",
+      "purpose": "Platform persona for GameDev · Unreal Multiplayer Architect work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -2252,7 +2222,7 @@
     {
       "slug": "zo-gamedev-unity-editor-tool-developer-8da1cee5",
       "id": "8da1cee5-959d-4b9b-bba8-532c93e22954",
-      "name": "GameDev \u00b7 Unity Editor Tool Developer",
+      "name": "GameDev · Unity Editor Tool Developer",
       "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
       "scopes": [
         "device:use",
@@ -2262,7 +2232,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 Unity Editor Tool Developer work.",
+      "purpose": "Platform persona for GameDev · Unity Editor Tool Developer work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -2271,7 +2241,7 @@
     {
       "slug": "zo-gamedev-unreal-systems-engineer-b696b696",
       "id": "b696b696-82c4-4d36-ae9c-fcc87e2bd98f",
-      "name": "GameDev \u00b7 Unreal Systems Engineer",
+      "name": "GameDev · Unreal Systems Engineer",
       "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
       "scopes": [
         "device:use",
@@ -2281,7 +2251,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 Unreal Systems Engineer work.",
+      "purpose": "Platform persona for GameDev · Unreal Systems Engineer work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -2290,7 +2260,7 @@
     {
       "slug": "zo-gamedev-unity-architect-b4d9de41",
       "id": "b4d9de41-db00-4957-8837-7d09c3a9fcdb",
-      "name": "GameDev \u00b7 Unity Architect",
+      "name": "GameDev · Unity Architect",
       "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
       "scopes": [
         "device:use",
@@ -2300,7 +2270,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 Unity Architect work.",
+      "purpose": "Platform persona for GameDev · Unity Architect work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -2309,7 +2279,7 @@
     {
       "slug": "zo-gamedev-unreal-world-builder-8fdf579c",
       "id": "8fdf579c-a91b-48b6-8ec8-441fa72e6338",
-      "name": "GameDev \u00b7 Unreal World Builder",
+      "name": "GameDev · Unreal World Builder",
       "model": "byok:ef1faca8-a70d-46d3-88d3-b78f96635885",
       "scopes": [
         "device:use",
@@ -2320,7 +2290,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 Unreal World Builder work.",
+      "purpose": "Platform persona for GameDev · Unreal World Builder work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -2329,7 +2299,7 @@
     {
       "slug": "zo-gamedev-unreal-technical-artist-443246ef",
       "id": "443246ef-37d2-4b1e-af4b-5ad0d5efd7c0",
-      "name": "GameDev \u00b7 Unreal Technical Artist",
+      "name": "GameDev · Unreal Technical Artist",
       "model": "byok:ef1faca8-a70d-46d3-88d3-b78f96635885",
       "scopes": [
         "device:use",
@@ -2340,7 +2310,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 Unreal Technical Artist work.",
+      "purpose": "Platform persona for GameDev · Unreal Technical Artist work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -2349,7 +2319,7 @@
     {
       "slug": "zo-gamedev-technical-artist-202e23cb",
       "id": "202e23cb-8c21-4321-bcfa-0534286aca87",
-      "name": "GameDev \u00b7 Technical Artist",
+      "name": "GameDev · Technical Artist",
       "model": "byok:ef1faca8-a70d-46d3-88d3-b78f96635885",
       "scopes": [
         "device:use",
@@ -2360,7 +2330,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 Technical Artist work.",
+      "purpose": "Platform persona for GameDev · Technical Artist work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-11T18:09:58.744Z"
@@ -2369,7 +2339,7 @@
     {
       "slug": "zo-gamedev-three-js-designer-98d2de05",
       "id": "98d2de05-132d-42ff-a59b-ab834c5e3f6f",
-      "name": "GameDev \u00b7 Three.js Designer",
+      "name": "GameDev · Three.js Designer",
       "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
       "scopes": [
         "files:read",
@@ -2377,7 +2347,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 Three.js Designer work.",
+      "purpose": "Platform persona for GameDev · Three.js Designer work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-18T19:45:34.622Z"
@@ -2386,7 +2356,7 @@
     {
       "slug": "zo-gamedev-three-js-engineer-9add3761",
       "id": "9add3761-5b4a-4698-9494-063b525e0245",
-      "name": "GameDev \u00b7 Three.js Engineer",
+      "name": "GameDev · Three.js Engineer",
       "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
       "scopes": [
         "device:use",
@@ -2396,7 +2366,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 Three.js Engineer work.",
+      "purpose": "Platform persona for GameDev · Three.js Engineer work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-18T19:45:34.622Z"
@@ -2405,7 +2375,7 @@
     {
       "slug": "zo-gamedev-three-js-artist-8554e4a2",
       "id": "8554e4a2-39f3-4e4c-a03f-bc001dec7689",
-      "name": "GameDev \u00b7 Three.js Artist",
+      "name": "GameDev · Three.js Artist",
       "model": "byok:ef1faca8-a70d-46d3-88d3-b78f96635885",
       "scopes": [
         "device:use",
@@ -2416,7 +2386,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 Three.js Artist work.",
+      "purpose": "Platform persona for GameDev · Three.js Artist work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-18T19:45:34.622Z"
@@ -2425,7 +2395,7 @@
     {
       "slug": "zo-gamedev-three-js-architect-d34189f6",
       "id": "d34189f6-19c7-454f-b960-b3a815a27496",
-      "name": "GameDev \u00b7 Three.js Architect",
+      "name": "GameDev · Three.js Architect",
       "model": "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
       "scopes": [
         "device:use",
@@ -2435,7 +2405,7 @@
         "web:browse",
         "web:search"
       ],
-      "purpose": "Platform persona for GameDev \u00b7 Three.js Architect work.",
+      "purpose": "Platform persona for GameDev · Three.js Architect work.",
       "provenance": {
         "source": "zo.list_personas",
         "observedAt": "2026-08-18T19:45:34.622Z"

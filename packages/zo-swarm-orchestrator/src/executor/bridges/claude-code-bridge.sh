@@ -103,7 +103,17 @@ except Exception:
     sys.exit(0)
 
 tool_names = []
+# F-009: filter MCP servers to the persona's declared capabilities when set.
+# SWARM_PERSONA_MCPS is a comma-separated list (e.g. "zo-memory,qdrant-rag").
+# When unset, all configured servers are wired (previous behavior).
+persona_mcps = None
+import os
+_raw = os.environ.get("SWARM_PERSONA_MCPS", "")
+if _raw.strip():
+    persona_mcps = {s.strip() for s in _raw.split(",") if s.strip()}
 for srv_name, srv in cfg.get("mcpServers", {}).items():
+    if persona_mcps is not None and srv_name not in persona_mcps:
+        continue
     url = srv.get("url", "")
     if not url:
         continue
