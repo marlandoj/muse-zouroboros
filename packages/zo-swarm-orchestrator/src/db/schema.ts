@@ -116,12 +116,20 @@ function initSchema(db: Database): void {
       output_tokens INTEGER NOT NULL DEFAULT 0,
       cost_usd REAL NOT NULL DEFAULT 0,
       rate_source TEXT,
-      estimated INTEGER NOT NULL DEFAULT 0
+      estimated INTEGER NOT NULL DEFAULT 0,
+      persona TEXT
     )
   `);
   db.run(`CREATE INDEX IF NOT EXISTS idx_cost_ledger_ts ON cost_ledger(ts)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_cost_ledger_source ON cost_ledger(source)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_cost_ledger_model ON cost_ledger(model)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_cost_ledger_persona ON cost_ledger(persona)`);
+  // Migration for existing databases (F-008: persona telemetry)
+  try {
+    const cols = db.query(`PRAGMA table_info(cost_ledger)`).all() as Array<{ name: string }>;
+    const have = new Set(cols.map(c => c.name));
+    if (!have.has('persona')) db.run(`ALTER TABLE cost_ledger ADD COLUMN persona TEXT`);
+  } catch {}
 
   migrateSwarmRolesSOP(db);
   seedDefaultRoles(db);

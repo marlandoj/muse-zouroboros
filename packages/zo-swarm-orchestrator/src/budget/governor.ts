@@ -42,6 +42,8 @@ export interface UsageMeta {
   label?: string;
   /** false only when tokens are vendor-reported; swarm token splits default to estimated */
   estimated?: boolean;
+  /** domain persona active for this task (F-008: persona telemetry) */
+  persona?: string;
 }
 
 type BudgetListener = (event: BudgetEvent) => void;
@@ -107,8 +109,8 @@ export class BudgetGovernor {
     try {
       this.db.run(
         `INSERT INTO cost_ledger
-         (ts, source, run_id, label, model, vendor, input_tokens, output_tokens, cost_usd, rate_source, estimated)
-         VALUES (?, 'swarm', ?, ?, ?, ?, ?, ?, ?, 'swarm-pricing', ?)`,
+         (ts, source, run_id, label, model, vendor, input_tokens, output_tokens, cost_usd, rate_source, estimated, persona)
+         VALUES (?, 'swarm', ?, ?, ?, ?, ?, ?, ?, 'swarm-pricing', ?, ?)`,
         [
           Date.now(),
           meta?.runId ?? swarmId,
@@ -119,6 +121,7 @@ export class BudgetGovernor {
           Math.round(outputTokens),
           cost,
           meta?.estimated === false ? 0 : 1,
+          meta?.persona ?? null,
         ]
       );
     } catch {}

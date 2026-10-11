@@ -799,6 +799,7 @@ export class SwarmOrchestrator {
         runId,
         label: result.task.id,
         estimated: !bridgeReported,
+        persona: result.task.persona,
       });
     }
 
