@@ -86,13 +86,15 @@ export function resolveCollections(options: RAGEnrichmentOptions = {}): string[]
 async function getEmbedding(text: string): Promise<number[]> {
   const apiKey = process.env.OPENAI_API_KEY || process.env.ZO_OPENAI_API_KEY;
   if (!apiKey) throw new Error('OPENAI_API_KEY not configured');
-  const response = await fetch('https://api.openai.com/v1/embeddings', {
+  const baseUrl = (process.env.OPENAI_BASE_URL || 'https://api.openai.com').replace(/\/$/, '');
+  const response = await fetch(`${baseUrl}/v1/embeddings`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
     },
     body: JSON.stringify({ model: 'text-embedding-3-small', input: text }),
+    signal: AbortSignal.timeout(30000),
   });
   if (!response.ok) throw new Error(`OpenAI embedding failed: ${response.status}`);
   const data = await response.json() as { data?: Array<{ embedding: number[] }> };
@@ -101,7 +103,8 @@ async function getEmbedding(text: string): Promise<number[]> {
   return vec;
 }
 
-const DEFAULT_QDRANT_URL = 'http://100.69.35.3:6333';
+// Local-first default; override with QDRANT_URL for remote/Tailscale hosts.
+const DEFAULT_QDRANT_URL = 'http://127.0.0.1:6333';
 
 async function searchQdrantCollection(
   collection: string,
@@ -121,6 +124,9 @@ async function searchQdrantCollection(
       'api-key': qdrantKey || '',
     },
     body: JSON.stringify({ vector: embedding, limit: topK, with_payload: true }),
+    // A hung Qdrant must not stall task dispatch; per-collection failures
+    // are tolerated downstream via Promise.allSettled.
+    signal: AbortSignal.timeout(15000),
   });
   if (!response.ok) throw new Error(`Qdrant search failed (${collection}): ${response.status}`);
 
@@ -136,11 +142,12 @@ async function searchQdrantCollection(
     .filter(point => point.score >= minScore)
     .map(point => {
       const p = point.payload || {};
-      const content = typeof p.content === 'string' ? p.content : '';
-      const sdk = typeof p.sdk === 'string' ? p.sdk : collection;
-      const source = typeof p.source === 'string'
-        ? p.source
-        : (typeof p.source_path === 'string' ? String(p.source_path) : `${collection}#${point.id}`);
+      // Payload-shape compat: qdrant-indexer.ts writes {content, source,
+      // source_path}; codebase-memory-mcp's indexer writes {chunk, path, text}.
+      const str = (v: unknown) => typeof v === 'string' ? v : '';
+      const content = str(p.content) || str(p.text) || str(p.chunk);
+      const sdk = str(p.sdk) || collection;
+      const source = str(p.source) || str(p.source_path) || str(p.path) || `${collection}#${point.id}`;
       return { content, sdk, source, score: point.score, collection };
     })
     .filter(r => r.content.length > 0);

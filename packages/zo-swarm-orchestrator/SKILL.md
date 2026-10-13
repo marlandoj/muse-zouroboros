@@ -182,7 +182,7 @@ The orchestrator automatically enriches task prompts with relevant SDK documenta
 ### How It Works
 
 1. **Task Analysis**: When a task contains keywords like "agent", "API", "database", "workflow", etc., the RAG system queries the knowledge base
-2. **Semantic Search**: Uses Ollama (nomic-embed-text) for local embeddings, Qdrant for vector search — zero API costs
+2. **Semantic Search**: Embeds the task with OpenAI `text-embedding-3-small` (1536d) and searches local Qdrant collections (15s per-collection timeout; failures are tolerated and reported in telemetry, never fatal)
 3. **Context Injection**: Top 3 most relevant SDK patterns are injected into the prompt before the task description
 
 ### Covered SDKs (19 Total)
@@ -235,13 +235,20 @@ If no patterns are found, the task proceeds normally — RAG is additive, not re
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `QDRANT_URL` | (required) | Qdrant Cloud endpoint |
+| `QDRANT_URL` | `http://127.0.0.1:6333` | Local Qdrant endpoint (set to a remote/Tailscale host as needed) |
 | `QDRANT_API_KEY` | (optional) | Qdrant API key |
-| `OLLAMA_URL` | `http://localhost:11434/api/embeddings` | Ollama endpoint |
+| `RAG_COLLECTIONS` | `zouroboros-code,shared-memory-facts,code-docs` | Comma-separated collection whitelist |
+| `OPENAI_BASE_URL` | `https://api.openai.com` | Embedding endpoint override |
+
+Collections are host-provisioned prerequisites — the distribution ships no
+Qdrant server and no indexer for them (see `scripts/qdrant-indexer.ts`,
+quarantined: reuses existing collections, `--force-recreate` to rebuild).
 
 ### Disabling RAG
 
-RAG is automatic and non-blocking. To disable, set `RAG_ENABLED=false` (future release) or simply ensure QDRANT_URL is unset.
+RAG is automatic and non-blocking. To disable, point `QDRANT_URL` at an
+unreachable address — per-collection failures are tolerated and the task
+proceeds without enrichment.
 
 ---
 

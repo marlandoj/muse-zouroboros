@@ -2,23 +2,33 @@
 /**
  * Qdrant Indexer for Local Self-Hosted RAG
  *
- * Indexes two collections into local Qdrant (100.69.35.3:6333):
- *   1. zouroboros-code   — TypeScript source from zouroboros/packages
+ * Indexes two collections into local Qdrant:
+ *   1. zouroboros-code   — TypeScript source from the monorepo packages
  *   2. shared-memory-facts — Shared long-term memory facts
  *
- * The pre-existing `code-docs` collection (SDK docs, 95 points) is left as-is.
+ * QUARANTINE NOTICE (2026-10-13): this script used to DELETE and recreate
+ * the target collection on every run, and hardcoded Zo-host absolute paths.
+ * It is now safe by default:
+ *   - existing collections are REUSED (upsert), never dropped;
+ *   - pass --force-recreate to opt into the destructive rebuild;
+ *   - repo root, memory DB, and Qdrant URL are env-overridable.
  *
- * Run: bun /opt/zouroboros/repo/packages/swarm/scripts/qdrant-indexer.ts [--collection=name]
+ * The pre-existing `code-docs` collection (SDK docs) is left as-is.
+ *
+ * Run: bun packages/swarm/scripts/qdrant-indexer.ts [--collection=name] [--force-recreate]
+ * Env: QDRANT_URL (default http://127.0.0.1:6333), QDRANT_API_KEY,
+ *      ZOUROBOROS_REPO (default: monorepo root), ZOUROBOROS_MEMORY_DB,
+ *      OPENAI_API_KEY / ZO_OPENAI_API_KEY, OPENAI_BASE_URL
  */
 import { readdirSync, statSync, readFileSync, existsSync } from "node:fs";
 import { randomUUID } from "node:crypto";
-import { join, relative, extname, basename } from "node:path";
+import { join, relative, extname, basename, resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import { Database } from "bun:sqlite";
 import { chunkText } from "zouroboros-rag";
 
 // Self-heal: source zouroboros.env if OPENAI_API_KEY is missing (e.g. scheduled agent
-// invoked us under `env -i`). Must run BEFORE importing model-client, which captures
-// OPENAI_TOKEN at module load. Mirrors the pattern in packages/swarm/src/rag/enrichment.ts.
+// invoked us under `env -i`). Mirrors the pattern in packages/swarm/src/rag/enrichment.ts.
 if (!process.env.OPENAI_API_KEY && !process.env.ZO_OPENAI_API_KEY) {
   try {
     const raw = readFileSync(process.env.ZO_SECRETS_PATH || "/etc/zouroboros/zouroboros.env", "utf8");
@@ -29,14 +39,15 @@ if (!process.env.OPENAI_API_KEY && !process.env.ZO_OPENAI_API_KEY) {
   } catch { /* secrets file absent — caller must inject key */ }
 }
 
-const { embeddings: mcEmbeddings } = await import("/home/zouroboros/Skills/zo-memory-system/scripts/model-client.ts");
-
-const QDRANT_URL = (process.env.QDRANT_URL || "http://100.69.35.3:6333").replace(/\/$/, "");
+const QDRANT_URL = (process.env.QDRANT_URL || "http://127.0.0.1:6333").replace(/\/$/, "");
 const QDRANT_KEY = process.env.QDRANT_API_KEY || "";
 const VECTOR_SIZE = 1536;
+const FORCE_RECREATE = process.argv.includes("--force-recreate");
 
-const ZOUROBOROS_ROOT = "/opt/zouroboros/repo/packages";
-const MEMORY_DB = "/var/lib/zouroboros/memory/shared-facts.db";
+// Repo root defaults to the monorepo checkout this script lives in.
+const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url));
+const ZOUROBOROS_ROOT = process.env.ZOUROBOROS_REPO || resolve(SCRIPT_DIR, "../../..", "packages");
+const MEMORY_DB = process.env.ZOUROBOROS_MEMORY_DB || process.env.ZO_MEMORY_DB || "/var/lib/zouroboros/memory/shared-facts.db";
 
 function qHeaders(): Record<string, string> {
   const h: Record<string, string> = { "Content-Type": "application/json" };
@@ -56,7 +67,11 @@ async function qReq(method: string, path: string, body?: any) {
 async function ensureCollection(name: string) {
   const exists = await fetch(`${QDRANT_URL}/collections/${name}`, { headers: qHeaders() });
   if (exists.ok) {
-    console.log(`  collection '${name}' exists, recreating...`);
+    if (!FORCE_RECREATE) {
+      console.log(`  collection '${name}' exists, reusing (pass --force-recreate to rebuild).`);
+      return;
+    }
+    console.log(`  collection '${name}' exists, --force-recreate: dropping...`);
     await qReq("DELETE", `/collections/${name}`);
   }
   await qReq("PUT", `/collections/${name}`, {
@@ -67,9 +82,20 @@ async function ensureCollection(name: string) {
 }
 
 async function embed(text: string): Promise<number[]> {
-  const result = await mcEmbeddings(text);
-  if (!result.embedding?.length) throw new Error("Embedding generation failed");
-  return result.embedding;
+  const apiKey = process.env.OPENAI_API_KEY || process.env.ZO_OPENAI_API_KEY;
+  if (!apiKey) throw new Error("OPENAI_API_KEY not configured");
+  const baseUrl = (process.env.OPENAI_BASE_URL || "https://api.openai.com").replace(/\/$/, "");
+  const r = await fetch(`${baseUrl}/v1/embeddings`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify({ model: "text-embedding-3-small", input: text }),
+    signal: AbortSignal.timeout(30000),
+  });
+  if (!r.ok) throw new Error(`Embedding failed: ${r.status}`);
+  const data = (await r.json()) as { data?: Array<{ embedding: number[] }> };
+  const vec = data.data?.[0]?.embedding;
+  if (!vec?.length) throw new Error("Embedding generation failed");
+  return vec;
 }
 
 let nextId = 1;
@@ -124,9 +150,12 @@ function walkFiles(root: string, exts: Set<string>, skip: Set<string> = new Set(
 // ---------- 1. zouroboros-code ----------
 async function indexZouroborosCode() {
   console.log("\n[1/2] zouroboros-code");
+  if (!existsSync(ZOUROBOROS_ROOT)) {
+    throw new Error(`Code root not found: ${ZOUROBOROS_ROOT} (set ZOUROBOROS_REPO to override)`);
+  }
   await ensureCollection("zouroboros-code");
   const files = walkFiles(ZOUROBOROS_ROOT, new Set([".ts", ".tsx", ".md"]));
-  console.log(`  found ${files.length} files`);
+  console.log(`  found ${files.length} files under ${ZOUROBOROS_ROOT}`);
 
   let total = 0;
   let batch: { id: number; vector: number[]; payload: any }[] = [];
@@ -135,8 +164,8 @@ async function indexZouroborosCode() {
     let content: string;
     try { content = readFileSync(file, "utf8"); } catch { continue; }
     if (content.length < 80 || content.length > 100_000) continue;
-    const rel = relative("/opt/zouroboros/repo", file);
-    const pkg = rel.split("/")[2] || "unknown";
+    const rel = relative(resolve(ZOUROBOROS_ROOT, ".."), file);
+    const pkg = rel.split("/")[1] || "unknown";
     const chunks = chunkText(content);
     for (let i = 0; i < chunks.length; i++) {
       try {
@@ -166,6 +195,9 @@ async function indexZouroborosCode() {
 // ---------- 2. shared-memory-facts ----------
 async function indexMemoryFacts() {
   console.log("\n[2/2] shared-memory-facts");
+  if (!existsSync(MEMORY_DB)) {
+    throw new Error(`Memory DB not found: ${MEMORY_DB} (set ZOUROBOROS_MEMORY_DB to override)`);
+  }
   await ensureCollection("shared-memory-facts");
   const db = new Database(MEMORY_DB, { readonly: true });
   const rows = db.query<any, []>(
@@ -215,7 +247,7 @@ async function indexMemoryFacts() {
 
 // ---------- reindex sentinel ----------
 function writeReindexSentinels(collections: string[]): void {
-  const dbPath = process.env.ZOUROBOROS_MEMORY_DB || "/var/lib/zouroboros/memory/shared-facts.db";
+  const dbPath = MEMORY_DB;
   if (!existsSync(dbPath)) return;
   const db = new Database(dbPath);
   db.exec(`CREATE TABLE IF NOT EXISTS rag_reindex_log (
