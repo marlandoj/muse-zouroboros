@@ -54,11 +54,10 @@ afterEach(() => {
 });
 
 describe('resolveCollections', () => {
-  test('default is the pruned local 1536d corpus (VPS migration)', () => {
+  test('default is the pruned local 1536d corpus', () => {
     delete process.env.RAG_COLLECTIONS;
     expect(resolveCollections()).toEqual([
       'zouroboros-code',
-      'shared-memory-facts',
       'code-docs',
     ]);
   });
@@ -82,7 +81,6 @@ describe('resolveCollections', () => {
     process.env.RAG_COLLECTIONS = '';
     expect(resolveCollections()).toEqual([
       'zouroboros-code',
-      'shared-memory-facts',
       'code-docs',
     ]);
   });
@@ -196,7 +194,7 @@ describe('enrichTaskWithRAG — multi-collection', () => {
     }) as typeof fetch;
 
     const result = await enrichTaskWithRAG('agent workflow', {
-      collections: ['code-docs', 'shared-memory-facts'],
+      collections: ['code-docs', 'zouroboros-code'],
       topK: 3,
     });
     expect(result.patterns).toBe(0);

@@ -21,10 +21,3 @@ export {
   type RAGTelemetryRecord,
 } from './telemetry.js';
 
-export {
-  isCandidateShadowEnabled,
-  runRagShadowComparison,
-  type CandidateInputClassification,
-  type CandidateShadowEvidence,
-  type CandidateShadowOptions,
-} from './shadow-comparator.js';

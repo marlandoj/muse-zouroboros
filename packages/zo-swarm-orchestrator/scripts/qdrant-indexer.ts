@@ -2,9 +2,11 @@
 /**
  * Qdrant Indexer for Local Self-Hosted RAG
  *
- * Indexes two collections into local Qdrant:
- *   1. zouroboros-code   — TypeScript source from the monorepo packages
- *   2. shared-memory-facts — Shared long-term memory facts
+ * Indexes the zouroboros-code collection into local Qdrant
+ * (TypeScript source from the monorepo packages).
+ *
+ * Retired 2026-10-13: the shared-memory-facts target (read-side vector copy
+ * of the SQLite facts DB) was removed — redundant with SQLite hybrid search.
  *
  * QUARANTINE NOTICE (2026-10-13): this script used to DELETE and recreate
  * the target collection on every run, and hardcoded Zo-host absolute paths.
@@ -149,7 +151,7 @@ function walkFiles(root: string, exts: Set<string>, skip: Set<string> = new Set(
 
 // ---------- 1. zouroboros-code ----------
 async function indexZouroborosCode() {
-  console.log("\n[1/2] zouroboros-code");
+  console.log("\nzouroboros-code");
   if (!existsSync(ZOUROBOROS_ROOT)) {
     throw new Error(`Code root not found: ${ZOUROBOROS_ROOT} (set ZOUROBOROS_REPO to override)`);
   }
@@ -192,59 +194,6 @@ async function indexZouroborosCode() {
   console.log(`\n  indexed ${total} chunks`);
 }
 
-// ---------- 2. shared-memory-facts ----------
-async function indexMemoryFacts() {
-  console.log("\n[2/2] shared-memory-facts");
-  if (!existsSync(MEMORY_DB)) {
-    throw new Error(`Memory DB not found: ${MEMORY_DB} (set ZOUROBOROS_MEMORY_DB to override)`);
-  }
-  await ensureCollection("shared-memory-facts");
-  const db = new Database(MEMORY_DB, { readonly: true });
-  const rows = db.query<any, []>(
-    `SELECT id, persona, entity, key, value, text, category, decay_class, importance, source, created_at, confidence
-     FROM facts WHERE value IS NOT NULL`
-  ).all();
-  db.close();
-  console.log(`  loaded ${rows.length} facts`);
-
-  let total = 0;
-  let batch: { id: number; vector: number[]; payload: any }[] = [];
-  for (const f of rows) {
-    const composed = [
-      f.entity ? `Entity: ${f.entity}` : null,
-      f.key ? `Key: ${f.key}` : null,
-      f.value ? `Value: ${f.value}` : null,
-      f.text && f.text !== f.value ? `Text: ${f.text}` : null,
-    ].filter(Boolean).join("\n");
-    if (composed.length < 10) continue;
-    try {
-      const vector = await embed(composed);
-      batch.push({
-        id: newId(),
-        vector,
-        payload: {
-          collection: "shared-memory-facts",
-          fact_id: f.id,
-          persona: f.persona,
-          entity: f.entity,
-          key: f.key,
-          value: f.value,
-          category: f.category,
-          decay_class: f.decay_class,
-          importance: f.importance,
-          confidence: f.confidence,
-          source: f.source,
-          content: composed,
-        },
-      });
-      total++;
-      if (batch.length >= 32) { await upsert("shared-memory-facts", batch); batch = []; process.stdout.write("."); }
-    } catch (e) { console.error(`\n  skip fact ${f.id}: ${(e as Error).message}`); }
-  }
-  if (batch.length) await upsert("shared-memory-facts", batch);
-  console.log(`\n  indexed ${total} facts`);
-}
-
 // ---------- reindex sentinel ----------
 function writeReindexSentinels(collections: string[]): void {
   const dbPath = MEMORY_DB;
@@ -269,6 +218,5 @@ console.log(`Qdrant indexer → ${QDRANT_URL}  (target: ${target})`);
 const start = Date.now();
 const indexed: string[] = [];
 if (target === "all" || target === "zouroboros-code") { await indexZouroborosCode(); indexed.push("zouroboros-code"); }
-if (target === "all" || target === "shared-memory-facts") { await indexMemoryFacts(); indexed.push("shared-memory-facts"); }
 if (indexed.length > 0) writeReindexSentinels(indexed);
 console.log(`\nDone in ${((Date.now() - start) / 1000).toFixed(1)}s`);

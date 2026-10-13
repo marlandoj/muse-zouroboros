@@ -2,12 +2,9 @@
  * RAG Enrichment Module for Swarm Orchestrator
  *
  * Enriches task prompts with relevant documentation from one or more
- * Qdrant collections. Default whitelist covers the full local 1536d
- * corpus: `zouroboros-research` (RAPTOR L1+L2 papers),
- * `zouroboros-code` (workspace code), `shared-memory-facts` (memory),
- * `commerce-a-knowledge` (vertical business knowledge), and `code-docs`
- * (SDK docs). Override via `options.collections` or `RAG_COLLECTIONS`
- * env (comma-separated).
+ * Qdrant collections. Default whitelist: `zouroboros-code` (workspace code)
+ * and `code-docs` (SDK docs). Override via `options.collections` or
+ * `RAG_COLLECTIONS` env (comma-separated).
  *
  * Embeds with OpenAI `text-embedding-3-small` (1536d). All five
  * collections were unified to 1536d by the 2026-05-03 re-index after
@@ -15,11 +12,6 @@
  */
 import { readFileSync } from 'fs';
 import { emitRAGTelemetry, matchedKeywords } from './telemetry.js';
-import {
-  isCandidateShadowEnabled,
-  runRagShadowComparison,
-  type CandidateShadowOptions,
-} from './shadow-comparator.js';
 
 // Self-heal: source zouroboros.env if OPENAI_API_KEY is missing (supports out-of-process callers)
 if (!process.env.OPENAI_API_KEY && !process.env.ZO_OPENAI_API_KEY) {
@@ -46,14 +38,13 @@ export interface RAGEnrichmentOptions {
   sdks?: string[];
   includeCode?: boolean;
   collections?: string[];
-  candidateShadow?: CandidateShadowOptions;
 }
 
-// VPS migration: pruned 'zouroboros-research' and 'commerce-a-knowledge'
-// (no indexers or corpora on host); re-add if those corpora are rebuilt.
+// Retired: 'zouroboros-research', 'commerce-a-knowledge' (VPS migration),
+// 'shared-memory-facts' (2026-10-13 — redundant with SQLite hybrid search;
+// re-add if the corpus is ever rebuilt).
 const DEFAULT_COLLECTIONS = [
   'zouroboros-code',
-  'shared-memory-facts',
   'code-docs',
 ];
 
@@ -251,7 +242,6 @@ function getZouroborosContext(sdk: string): string {
     'airtable': 'Database and CRM integration',
     'zouroboros-research': 'Peer-reviewed research papers (RAPTOR L1+L2 hierarchy)',
     'zouroboros-code': 'Workspace code patterns indexed from Skills/, packages/, and Projects/',
-    'shared-memory-facts': 'Long-term facts captured by the shared zo-memory pipeline',
     'commerce-a-knowledge': 'Commerce vertical business knowledge (brand, SKUs, ops)',
     'code-docs': 'SDK and library documentation (Hono, Bun, Drizzle, Stripe, etc.)',
   };
@@ -303,10 +293,6 @@ export async function enrichTaskWithRAG(
       totalLatencyMs: 0,
     });
     return { context: '', latencyMs: 0, patterns: 0 };
-  }
-
-  if (isCandidateShadowEnabled(options.candidateShadow)) {
-    void runRagShadowComparison(taskText, options.candidateShadow).catch(() => undefined);
   }
 
   let embedLatencyMs = 0;
