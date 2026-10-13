@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
-import { validateLifecycleRecord } from "../../../Skills/skill-security-gate/scripts/lifecycle/gate.ts";
-import type { CompatibilityRow, SkillLifecycleRecord } from "../../../Skills/skill-security-gate/scripts/lifecycle/types.ts";
+import { validateLifecycleRecord } from "./lifecycle-stub";
+import type { CompatibilityRow, SkillLifecycleRecord } from "./lifecycle-stub";
+import type { PortableHarnessInventory } from "./harness-portability-comparison-contract.ts";
 import {
   parseScenarioSourceSummary,
   type ScenarioSourceSummary,

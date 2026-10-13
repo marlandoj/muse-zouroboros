@@ -242,23 +242,15 @@ export async function triageSignal(
   return { ok: true, draft, missing_fields: [], park_reason: null, description };
 }
 
-// ─── Real runner (/zo/ask, pool-worker pattern) ───────────────────────────────
-
-const ZO_ASK_URL = "https://api.zo.computer/zo/ask";
+// ─── Real runner (retired) ───────────────────────────────────────────────────
+// Zo Computer was retired on 2026-10-03 and no longer exists. The /zo/ask
+// transport this runner used is gone; the runner now fails fast.
 
 export function liveRunner(): LlmRunner {
-  return async (prompt, model) => {
-    const token = process.env.ZO_CLIENT_IDENTITY_TOKEN;
-    if (!token) throw new Error("ZO_CLIENT_IDENTITY_TOKEN not set — cannot invoke /zo/ask");
-    const resp = await fetch(ZO_ASK_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify({ message: prompt, model_name: model.id }),
-      signal: AbortSignal.timeout(120_000),
-    });
-    if (!resp.ok) throw new Error(`/zo/ask ${resp.status}`);
-    const j = (await resp.json()) as { response?: string; message?: string };
-    return j.response ?? j.message ?? "";
+  return async (_prompt, _model) => {
+    throw new Error(
+      "signal-triage live runner requires Zo Computer (/zo/ask), retired 2026-10-03: Zouroboros System is harness-only",
+    );
   };
 }
 

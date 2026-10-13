@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { EvidenceCheckStatus, EvidenceMode } from "./factory-evidence";
 import { sourceDigest, type SupplyChainAttestation } from "./supply-chain-stub";
-import type { SupplyChainReport } from "../../../Skills/skill-security-gate/scripts/supply-chain/types";
+import type { SupplyChainReport } from "./supply-chain-stub";
 
 export interface SupplyChainPreflight {
   status: EvidenceCheckStatus;

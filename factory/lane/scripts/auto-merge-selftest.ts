@@ -114,15 +114,15 @@ import { validateConsensusAttestation, verifyConsensusAttestation } from "./cons
 import {
   initializePersonaReviewKey,
   REQUIRED_PROMOTION_PERSONAS,
-} from "../../../Skills/zouroboros-governance/scripts/persona-promotion-review";
+} from "./governance-stub";
 import {
   initializeOperatorApprovalKey,
   recordEvidenceGenerationApproval,
   recordOperatorPromotionApproval,
+  type ProviderNativeContract,
   type PullRequestBinding,
-} from "../../../Skills/zouroboros-governance/scripts/operator-promotion-approval";
-import type { PromotionAuthorityConfig } from "../../../Skills/zouroboros-governance/scripts/promotion-authorization-ledger";
-import type { ProviderNativeContract } from "../../../Skills/zouroboros-governance/scripts/provider-native-promotion-attestation";
+} from "./governance-stub";
+import type { PromotionAuthorityConfig } from "./governance-stub";
 import { CERTIFICATION_VALIDATION_CLASSES } from "./promotion-execution-context";
 
 process.env.FACTORY_STATE_MODE = "test";

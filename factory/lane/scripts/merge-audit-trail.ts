@@ -33,7 +33,7 @@ import type { SloState } from "./factory-slo";
 import type { RiskVerdict } from "./risk-classifier";
 import type { ScenarioRunRecord } from "./scenario-run";
 import type { SnakePitReport } from "./snake-pit";
-import type { PullRequestBinding } from "../../../Skills/zouroboros-governance/scripts/operator-promotion-approval";
+import type { PullRequestBinding } from "./governance-stub";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

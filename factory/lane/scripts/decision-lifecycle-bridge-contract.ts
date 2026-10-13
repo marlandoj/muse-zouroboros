@@ -1,6 +1,6 @@
-import type { LifecycleDecision, LifecycleIssue, LifecycleState, SkillLifecycleRecord } from "../../../Skills/skill-security-gate/scripts/lifecycle/types.ts";
-import { canonicalHash } from "../../../Skills/skill-security-gate/scripts/lifecycle/canonical.ts";
-import { validateLifecycleRecord, validateLifecycleTransition } from "../../../Skills/skill-security-gate/scripts/lifecycle/gate.ts";
+import type { LifecycleDecision, LifecycleIssue, LifecycleState, SkillLifecycleRecord } from "./lifecycle-stub";
+import { canonicalHash } from "./lifecycle-stub";
+import { validateLifecycleRecord, validateLifecycleTransition } from "./lifecycle-stub";
 import {
   assertPromotionBoundary,
   parsePromotionSignature,

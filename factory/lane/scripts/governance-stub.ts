@@ -22,7 +22,25 @@
  *
  * If governance verification is needed, vendor the upstream skill modules
  * and repoint the importers at them.
+ *
+ * Exception: the "promotion approval issuance" section below reimplements
+ * pure-local HMAC/file operations faithfully (no network, no external
+ * authority) so self-tests can mint fixtures. Fail-closed is preserved
+ * end-to-end: the VERIFY functions above still return {passed:false}, so a
+ * locally-minted approval can never pass a gate in this distribution.
  */
+
+import { createHmac, randomBytes, randomUUID } from "node:crypto";
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  renameSync,
+  statSync,
+  writeFileSync,
+} from "node:fs";
+import { dirname, resolve } from "node:path";
 
 const NOT_VENDORED =
   "zouroboros-governance is not vendored in this distribution — cannot verify";
@@ -36,8 +54,10 @@ export const DEFAULT_OPERATOR_APPROVAL_KEY_PATH =
 
 export interface PullRequestBinding {
   repository: string;
-  baseRef: string;
+  number: number;
   headSha: string;
+  baseRef: string;
+  headRef: string;
 }
 
 export interface PromotionAuthorityConfig {
@@ -59,14 +79,46 @@ export interface ConsumedAuthorizationReceipt {
   receiptSha256: string;
 }
 
+export interface HumanPromotionReviewSubstitution {
+  replacesPersonaId: string;
+  replacesPersonaName: string;
+  commitSha: string;
+  evidenceSha256: string;
+  verdict: "approve" | "reject";
+  rationale: string;
+  evidence: string[];
+  findings: string[];
+  reviewedAt: string;
+}
+
 export interface OperatorPromotionApproval {
+  schemaVersion: 1 | 2;
   ticket: string;
-  approvedAt: string;
+  target: PullRequestBinding;
+  approvedBy: string;
+  rationale: string;
+  budgetUsd: number;
+  sourceRef: string;
+  issuedAt: string;
+  expiresAt: string;
+  nonce: string;
+  humanReviewSubstitution?: HumanPromotionReviewSubstitution;
+  signature: string;
 }
 
 export interface EvidenceGenerationApproval {
+  schemaVersion: 1;
+  issuer: "zouroboros-software-factory:auto-merge-lane";
+  scope: "factory-evidence-only";
   ticket: string;
-  approvedAt: string;
+  target: PullRequestBinding;
+  approvedBy: string;
+  rationale: string;
+  sourceRef: string;
+  issuedAt: string;
+  expiresAt: string;
+  nonce: string;
+  signature: string;
 }
 
 // ─── persona-promotion-review ────────────────────────────────────────────────
@@ -87,6 +139,37 @@ export async function runPersonaPromotionReview(_input: unknown): Promise<never>
 }
 
 // ─── provider-native-promotion-attestation ───────────────────────────────────
+
+export interface ProviderNativeContract {
+  schema: "zouroboros.provider-native-review-contract/v2";
+  snapshotSha256: string;
+  version: string;
+  harnesses: {
+    "Claude Code": {
+      authentication: {
+        loggedIn: true;
+        authMethod: "claude.ai";
+        apiProvider: "firstParty";
+      };
+      harnessModels: ["claude-opus-5", "claude-haiku-4-5-20251001"];
+      executableSha256: string;
+    };
+    "Codex CLI": {
+      authentication: {
+        loggedIn: true;
+        authMethod: "chatgpt";
+        apiProvider: "openai";
+      };
+      harnessModels: ["gpt-5.6-sol"];
+      executableSha256: string;
+    };
+  };
+  personas: Array<{
+    id: string;
+    name: string;
+    promptSha256: string;
+  }>;
+}
 
 export function resolveUniqueRepositoryRemote(
   _repoDir: string,
@@ -130,6 +213,305 @@ export function verifyEvidenceGenerationApproval(
   _keyPath?: string,
 ): { passed: boolean; reason: string; approval: null } {
   return { passed: false, reason: `${NOT_VENDORED}: evidence generation approval`, approval: null };
+}
+
+// ─── promotion approval issuance (pure-local HMAC, reimplemented faithfully) ─
+// The functions below are pure local HMAC/file operations — no network, no
+// external authority. They are reimplemented faithfully from the upstream
+// modules so self-tests can mint fixtures. Fail-closed is preserved
+// end-to-end: verifyOperatorPromotionApproval / verifyEvidenceGenerationApproval
+// above still return {passed:false}, so a locally-minted approval can never
+// pass a gate in this distribution.
+
+const HUMAN_REVIEW_SUBSTITUTABLE_PERSONA = {
+  id: "c9fef4df-091b-4e41-a51a-23479d9cf3eb",
+  name: "Claude Code",
+} as const;
+
+export const REQUIRED_PROMOTION_PERSONAS = [
+  {
+    ...HUMAN_REVIEW_SUBSTITUTABLE_PERSONA,
+    modelName: "byok:63a73cf2-224a-4641-8dcb-c3313270d08a",
+  },
+  {
+    id: "beb55a68-6918-4245-b20b-2b8b143113e1",
+    name: "Codex CLI",
+    modelName: "byok:905b6491-3b7f-4ed6-864c-a9817603cb0f",
+  },
+] as const;
+
+const EVIDENCE_GENERATION_APPROVAL_SCHEMA_VERSION = 1 as const;
+const EVIDENCE_GENERATION_APPROVAL_ISSUER =
+  "zouroboros-software-factory:auto-merge-lane" as const;
+const EVIDENCE_GENERATION_APPROVAL_SCOPE = "factory-evidence-only" as const;
+const EVIDENCE_GENERATION_APPROVAL_MAX_VALIDITY_MS = 2 * 60 * 60 * 1000;
+const EVIDENCE_GENERATION_SIGNATURE_DOMAIN =
+  "zouroboros-evidence-generation-approval\n";
+
+function keyMaterial(keyPath: string): Buffer {
+  if (!existsSync(keyPath))
+    throw new Error(`operator approval key is unavailable: ${keyPath}`);
+  const mode = statSync(keyPath).mode & 0o777;
+  if ((mode & 0o077) !== 0)
+    throw new Error("operator approval key must not be group/world accessible");
+  const key = readFileSync(keyPath);
+  if (key.length < 32)
+    throw new Error("operator approval key must contain at least 32 bytes");
+  return key;
+}
+
+function nonEmpty(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function validBinding(value: unknown): value is PullRequestBinding {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const binding = value as Partial<PullRequestBinding>;
+  return (
+    nonEmpty(binding.repository) &&
+    Number.isInteger(binding.number) &&
+    Number(binding.number) > 0 &&
+    typeof binding.headSha === "string" &&
+    /^[a-f0-9]{40}$/i.test(binding.headSha) &&
+    nonEmpty(binding.baseRef) &&
+    nonEmpty(binding.headRef)
+  );
+}
+
+function normalizeRepository(value: string): string {
+  return value
+    .trim()
+    .replace(/^git@([^:]+):/, "https://$1/")
+    .replace(/^ssh:\/\/git@([^/]+)\//, "https://$1/")
+    .replace(/^https:\/\/github\.com\//i, "")
+    .replace(/\.git$/, "")
+    .replace(/\/$/, "")
+    .toLowerCase();
+}
+
+function signApproval(
+  approval: Omit<OperatorPromotionApproval, "signature">,
+  keyPath: string,
+): string {
+  return createHmac("sha256", keyMaterial(keyPath))
+    .update(JSON.stringify(approval))
+    .digest("hex");
+}
+
+function signEvidenceApproval(
+  approval: Omit<EvidenceGenerationApproval, "signature">,
+  keyPath: string,
+): string {
+  return createHmac("sha256", keyMaterial(keyPath))
+    .update(EVIDENCE_GENERATION_SIGNATURE_DOMAIN)
+    .update(JSON.stringify(approval))
+    .digest("hex");
+}
+
+function humanReviewFailures(
+  value: unknown,
+  target: PullRequestBinding,
+  issuedAt: string,
+  expiresAt: string,
+): string[] {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return ["humanReviewSubstitution must be an object"];
+  }
+  const review = value as Partial<HumanPromotionReviewSubstitution>;
+  const failures: string[] = [];
+  if (!nonEmpty(review.replacesPersonaId) || !nonEmpty(review.replacesPersonaName)) {
+    failures.push("human review replacement persona identity is required");
+  } else if (
+    review.replacesPersonaId !== HUMAN_REVIEW_SUBSTITUTABLE_PERSONA.id ||
+    review.replacesPersonaName !== HUMAN_REVIEW_SUBSTITUTABLE_PERSONA.name
+  ) {
+    failures.push("human review may replace only Claude Code");
+  }
+  if (review.commitSha !== target.headSha)
+    failures.push("human review commit must match the promotion target head");
+  if (
+    typeof review.evidenceSha256 !== "string" ||
+    !/^[a-f0-9]{64}$/i.test(review.evidenceSha256)
+  ) {
+    failures.push("human review evidenceSha256 must be a SHA-256 digest");
+  }
+  if (review.verdict !== "approve" && review.verdict !== "reject")
+    failures.push("human review verdict must be approve|reject");
+  if (!nonEmpty(review.rationale)) failures.push("human review rationale is required");
+  const validStringArray = (v: unknown, allowEmpty: boolean): v is string[] =>
+    Array.isArray(v) &&
+    (allowEmpty || v.length > 0) &&
+    v.every((item) => nonEmpty(item));
+  if (!validStringArray(review.evidence, false))
+    failures.push("human review must cite evidence");
+  if (!validStringArray(review.findings, true))
+    failures.push("human review findings must be a string array");
+  const reviewed = Date.parse(review.reviewedAt ?? "");
+  const issued = Date.parse(issuedAt);
+  const expires = Date.parse(expiresAt);
+  if (!Number.isFinite(reviewed)) failures.push("human review reviewedAt is invalid");
+  if (Number.isFinite(reviewed) && Number.isFinite(issued) && reviewed < issued - 5 * 60_000) {
+    failures.push("human review predates the request-scoped approval window");
+  }
+  if (Number.isFinite(reviewed) && Number.isFinite(expires) && reviewed >= expires) {
+    failures.push("human review falls outside the request-scoped approval window");
+  }
+  return failures;
+}
+
+export function initializePersonaReviewKey(
+  keyPath = DEFAULT_PERSONA_REVIEW_KEY_PATH,
+): string {
+  mkdirSync(dirname(keyPath), { recursive: true });
+  if (!existsSync(keyPath))
+    writeFileSync(keyPath, randomBytes(48), { flag: "wx", mode: 0o600 });
+  chmodSync(keyPath, 0o600);
+  keyMaterial(keyPath);
+  return keyPath;
+}
+
+export function initializeOperatorApprovalKey(
+  keyPath = DEFAULT_OPERATOR_APPROVAL_KEY_PATH,
+): string {
+  mkdirSync(dirname(keyPath), { recursive: true });
+  if (!existsSync(keyPath))
+    writeFileSync(keyPath, randomBytes(48), { flag: "wx", mode: 0o600 });
+  chmodSync(keyPath, 0o600);
+  keyMaterial(keyPath);
+  return keyPath;
+}
+
+export function recordOperatorPromotionApproval(input: {
+  ticket: string;
+  target: PullRequestBinding;
+  approvedBy: string;
+  rationale: string;
+  budgetUsd: number;
+  sourceRef: string;
+  expiresAt: string;
+  outputPath: string;
+  keyPath?: string;
+  issuedAt?: string;
+  humanReviewSubstitution?: HumanPromotionReviewSubstitution;
+}): OperatorPromotionApproval {
+  if (!nonEmpty(input.ticket) || !validBinding(input.target))
+    throw new Error("ticket and a complete pull-request binding are required");
+  if (!nonEmpty(input.approvedBy) || !nonEmpty(input.rationale) || !nonEmpty(input.sourceRef)) {
+    throw new Error("approvedBy, rationale, and sourceRef are required");
+  }
+  if (!Number.isFinite(input.budgetUsd) || input.budgetUsd < 0)
+    throw new Error("budgetUsd must be a non-negative number");
+  const issuedAt = input.issuedAt ?? new Date().toISOString();
+  const issued = Date.parse(issuedAt);
+  const expires = Date.parse(input.expiresAt);
+  if (!Number.isFinite(issued) || !Number.isFinite(expires) || expires <= issued) {
+    throw new Error("expiresAt must be later than issuedAt");
+  }
+  if (expires - issued > 24 * 60 * 60 * 1000)
+    throw new Error("operator approval may not remain valid longer than 24 hours");
+  if (input.humanReviewSubstitution) {
+    const failures = humanReviewFailures(
+      input.humanReviewSubstitution,
+      input.target,
+      issuedAt,
+      input.expiresAt,
+    );
+    if (failures.length > 0) throw new Error(failures.join("; "));
+  }
+
+  const keyPath = resolve(input.keyPath ?? DEFAULT_OPERATOR_APPROVAL_KEY_PATH);
+  keyMaterial(keyPath);
+  const unsigned: Omit<OperatorPromotionApproval, "signature"> = {
+    schemaVersion: input.humanReviewSubstitution ? 2 : 1,
+    ticket: input.ticket.trim(),
+    target: {
+      ...input.target,
+      repository: normalizeRepository(input.target.repository),
+    },
+    approvedBy: input.approvedBy.trim(),
+    rationale: input.rationale.trim(),
+    budgetUsd: input.budgetUsd,
+    sourceRef: input.sourceRef.trim(),
+    issuedAt,
+    expiresAt: input.expiresAt,
+    nonce: randomUUID(),
+    ...(input.humanReviewSubstitution
+      ? { humanReviewSubstitution: input.humanReviewSubstitution }
+      : {}),
+  };
+  const approval: OperatorPromotionApproval = {
+    ...unsigned,
+    signature: signApproval(unsigned, keyPath),
+  };
+  const outputPath = resolve(input.outputPath);
+  mkdirSync(dirname(outputPath), { recursive: true });
+  const temporary = `${outputPath}.tmp-${process.pid}-${randomUUID()}`;
+  writeFileSync(temporary, `${JSON.stringify(approval, null, 2)}\n`, {
+    flag: "wx",
+    mode: 0o600,
+  });
+  renameSync(temporary, outputPath);
+  chmodSync(outputPath, 0o600);
+  return approval;
+}
+
+export function recordEvidenceGenerationApproval(input: {
+  ticket: string;
+  target: PullRequestBinding;
+  approvedBy: string;
+  rationale: string;
+  sourceRef: string;
+  expiresAt: string;
+  outputPath: string;
+  keyPath?: string;
+  issuedAt?: string;
+}): EvidenceGenerationApproval {
+  if (!nonEmpty(input.ticket) || !validBinding(input.target))
+    throw new Error("ticket and a complete pull-request binding are required");
+  if (!nonEmpty(input.approvedBy) || !nonEmpty(input.rationale) || !nonEmpty(input.sourceRef)) {
+    throw new Error("approvedBy, rationale, and sourceRef are required");
+  }
+  const issuedAt = input.issuedAt ?? new Date().toISOString();
+  const issued = Date.parse(issuedAt);
+  const expires = Date.parse(input.expiresAt);
+  if (!Number.isFinite(issued) || !Number.isFinite(expires) || expires <= issued) {
+    throw new Error("expiresAt must be later than issuedAt");
+  }
+  if (expires - issued > EVIDENCE_GENERATION_APPROVAL_MAX_VALIDITY_MS) {
+    throw new Error("evidence-generation approval may not remain valid longer than 2 hours");
+  }
+  const keyPath = resolve(input.keyPath ?? DEFAULT_OPERATOR_APPROVAL_KEY_PATH);
+  keyMaterial(keyPath);
+  const unsigned: Omit<EvidenceGenerationApproval, "signature"> = {
+    schemaVersion: EVIDENCE_GENERATION_APPROVAL_SCHEMA_VERSION,
+    issuer: EVIDENCE_GENERATION_APPROVAL_ISSUER,
+    scope: EVIDENCE_GENERATION_APPROVAL_SCOPE,
+    ticket: input.ticket.trim(),
+    target: {
+      ...input.target,
+      repository: normalizeRepository(input.target.repository),
+    },
+    approvedBy: input.approvedBy.trim(),
+    rationale: input.rationale.trim(),
+    sourceRef: input.sourceRef.trim(),
+    issuedAt,
+    expiresAt: input.expiresAt,
+    nonce: randomUUID(),
+  };
+  const approval: EvidenceGenerationApproval = {
+    ...unsigned,
+    signature: signEvidenceApproval(unsigned, keyPath),
+  };
+  const outputPath = resolve(input.outputPath);
+  mkdirSync(dirname(outputPath), { recursive: true });
+  const temporary = `${outputPath}.tmp-${process.pid}-${randomUUID()}`;
+  writeFileSync(temporary, `${JSON.stringify(approval, null, 2)}\n`, {
+    flag: "wx",
+    mode: 0o600,
+  });
+  renameSync(temporary, outputPath);
+  chmodSync(outputPath, 0o600);
+  return approval;
 }
 
 // ─── constitution-gate ───────────────────────────────────────────────────────
