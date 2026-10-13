@@ -18,7 +18,7 @@ import {
   type ReplicateRunInput,
   type TimeoutCalibration,
   type TimeoutSweepInput,
-} from "../../../packages/bench/scripts/replicate-distribution";
+} from "./replicate-distribution";
 
 interface BenchmarkRunFile extends ReplicateRunInput {
   benchmark: string;

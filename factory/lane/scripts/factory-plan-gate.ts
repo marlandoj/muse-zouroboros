@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import {
   runOperationalPlanGatePreflight,
   type OperationalPlanGateDecision,
-} from "../../../Skills/zouroboros/skills/swarm/scripts/plan-gate-runtime";
+} from "./plan-gate-stub";
 import {
   checkSeedRepositoryDrift,
   type RepositoryDriftDecision,

@@ -28,7 +28,7 @@ import { execSync } from "node:child_process";
 import {
   runFactoryControlGate,
   type FactoryControlOutcome,
-} from "../../../packages/capability-runtime/src/index";
+} from "./factory-control-stub";
 
 const ZCR_SHADOW_HOOK = "zcr-008/v1";
 
@@ -81,25 +81,19 @@ import {
   type ProductPreflightResult,
 } from "./product-lifecycle-gate";
 import {
-  gameSeedPreflightSummary,
-  runGameSeedPreflight,
-  type GameSeedPreflightResult,
-} from "../game-gauntlet/scripts/game-seed-preflight";
-import {
-  gameManifestPreflightSummary,
-  runGameManifestPreflight,
-  type GameManifestPreflightResult,
-} from "../game-gauntlet/scripts/game-manifest-preflight";
-import {
   gameHarnessPreflightSummary,
-  runGameHarnessPreflight,
-  type GameHarnessPreflightResult,
-} from "../game-gauntlet/scripts/game-harness-preflight";
-import {
+  gameManifestPreflightSummary,
   gameScorePreflightSummary,
+  gameSeedPreflightSummary,
+  runGameHarnessPreflight,
+  runGameManifestPreflight,
   runGameScorePreflight,
+  runGameSeedPreflight,
+  type GameHarnessPreflightResult,
+  type GameManifestPreflightResult,
   type GameScorePreflightResult,
-} from "../game-gauntlet/scripts/game-score-preflight";
+  type GameSeedPreflightResult,
+} from "./game-gauntlet-preflight-stub";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

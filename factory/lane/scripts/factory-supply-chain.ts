@@ -3,7 +3,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import type { EvidenceCheckStatus, EvidenceMode } from "./factory-evidence";
-import { sourceDigest, type SupplyChainAttestation } from "../../../Skills/skill-security-gate/scripts/supply-chain/attestation";
+import { sourceDigest, type SupplyChainAttestation } from "./supply-chain-stub";
 import type { SupplyChainReport } from "../../../Skills/skill-security-gate/scripts/supply-chain/types";
 
 export interface SupplyChainPreflight {

@@ -42,7 +42,7 @@ import {
   type ProjectDelegationActionPayload,
   type ProjectDelegationOperationalStatePaths,
   type ProjectDelegationPaths,
-} from "../../../Skills/zouroboros-governance/scripts/project-delegation-receipt";
+} from "./project-delegation-stub";
 
 const DEFAULT_STATE_DIR = factoryStateRoot();
 const DEFAULT_AUTHORIZED_ROOT = "/home/workspace";

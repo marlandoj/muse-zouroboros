@@ -23,7 +23,7 @@ import { factoryStatePath, factoryStatePathForProject, factoryStateRoot, resolve
 
 import { existsSync, readFileSync } from "node:fs";
 import { dirname, isAbsolute, join, resolve } from "node:path";
-import { isSecretEnvName } from "../../../packages/selfheal/src/crystallize/eval-replay.ts";
+import { isSecretEnvName } from "./holdout-sandbox-stub";
 
 // ─── Flags ────────────────────────────────────────────────────────────────────
 

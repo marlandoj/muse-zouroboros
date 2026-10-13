@@ -14,7 +14,7 @@ import {
   runEphemeralWorker,
   type EphemeralWorkerEvidence,
   type ExternalComputeManifest,
-} from "../../../packages/hetzner-exec/src/ephemeral-worker";
+} from "./hetzner-exec-stub";
 import {
   CODING_CASCADE_MODELS,
   CascadeDispatchError,
@@ -128,7 +128,9 @@ interface LeaseOwner {
 
 const FACTORY_ROOT = join(import.meta.dir, "..");
 const DEFAULT_STATE_DIR = factoryStatePath("hetzner-executor");
-const ZO_ASK_URL = "https://api.zo.computer/zo/ask";
+// Zo Computer no longer exists (retired 2026-10-03). The /zo/ask BYOK
+// transport was removed; use local harness executors instead. runByok()
+// below fails fast rather than attempting the dead endpoint.
 const DEFAULT_MODEL_TIMEOUT_MS = 30 * 60_000;
 
 function runCommand(command: string, args: string[], cwd?: string): CommandResult {
@@ -208,46 +210,14 @@ function modelTimeoutMs(env: Record<string, string | undefined>): number {
   return value;
 }
 
-async function runByok(input: ByokExecutorInput): Promise<ByokExecutorResult> {
-  let response: Response;
-  try {
-    response = await fetch(ZO_ASK_URL, {
-      method: "POST",
-      headers: {
-        Authorization: input.token,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify({ input: input.prompt, model_name: input.model }),
-      signal: AbortSignal.timeout(input.timeoutMs),
-    });
-  } catch (error) {
-    throw new CascadeDispatchError(
-      `Zo BYOK transport failed: ${error instanceof Error ? error.message : String(error)}`,
-      "transport",
-    );
-  }
-  const body = await response.text();
-  if (!response.ok) {
-    throw new CascadeDispatchError(
-      `Zo BYOK executor returned HTTP ${response.status}: ${body.slice(0, 300)}`,
-      httpFailureKind(response.status),
-    );
-  }
-  let parsed: { output?: unknown; model_name?: unknown; model?: unknown };
-  try {
-    parsed = JSON.parse(body) as typeof parsed;
-  } catch {
-    throw new CascadeDispatchError("Zo BYOK executor returned invalid JSON", "transport");
-  }
-  return {
-    output: typeof parsed.output === "string" ? parsed.output : "",
-    model: typeof parsed.model_name === "string"
-      ? parsed.model_name
-      : typeof parsed.model === "string"
-        ? parsed.model
-        : input.model,
-  };
+async function runByok(_input: ByokExecutorInput): Promise<ByokExecutorResult> {
+  // Zo Computer transport removed (retired 2026-10-03). The /zo/ask endpoint
+  // no longer exists; BYOK execution must go through local harness executors.
+  // Callers may still inject a working implementation via options.byokRun.
+  throw new CascadeDispatchError(
+    "Zo Computer transport removed; use local harness executors (or inject options.byokRun)",
+    "transport",
+  );
 }
 
 function buildByokPrompt(input: {

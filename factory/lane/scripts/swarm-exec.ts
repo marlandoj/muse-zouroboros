@@ -79,7 +79,7 @@ import {
 import {
   DEFAULT_PROJECT_DELEGATION_KEY_PATH,
   type ProjectDelegationPaths,
-} from "../../../Skills/zouroboros-governance/scripts/project-delegation-receipt";
+} from "./project-delegation-stub";
 import type { CascadeValidationCommand } from "./coding-cascade";
 import { resolveRepositoryValidationCommands } from "./repository-validation-routing";
 import { retryableExecutionContractError } from "./execution-contract-error";

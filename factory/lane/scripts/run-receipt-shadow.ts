@@ -30,7 +30,7 @@ import {
   RECEIPT_SHADOW_EXTERNAL_CONFIG_ENV,
   type ReceiptShadowExternalConfig,
 } from "./runtime-config";
-import { parsePolicy } from "../../../Skills/zouroboros-governance/scripts/autonomy-classifier";
+import { parsePolicy } from "./governance-stub";
 
 export const RECEIPT_SHADOW_CONTRACT_ID = "zouroboros-run-receipt-shadow/v1" as const;
 export const RECEIPT_SHADOW_MODES = ["off", "shadow"] as const;
