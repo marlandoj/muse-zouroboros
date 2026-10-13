@@ -1,5 +1,10 @@
 # Swarm Orchestrator Changelog
 
+## Unreleased
+
+- Portable host roots (`src/host-roots.ts`, ported from hermes-zouroboros): workspace/state/logs/runtime/factory/model-routing paths now resolve from `ZOUROBOROS_*` env vars (legacy `ZO_*` honored), then XDG, then home fallbacks — no more hard-coded `/home/workspace` or `/var/lib/zouroboros` in the central resolvers. **Migration note:** hosts that relied on the old implicit defaults without setting env vars now resolve to XDG (`~/.local/state/zouroboros`). Set `ZOUROBOROS_STATE_DIR=/var/lib/zouroboros` and `ZOUROBOROS_WORKSPACE=/home/workspace` to keep the legacy layout. Resolved roots are logged at orchestrator startup.
+- Decision gate: added the four #850 intent patterns (`use a/the swarm`, `launch/start/kick off/spin up a swarm`, `swarm campaign`, `as/via a swarm`).
+
 ## 5.1.1
 
 ### Patch Changes

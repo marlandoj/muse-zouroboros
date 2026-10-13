@@ -787,3 +787,25 @@ Defaults are unchanged — these only matter when the default hurts.
   git repository"), that is recorded as a review *infrastructure* error: the
   review fails, but the worker's actual outcome is preserved — a success is
   never overwritten with a failure on that basis.
+
+## 6. Distribution limitations (public package)
+
+The lane was vendored from the monorepo without its sibling packages
+(`capability-runtime`, `zouroboros-workflow`, `Skills/`, `game-gauntlet`, …).
+Where those are missing, `factory/lane/scripts/*-stub.ts` modules stand in.
+Stub semantics are deliberately **fail-closed**: gates throw or report
+`{passed:false}` with a clear "not vendored" reason rather than silently
+passing. Three consequences to know:
+
+- **Auto-merge certification is advisory-only here.** Without the governance
+  keys/verifiers, certification gates fail closed. The 11-gate lane still
+  evaluates and reports, but nothing in this distribution can certify a
+  promotion — treat its verdicts as advisory, not authority.
+- **Delegated seed admission is rejected.** Held/delegated `factory-work/v1`
+  claims (e.g. from the Hermes kanban intake) cannot be admitted by the local
+  verifier; they throw. Held work must arrive non-delegated, or admission must
+  be implemented against a verifier you trust.
+- **External BYOK compute is removed.** The Zo Computer `/zo/ask` transport is
+  gone (Zo retired 2026-10-03); `runByok()` fails fast. Use local harness
+  executors, or inject an alternative via `options.byokRun` /
+  `options.workerRun`.

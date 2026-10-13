@@ -19,6 +19,7 @@ import { createTransport } from './transport/factory.js';
 import type { ExecutorTransport } from './transport/types.js';
 import { selectExecutor, inferComplexity, type BudgetSnapshot, type HealthSnapshot } from './selector/executor-selector.js';
 import { resolveModelForExecutor } from './routing/model-router.js';
+import { workspaceRoot, stateRoot, logRoot, runtimeRoot } from './host-roots.js';
 import { BudgetGovernor, type BudgetConfig } from './budget/governor.js';
 import { RoleRegistry } from './roles/registry.js';
 import { prefetchRAGForTasks } from './rag/index.js';
@@ -485,6 +486,11 @@ export class SwarmOrchestrator {
     console.log(`Starting swarm execution with ${tasks.length} tasks`);
     console.log(`Run id: ${runId}`);
     console.log(`Mode: ${this.config.dagMode}, Concurrency: ${this.config.localConcurrency}`);
+    // Host roots (2026-10-13): resolved from env/XDG, not hard-coded. Hosts that
+    // relied on the old implicit defaults (/var/lib/zouroboros, /home/workspace)
+    // without env vars now resolve to XDG — set ZOUROBOROS_STATE_DIR /
+    // ZOUROBOROS_WORKSPACE to keep the legacy layout.
+    console.log(`Host roots: workspace=${workspaceRoot()} state=${stateRoot()} logs=${logRoot()} runtime=${runtimeRoot()}`);
     console.log(`Pipeline gates: seed=${gates.seedValidation}, postFlight=${gates.postFlightEval}, gapAudit=${gates.gapAuditLoop}`);
 
     // Pre-flight 0: Data checks
