@@ -193,6 +193,21 @@ bun scripts/memory.ts decay
 bun scripts/memory.ts consolidate
 ```
 
+### Memory Defense (defense.ts)
+Every `store` / `batch-store` write is scanned for secrets and PII before it
+reaches storage. Policy via `ZO_MEMORY_DEFENSE`: `redact` (default,
+fail-safe) | `block` | `off`. PII patterns (SSN, email, Luhn-verified credit
+cards) opt-in via `ZO_MEMORY_DEFENSE_PII=1`. Matches are replaced in place as
+`[REDACTED:<pattern>]` and recorded in the fact's metadata (`defense.policy`,
+`defense.redactions`) — the secret itself never touches the DB.
+```bash
+# Dry-run the scanner on arbitrary text (nothing stored)
+bun scripts/memory.ts defense scan --text "aws AKIA..."
+
+# List active patterns and current policy
+bun scripts/memory.ts defense patterns
+```
+
 ---
 
 ## Knowledge Graph (graph.ts)

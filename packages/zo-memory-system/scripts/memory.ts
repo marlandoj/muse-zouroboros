@@ -34,6 +34,7 @@ import {
   upsertOpenLoop,
 } from "./continuation";
 import { generate as mcGenerate, embeddings as mcEmbeddings } from "./model-client";
+import { applyDefense, resolveDefensePolicy, DefenseBlockedError } from "./defense";
 
 // --- Configuration ---
 const DB_PATH = process.env.ZO_MEMORY_DB || "/home/workspace/.zo/memory/shared-facts.db";
@@ -341,6 +342,35 @@ async function storeWithEmbedding(
     }
   }
 
+  // Memory Defense: scan the retain payload for secrets/PII before anything
+  // reaches storage. Default policy is redact (fail-safe); 'block' rejects
+  // the write entirely. Redactions are recorded in metadata (provenance)
+  // without the secret itself ever touching the DB.
+  const redactionFindings: Array<{ pattern: string }> = [];
+  const defense = applyDefense(storeValue);
+  if (defense.blocked) throw new DefenseBlockedError(defense.findings);
+  if (defense.findings.length > 0) {
+    storeValue = defense.text;
+    redactionFindings.push(...defense.findings);
+  }
+  // The caller-supplied text field is also retain payload (and FTS-indexed),
+  // so a secret can't slip in via --text.
+  let storeText = entry.text || `${entry.entity} ${entry.key || ""}: ${storeValue}`;
+  const textDefense = applyDefense(storeText);
+  if (textDefense.blocked) throw new DefenseBlockedError(textDefense.findings);
+  if (textDefense.findings.length > 0) {
+    storeText = textDefense.text;
+    for (const f of textDefense.findings) {
+      if (!redactionFindings.some((r) => r.pattern === f.pattern)) redactionFindings.push(f);
+    }
+  }
+  if (redactionFindings.length > 0) {
+    storeMetadata.defense = {
+      policy: resolveDefensePolicy().policy,
+      redactions: redactionFindings.map((f) => f.pattern),
+    };
+  }
+
   // Insert fact
   const metadataStr = Object.keys(storeMetadata).length > 0 ? JSON.stringify(storeMetadata) : null;
   db.prepare(`
@@ -353,7 +383,7 @@ async function storeWithEmbedding(
     entry.entity,
     entry.key,
     storeValue,
-    entry.text || `${entry.entity} ${entry.key || ""}: ${storeValue}`,
+    storeText,
     entry.category,
     decayClass,
     entry.importance,
@@ -1344,6 +1374,7 @@ Commands:
   trends    Show velocity trends for an entity
   delete    Delete a specific fact by ID (cascades to embeddings, links, activation)
   prune     Garbage-collect expired facts and/or low-activation facts
+  defense   Dry-run the Memory Defense secret/PII scanner (scan|patterns)
 
 
 Delete options:
@@ -1393,6 +1424,14 @@ Procedures options:
 
 Open loop options:
   --status <state>     open|resolved|stale|superseded
+
+Defense options:
+  Policy via ZO_MEMORY_DEFENSE: redact (default, fail-safe) | block | off
+  PII patterns (SSN, email, credit card) opt-in via ZO_MEMORY_DEFENSE_PII=1
+  defense scan --text "..."   Scan text, print findings (nothing stored)
+  defense patterns            List active patterns and current policy
+  Every store/batch-store write is scanned automatically; matches are
+  redacted in place as [REDACTED:<pattern>] and recorded in fact metadata.
 
 Examples:
   bun memory.ts init
@@ -1527,14 +1566,39 @@ async function main() {
           }
           const key = (item.key as string) || null;
           const persona = (item.persona as string) || "shared";
-          const text = (item.text as string) || `${entity} ${key || ""}: ${value}`;
           const category = (item.category as string) || "fact";
           const decayClass = (item.decay as string) || "stable";
           const importance = parseFloat(String(item.importance)) || 1.0;
           const source = (item.source as string) || "batch";
           const expiresAt = TTL_DEFAULTS[decayClass as DecayClass] ? nowSec + TTL_DEFAULTS[decayClass as DecayClass]! : null;
 
-          insertStmt.run(id, persona, entity, key, value, text, category, decayClass, importance, source, nowSec, expiresAt, nowSec, 1.0, null);
+          // Memory Defense: same retain-path scanning as storeWithEmbedding.
+          // A blocked item is skipped (with a warning) rather than aborting
+          // the whole batch; redactions are recorded in metadata.
+          let safeValue = value;
+          let safeText = (item.text as string) || `${entity} ${key || ""}: ${value}`;
+          let itemMetadata: string | null = null;
+          const itemDefense = applyDefense(`${safeValue}\n${safeText}`);
+          if (itemDefense.blocked) {
+            console.error(
+              `Skipping item ${entity}.${key || "_"}: Memory Defense blocked write (matched ${itemDefense.findings.map((f) => f.pattern).join(", ")})`
+            );
+            continue;
+          }
+          if (itemDefense.findings.length > 0) {
+            const vDefense = applyDefense(safeValue);
+            safeValue = vDefense.text;
+            const tDefense = applyDefense(safeText);
+            safeText = tDefense.text;
+            itemMetadata = JSON.stringify({
+              defense: {
+                policy: resolveDefensePolicy().policy,
+                redactions: itemDefense.findings.map((f) => f.pattern),
+              },
+            });
+          }
+
+          insertStmt.run(id, persona, entity, key, safeValue, safeText, category, decayClass, importance, source, nowSec, expiresAt, nowSec, 1.0, itemMetadata);
           ids.push(id);
         }
         db.exec("COMMIT");
@@ -2030,6 +2094,37 @@ async function main() {
         console.log(`\n[DRY RUN] Total: ${totalDeleted} facts would be pruned. Re-run without --dry-run to execute.`);
       } else {
         console.log(`\nTotal pruned: ${totalDeleted} facts.`);
+      }
+      break;
+    }
+
+    case "defense": {
+      // Memory Defense: dry-run the retain-path secret/PII scanner without
+      // storing anything. Policy via ZO_MEMORY_DEFENSE (redact|block|off,
+      // default redact); PII patterns opt-in via ZO_MEMORY_DEFENSE_PII=1.
+      const sub = flags["scan"] === "true" || args[1] === "scan" ? "scan" : args[1] || "patterns";
+      if (sub === "scan") {
+        const text = flags["text"] || args.slice(2).join(" ");
+        if (!text) {
+          console.error('Usage: bun memory.ts defense scan --text "..."');
+          process.exit(1);
+        }
+        const result = applyDefense(text);
+        if (result.findings.length === 0) {
+          console.log("No findings.");
+        } else {
+          console.log(`${result.findings.length} finding(s):`);
+          for (const f of result.findings) console.log(`  [${f.kind}] ${f.pattern} -> ${f.placeholder}`);
+          console.log("\nTransformed text:\n" + result.text);
+          if (result.blocked) console.log("\n[blocked] write would be rejected under the 'block' policy.");
+        }
+      } else {
+        const { policy, includePii } = resolveDefensePolicy();
+        console.log(`Policy: ${policy} | PII: ${includePii ? "on (ZO_MEMORY_DEFENSE_PII=1)" : "off"}`);
+        console.log("Secret patterns: aws_access_key_id, github_token, github_fine_grained_pat,");
+        console.log("  anthropic_api_key, openai_api_key, slack_token, google_api_key, stripe_key,");
+        console.log("  private_key_block, jwt, connection_string, generic_secret_assignment");
+        console.log("PII patterns (opt-in): us_ssn, email_address, credit_card (luhn-verified)");
       }
       break;
     }
