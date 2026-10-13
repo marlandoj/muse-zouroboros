@@ -17,7 +17,7 @@
 
 import { join } from "node:path";
 import { enterFactoryExecutorGuard, loadHostResourcePolicy, waitForMemoryHeadroom } from "./host-resource-guard";
-import { readSharedCatalog, selectShared } from "../../../packages/zo-swarm-orchestrator/src/routing/shared-catalog";
+import { readLastKnownGoodCatalog, readSharedCatalog, selectShared } from "../../../packages/zo-swarm-orchestrator/src/routing/shared-catalog";
 
 /** Every coder harness the factory is allowed to dispatch to. */
 export const KNOWN_CODER_HARNESSES: ReadonlyArray<string> = [
@@ -270,7 +270,24 @@ export async function runHarness(
   // Preserve explicit per-run model/provider pins. Automatic escalation requires
   // evidence through this consumer's ACP route, not a chat or bridge-only pass.
   if (!opts.env?.SWARM_RESOLVED_MODEL && readSharedCatalog()) {
-    const route = selectShared('factory', { harness: executorId })[0];
+    let routes = selectShared('factory', { harness: executorId });
+    if (routes.length === 0) {
+      // Remediation (factory reliability): a bad catalog regeneration can
+      // silently zero out qualified routes (e.g. a winner id the native CLI
+      // rejects) and fail every dispatch before launch. Fall back to the
+      // last-known-good catalog and say so loudly instead of failing closed;
+      // a genuinely stale or empty last-known-good still throws below.
+      const lkg = readLastKnownGoodCatalog();
+      const lkgRoutes = lkg ? selectShared('factory', { harness: executorId, catalog: lkg }) : [];
+      if (lkgRoutes.length > 0) {
+        console.error(
+          `[factory] WARNING: primary model catalog has zero qualified factory routes for harness "${executorId}"; ` +
+          `using last-known-good catalog (model ${lkgRoutes[0].model}). Regenerate the catalog.`,
+        );
+        routes = lkgRoutes;
+      }
+    }
+    const route = routes[0];
     if (!route) throw new Error(`No qualified native Factory route for ${executorId}`);
     opts = { ...opts, env: { ...opts.env, SWARM_RESOLVED_MODEL: route.model } };
   }

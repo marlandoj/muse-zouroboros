@@ -84,6 +84,20 @@ export function readSharedCatalog(path=sharedPath()): SharedCatalog|null {
   }
   return null;
 }
+// Remediation (factory reliability): when a catalog regeneration silently
+// yields zero qualified routes (e.g. a winner id the native CLI rejects),
+// callers can fall back to the last-known-good catalog instead of failing
+// the dispatch before launch. Qualification freshness still applies — this
+// only rescues a fresh last-known-good from a bad regeneration, never
+// genuinely stale data.
+export function readLastKnownGoodCatalog(): SharedCatalog|null {
+  const p = join(dirname(sharedPath()), 'last-known-good.json');
+  try {
+    const c=JSON.parse(readFileSync(p,'utf8'));
+    if(validCatalog(c)) return c;
+    return adaptModelCatalog(c);
+  } catch { return null; }
+}
 export function family(model: string): string {
   const s=model.toLowerCase();
   for(const [name,re] of Object.entries({claude:/claude|\bopus\b|\bsonnet\b|\bhaiku\b/,gpt:/gpt|codex|openai/,gemini:/gemini/,kimi:/kimi|moonshot/,glm:/glm|zai-org|z-ai/,deepseek:/deepseek/,qwen:/qwen/,llama:/llama/,mistral:/mistral/,nemotron:/nemotron/})) if(re.test(s)) return name;

@@ -740,3 +740,50 @@ this **before** claiming the assignment and tells you which setup to pick:
   on the campaign ⇒ the lane prepares the worktree itself; or
 - **(b)** point `SF_MULTI_HARNESS_WORKDIR` at a worktree inside the factory
   `.factory-worktrees` root.
+
+### 6.5 Reliability remediation (Oct 2026)
+
+Four integration points made the lane brittle; each now has an explicit knob.
+Defaults are unchanged — these only matter when the default hurts.
+
+- **Rig / state location.** The factory rig migrated `/tmp` → `/var/tmp` →
+  `/dev/shm` across VM replacements; only `/dev/shm` survived. Point the
+  state root there explicitly so a replacement never orphans campaign state:
+  ```bash
+  export FACTORY_STATE_DIR=/dev/shm/factory-rig
+  ```
+  After a VM replacement, re-run `~/workspace/bin/provision-factory-executors.sh`
+  before dispatching real harness work (it restores bubblewrap, the ACP CLIs,
+  and the credential symlinks that live outside `~`).
+
+- **Model-catalog gate.** If a catalog regeneration silently yields zero
+  qualified routes for a harness (e.g. a winner id the native CLI rejects),
+  dispatch used to fail before launch with `No qualified native Factory
+  route`. It now falls back to the `last-known-good.json` catalog beside the
+  primary one and logs a loud `[factory] WARNING` — fix the catalog, don't
+  ignore the warning. Escape hatch (tribal knowledge, now written down):
+  ```bash
+  export SWARM_MODEL_CATALOG_PATH=/nonexistent-catalog.json   # bypass shared catalog
+  ```
+
+- **Memory floor.** The 1024 MiB default floor rarely passes on small shared
+  hosts, which normalized the per-dispatch operator override. Set a sane
+  host-local floor explicitly instead:
+  ```bash
+  export FACTORY_MIN_AVAILABLE_MEMORY_MIB=512
+  ```
+  Range 256–65536; 1024 stays the default when unset. This deliberately
+  bypasses the half-of-executor-limit headroom invariant — it is your
+  explicit, auditable choice, so set it against the host's real capacity.
+
+- **Idle watchdog.** Dispatches now die after 10 minutes with no executor
+  output instead of burning the full 30–60 min task timeout. Stuck sessions
+  surface as `timeout` failures quickly; healthy sessions (2–7 min typical)
+  are unaffected.
+
+- **Review gate.** The deterministic review (`git diff --check`) now runs in
+  the assignment's actual worktree (`assignment.worktree_path`), not the
+  driver-supplied target repo. If the check itself cannot run (e.g. "not a
+  git repository"), that is recorded as a review *infrastructure* error: the
+  review fails, but the worker's actual outcome is preserved — a success is
+  never overwritten with a failure on that basis.

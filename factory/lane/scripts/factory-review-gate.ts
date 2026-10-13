@@ -14,6 +14,14 @@ export type FactoryReviewMode = "shadow" | "enforce";
 export interface ReviewCheckResult {
   pass: boolean;
   summary: string;
+  /**
+   * Remediation (factory reliability): true when the check itself could not
+   * run — e.g. `git diff` failing with "not a git repository" because it was
+   * pointed at the wrong directory. Callers must treat this as a review
+   * infrastructure failure, never as evidence the implementation is bad, and
+   * must not overwrite a worker success with a failure on this basis.
+   */
+  infrastructureError?: boolean;
 }
 
 export interface ConsensusReviewResult extends ReviewCheckResult {
@@ -138,10 +146,13 @@ export function defaultDeterministicReview(input: FactoryReviewInput): ReviewChe
     encoding: "utf8",
     timeout: 120_000,
   });
-  if (check.error) return { pass: false, summary: check.error.message };
+  if (check.error) return { pass: false, summary: check.error.message, infrastructureError: true };
+  const output = (check.stderr || check.stdout || "").trim();
+  const infra = /not a git repository|fatal:.*(?:cannot change|cannot chdir) to|no such file or directory/i.test(output);
   return {
     pass: check.status === 0,
-    summary: check.status === 0 ? "git diff --check passed" : (check.stderr || check.stdout || "git diff --check failed").trim(),
+    summary: check.status === 0 ? "git diff --check passed" : (output || "git diff --check failed"),
+    ...(infra ? { infrastructureError: true } : {}),
   };
 }
 

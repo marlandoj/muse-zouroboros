@@ -469,19 +469,30 @@ export async function reviewWorkerImplementation(
       return result;
     };
   }
+  // Remediation (factory reliability): review the worktree the agent actually
+  // worked in, not the driver-supplied target repo. The two can diverge (e.g.
+  // cascade worktrees), and grading the wrong directory turns good work into
+  // "not a git repository" failures.
+  const reviewWorkdir = assignment.worktree_path ?? process.env.SF_MULTI_HARNESS_WORKDIR ?? "/home/workspace";
   const review = await runFactoryReviewGate({
     execution_id: assignment.assignment_id,
     identifier: campaign.identifier,
     implementation_summary: workerResult.summary,
     ticket_context: ctx.ticket_description ?? `${item.name}\n${item.description}`,
-    workdir: ctx.target_repo ?? process.env.SF_MULTI_HARNESS_WORKDIR ?? "/home/workspace",
-    artifact_commit: gitCommitOrNull(ctx.target_repo ?? process.env.SF_MULTI_HARNESS_WORKDIR ?? "/home/workspace") ?? undefined,
+    workdir: reviewWorkdir,
+    artifact_commit: gitCommitOrNull(reviewWorkdir) ?? undefined,
     policy: campaign.execution_policy ?? null,
     risk_tier: campaign.risk_tier ?? null,
     state_dir: join(poolStateDir(), "reviews"),
   }, reviewDeps);
   assignment.review = review;
-  if (resolveCodingCascadeMode() !== "off" && review.blocking && !review.pass) {
+  // Remediation (factory reliability): when the deterministic check itself
+  // errored (infrastructureError — e.g. git could not run in the workdir),
+  // the review never evaluated the implementation. Fail the review, but
+  // record the work's actual outcome: never overwrite a worker success with
+  // a failure on this basis.
+  const reviewInfraError = review.deterministic?.infrastructureError === true;
+  if (resolveCodingCascadeMode() !== "off" && review.blocking && !review.pass && !reviewInfraError) {
     assignment.failure = classifyCascadeFailure({
       cause: "worker_failure",
       detail: `factory review blocked (${review.diversity_terminal_state}): ${review.deterministic.summary}${review.persona_reviews ? `; ${review.persona_reviews.summary}` : ""}`,
@@ -490,11 +501,17 @@ export async function reviewWorkerImplementation(
   }
   saveAssignment(assignment);
   stampPersonaResult(assignment);
-  if (review.blocking) {
+  if (review.blocking && !reviewInfraError) {
     writeJsonAtomic(assignment.result_path, {
       ...workerResult,
       outcome: "failure",
       summary: `${workerResult.summary} | factory review blocked: ${review.deterministic.summary}${review.persona_reviews ? `; ${review.persona_reviews.summary}` : ""}${review.consensus ? `; ${review.consensus.summary}` : ""}`,
+      ...(assignment.persona_orchestration ? { persona_orchestration: assignment.persona_orchestration } : {}),
+    });
+  } else if (review.blocking && reviewInfraError) {
+    writeJsonAtomic(assignment.result_path, {
+      ...workerResult,
+      summary: `${workerResult.summary} | factory review infrastructure error (work outcome preserved): ${review.deterministic.summary}`,
       ...(assignment.persona_orchestration ? { persona_orchestration: assignment.persona_orchestration } : {}),
     });
   }
@@ -869,6 +886,11 @@ async function dispatchWorkerScoped(campaign: Campaign, item: WorkItem, opts: Di
       const r = await runHarness(executorId, prompt, {
         workdir: a.worktree_path ?? process.env.SF_MULTI_HARNESS_WORKDIR,
         timeoutMs: a.timeout_min * 60_000,
+        // Remediation (factory reliability): stuck sessions used to burn the
+        // entire 30–60 min task timeout with zero output. Kill a session that
+        // goes quiet for 10 minutes; the ACP transport enforces this and
+        // reports it as a timeout.
+        idleTimeoutMs: 10 * 60_000,
         onLaunch: () => {
           // F-002: the executor really launched — a later reclaim can tell a
           // dispatched assignment apart from one that never got off the ground.

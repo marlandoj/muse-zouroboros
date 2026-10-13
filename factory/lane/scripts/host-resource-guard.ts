@@ -109,15 +109,33 @@ export function validateHostResourcePolicy(input: unknown): HostResourcePolicy {
 }
 
 export function loadHostResourcePolicy(path = DEFAULT_POLICY_PATH): HostResourcePolicy {
+  let policy: HostResourcePolicy;
   if (!existsSync(path)) {
     if (path !== DEFAULT_POLICY_PATH) throw new Error(`host resource policy not found: ${path}`);
-    return { ...DEFAULT_POLICY };
+    policy = { ...DEFAULT_POLICY };
+  } else {
+    try {
+      policy = validateHostResourcePolicy(JSON.parse(readFileSync(path, "utf8")));
+    } catch (error) {
+      throw new Error(`invalid host resource policy ${path}: ${error instanceof Error ? error.message : String(error)}`);
+    }
   }
-  try {
-    return validateHostResourcePolicy(JSON.parse(readFileSync(path, "utf8")));
-  } catch (error) {
-    throw new Error(`invalid host resource policy ${path}: ${error instanceof Error ? error.message : String(error)}`);
+  // Remediation (factory reliability): the 1024 MiB default floor rarely
+  // passes on small shared hosts, which normalized the operator override.
+  // FACTORY_MIN_AVAILABLE_MEMORY_MIB lets a host set a sane floor explicitly
+  // instead of bypassing the gate per-dispatch. 1024 MiB stays the default.
+  // The override is clamped to 256..65536 and deliberately bypasses the
+  // half-of-executor-limit headroom invariant — it is the operator's explicit,
+  // auditable choice, so set it against the host's real capacity.
+  const envFloor = process.env[MIN_AVAILABLE_MEMORY_MIB_ENV];
+  if (envFloor !== undefined && envFloor !== "") {
+    const mib = Number(envFloor);
+    if (!Number.isInteger(mib) || mib < 256 || mib > 65_536) {
+      throw new Error(`invalid ${MIN_AVAILABLE_MEMORY_MIB_ENV}=${envFloor}: must be an integer in 256..65536`);
+    }
+    policy = { ...policy, min_available_memory_mib: mib };
   }
+  return policy;
 }
 
 /**
@@ -133,6 +151,9 @@ export function loadHostResourcePolicy(path = DEFAULT_POLICY_PATH): HostResource
  * floor (that would silently weaken it for everyone).
  */
 export const DISPATCH_OPERATOR_OVERRIDE_ENV = "FACTORY_DISPATCH_OPERATOR_OVERRIDE";
+
+/** Host-local override for the minimum available-memory floor (MiB). See loadHostResourcePolicy. */
+export const MIN_AVAILABLE_MEMORY_MIB_ENV = "FACTORY_MIN_AVAILABLE_MEMORY_MIB";
 
 export function dispatchOperatorOverrideEnabled(env: Record<string, string | undefined> = process.env): boolean {
   return env[DISPATCH_OPERATOR_OVERRIDE_ENV] === "1";
