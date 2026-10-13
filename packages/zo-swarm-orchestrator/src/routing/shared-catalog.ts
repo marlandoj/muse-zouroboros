@@ -2,6 +2,7 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import type { ModelCatalog, CatalogTier } from './model-catalog.js';
+import { modelRoutingDir } from '../host-roots.js';
 
 // 'consensus' remains readable for historical evidence, but is never an active consumer.
 export type Consumer = 'swarm' | 'chat' | 'automation' | 'consensus' | 'factory';
@@ -22,9 +23,12 @@ export interface SharedCatalog {
   nominations: unknown[]; sha256: string;
 }
 // Unified catalog path (2026-10-09): the model-intelligence pipeline writes the
-// ModelCatalog schema to .../model-routing/swarm/current.json. ZOUROBOROS_MODEL_CATALOG_PATH
-// is kept as a deprecated fallback; SWARM_MODEL_CATALOG_PATH wins when both are set.
-export const sharedPath = () => process.env.SWARM_MODEL_CATALOG_PATH || process.env.ZOUROBOROS_MODEL_CATALOG_PATH || '/var/lib/zouroboros/model-routing/swarm/current.json';
+// ModelCatalog schema to <state>/model-routing/swarm/current.json, where <state>
+// resolves via host-roots (ZOUROBOROS_STATE_DIR, else XDG). Set
+// ZOUROBOROS_STATE_DIR=/var/lib/zouroboros to keep the legacy host layout.
+// ZOUROBOROS_MODEL_CATALOG_PATH is kept as a deprecated fallback;
+// SWARM_MODEL_CATALOG_PATH wins when both are set.
+export const sharedPath = () => process.env.SWARM_MODEL_CATALOG_PATH || process.env.ZOUROBOROS_MODEL_CATALOG_PATH || join(modelRoutingDir(), 'swarm/current.json');
 export function digest(c: Omit<SharedCatalog,'sha256'>|SharedCatalog): string {
   const {sha256: _, ...body}=c as SharedCatalog;
   return createHash('sha256').update(JSON.stringify(body)).digest('hex');

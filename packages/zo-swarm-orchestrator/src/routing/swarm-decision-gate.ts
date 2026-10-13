@@ -47,6 +47,11 @@ const FORCE_SWARM_PATTERNS = [
   /\bfull\s+swarm\s+pipeline\b/i,
   /\bswarm\s+execution\b/i,
   /\bthrough\s+(the\s+)?swarm\s+pipeline\b/i,
+  // Article forms the bare "use swarm" pattern misses ("use a swarm to …", "use the swarm").
+  /\buse\s+(a|the)\s+swarm\b(?![\s-]*(bench|decision|gate|orchestrator|system))/i,
+  /\b(launch|start|kick\s+off|spin\s+up)\s+(a\s+|the\s+)?swarm\b(?![\s-]*bench)/i,
+  /\bswarm\s+campaign\b/i,
+  /\b(as|via)\s+a\s+swarm\b/i,
 ];
 
 // Questions about swarm should NOT trigger force override

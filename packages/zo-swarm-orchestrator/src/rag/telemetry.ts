@@ -1,7 +1,8 @@
 /**
  * RAG Telemetry Sink
  *
- * Emits per-enrichment-call JSONL records to /dev/shm/rag-telemetry.jsonl.
+ * Emits per-enrichment-call JSONL records (default: <runtime>/rag-telemetry.jsonl,
+ * overridable via RAG_TELEMETRY_PATH).
  * Non-blocking, fire-and-forget. Failures are swallowed.
  *
  * Each record captures: trigger match, collections queried, per-collection
@@ -11,6 +12,8 @@
  * /dashboard/rag-telemetry page.
  */
 import { appendFile } from 'fs/promises';
+import { join } from 'node:path';
+import { runtimeRoot } from '../host-roots.js';
 
 export interface RAGTelemetryRecord {
   ts: string;
@@ -33,7 +36,7 @@ export interface RAGTelemetryRecord {
   condition?: string;
 }
 
-const TELEMETRY_PATH = process.env.RAG_TELEMETRY_PATH || '/dev/shm/rag-telemetry.jsonl';
+const TELEMETRY_PATH = process.env.RAG_TELEMETRY_PATH || join(runtimeRoot(), 'rag-telemetry.jsonl');
 const TELEMETRY_DISABLED = process.env.RAG_TELEMETRY_DISABLED === '1';
 
 export async function emitRAGTelemetry(record: Partial<RAGTelemetryRecord>): Promise<void> {

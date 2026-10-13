@@ -1,11 +1,12 @@
 import { createHash } from 'node:crypto';
 import { existsSync, readFileSync } from 'node:fs';
 import { copyFile, mkdir, readFile, rename, writeFile } from 'node:fs/promises';
-import { dirname } from 'node:path';
+import { dirname, join } from 'node:path';
 import type { ComplexityTier, ExecutorRegistryEntry } from '../types.js';
+import { modelRoutingDir } from '../host-roots.js';
 
 export const MODEL_CATALOG_SCHEMA_VERSION = '1.0.0';
-export const DEFAULT_MODEL_CATALOG_PATH = process.env.SWARM_MODEL_CATALOG_PATH || '/var/lib/zouroboros/model-routing/swarm/current.json';
+export const DEFAULT_MODEL_CATALOG_PATH = process.env.SWARM_MODEL_CATALOG_PATH || join(modelRoutingDir(), 'swarm/current.json');
 const LAST_KNOWN_GOOD_NAME = 'last-known-good.json';
 
 export type CatalogTier = 'light' | 'mid' | 'heavy';

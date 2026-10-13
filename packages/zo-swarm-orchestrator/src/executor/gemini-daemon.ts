@@ -17,11 +17,13 @@
  */
 
 import { existsSync, unlinkSync, writeFileSync, readFileSync } from "fs";
+import { join } from "node:path";
 import { getWorkspaceRoot } from "zouroboros-core";
+import { runtimeRoot } from "../host-roots.js";
 
 const SOCKET_PATH = "/tmp/gemini-daemon.sock";
 const PID_FILE = "/tmp/gemini-daemon.pid";
-const LOG_FILE = "/dev/shm/gemini-daemon.log";
+const LOG_FILE = process.env.GEMINI_DAEMON_LOG || join(runtimeRoot(), "gemini-daemon.log");
 const DEFAULT_MODEL = "gemini-3.5-flash-lite";
 const MAX_CONCURRENT = 4;
 const IDLE_TIMEOUT_MS = 30 * 60 * 1000;

@@ -23,10 +23,16 @@ function modelCatalog() {
 }
 
 describe('shared-catalog path unification', () => {
-  test('sharedPath defaults to the swarm catalog path', () => {
+  test('sharedPath defaults to the swarm catalog path under the state dir', () => {
     delete process.env.SWARM_MODEL_CATALOG_PATH;
     delete process.env.ZOUROBOROS_MODEL_CATALOG_PATH;
+    // Legacy layout preserved when the state dir points at the old host path
+    process.env.ZOUROBOROS_STATE_DIR = '/var/lib/zouroboros';
     expect(sharedPath()).toBe('/var/lib/zouroboros/model-routing/swarm/current.json');
+    delete process.env.ZOUROBOROS_STATE_DIR;
+    // Otherwise XDG-based (never the old hardcoded host path by accident)
+    expect(sharedPath()).toMatch(/model-routing\/swarm\/current\.json$/);
+    expect(sharedPath()).not.toBe('/var/lib/zouroboros/model-routing/swarm/current.json');
   });
   test('SWARM_MODEL_CATALOG_PATH wins over the deprecated var', () => {
     process.env.SWARM_MODEL_CATALOG_PATH = '/tmp/a.json';
