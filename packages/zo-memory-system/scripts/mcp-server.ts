@@ -24,6 +24,7 @@ import { randomUUID } from "crypto";
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { embeddings as mcEmbeddings } from "./model-client";
+import { computeGraphBoost, findGraphNeighbors } from "./graph-boost";
 
 // --- Config ---
 const DB_PATH = process.env.ZO_MEMORY_DB || "/home/workspace/.zo/memory/shared-facts.db";
@@ -179,14 +180,57 @@ async function toolMemorySearch(args: {
 
   const ranked = Object.entries(rrf).sort((a, b) => b[1] - a[1]).slice(0, limit);
 
+  // Third signal: graph boost over fact_links/vault_links (reweights via
+  // link structure) + 1-hop neighbor injection. Purely additive — any
+  // failure falls back to the two-signal RRF ranking.
+  let finalOrder: Array<{ id: string; score: number; viaGraph: boolean }>;
+  try {
+    const nowSec2 = Math.floor(Date.now() / 1000);
+    const scored = ranked.map(([id, rrfScore]) => {
+      const meta = db.prepare(
+        "SELECT expires_at, confidence FROM facts WHERE id = ?"
+      ).get(id) as { expires_at: number | null; confidence: number | null } | null;
+      let freshness = 1;
+      if (meta?.expires_at) {
+        freshness = Math.max(0, Math.min(1, (meta.expires_at - nowSec2) / (14 * 24 * 3600)));
+      }
+      return {
+        id,
+        rrfScore,
+        freshness,
+        confidence: meta?.confidence ?? 1,
+        sources: ["rrf"],
+      };
+    });
+    const boosted = computeGraphBoost(db, scored);
+    const topIds = boosted
+      .sort((a, b) => b.composite - a.composite)
+      .slice(0, 3)
+      .map((r) => r.id);
+    const existingIds = new Set(boosted.map((r) => r.id));
+    const neighbors = findGraphNeighbors(db, topIds, existingIds, 2);
+
+    finalOrder = boosted
+      .sort((a, b) => b.composite - a.composite)
+      .slice(0, limit)
+      .map((r) => ({ id: r.id, score: r.composite, viaGraph: r.graphBoost > 0 }));
+    for (const n of neighbors) {
+      if (finalOrder.length >= limit) break;
+      finalOrder.push({ id: n.factId, score: n.weight * 0.15, viaGraph: true });
+    }
+  } catch {
+    finalOrder = ranked.map(([id, score]) => ({ id, score, viaGraph: false }));
+  }
+
   // Fetch full facts
   const results: string[] = [];
-  for (const [id, score] of ranked) {
+  for (const { id, score, viaGraph } of finalOrder) {
     const row = db.prepare("SELECT * FROM facts WHERE id = ?").get(id) as Record<string, unknown> | null;
     if (row) {
       results.push(
         `[${row.decay_class}] ${row.entity}.${row.key || "_"} = ${(row.value as string).slice(0, 200)}` +
-        `\n  score: ${score.toFixed(4)} | category: ${row.category} | source: ${row.source}`
+        `\n  score: ${score.toFixed(4)} | category: ${row.category} | source: ${row.source}` +
+        (viaGraph ? " | via: graph" : "")
       );
     }
   }
