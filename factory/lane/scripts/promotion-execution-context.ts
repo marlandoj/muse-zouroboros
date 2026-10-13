@@ -16,19 +16,19 @@ import {
   CERTIFICATION_VALIDATION_CLASSES,
   validateCertificationValidationEvidence,
   type CertificationValidationEvidenceBinding,
-} from "../../../Skills/zouroboros-governance/scripts/certification-validation-evidence";
+} from "./governance-stub";
 
 export {
   CERTIFICATION_VALIDATION_CLASSES,
   validateCertificationValidationEvidence,
-} from "../../../Skills/zouroboros-governance/scripts/certification-validation-evidence";
+} from "./governance-stub";
 export type {
   CertificationValidationClass,
   CertificationValidationCommandReceipt,
   CertificationValidationEvidence,
   CertificationValidationEvidenceBinding,
   CertificationValidationTarget,
-} from "../../../Skills/zouroboros-governance/scripts/certification-validation-evidence";
+} from "./governance-stub";
 
 export interface PromotionExecutionContext {
   repository: string;

@@ -88,33 +88,25 @@ import {
   type CertificationValidationEvidenceBinding,
 } from "./promotion-execution-context";
 import {
-  DEFAULT_PERSONA_REVIEW_KEY_PATH,
-  runPersonaPromotionReview,
-  verifyPersonaPromotionAttestation,
-} from "../../../Skills/zouroboros-governance/scripts/persona-promotion-review";
-import {
-  resolveUniqueRepositoryRemote,
-  verifyProviderNativePromotionAttestation,
-} from "../../../Skills/zouroboros-governance/scripts/provider-native-promotion-attestation";
-import { issueProviderNativePromotionAttestation } from "../../../Skills/zouroboros-governance/scripts/provider-native-promotion-issuer";
-import {
   DEFAULT_OPERATOR_APPROVAL_KEY_PATH,
-  verifyEvidenceGenerationApproval,
-  verifyOperatorPromotionApproval,
-  type EvidenceGenerationApproval,
-  type OperatorPromotionApproval,
-  type PullRequestBinding,
-} from "../../../Skills/zouroboros-governance/scripts/operator-promotion-approval";
-import {
+  DEFAULT_PERSONA_REVIEW_KEY_PATH,
   evaluateConstitution,
-  type ConstitutionInput,
-} from "../../../Skills/zouroboros-governance/scripts/constitution-gate";
-import {
+  issueProviderNativePromotionAttestation,
   loadPromotionAuthorityConfig,
   promotionCertificationAttemptStore,
+  resolveUniqueRepositoryRemote,
+  runPersonaPromotionReview,
+  verifyEvidenceGenerationApproval,
+  verifyOperatorPromotionApproval,
+  verifyPersonaPromotionAttestation,
+  verifyProviderNativePromotionAttestation,
   type ConsumedAuthorizationReceipt,
+  type ConstitutionInput,
+  type EvidenceGenerationApproval,
+  type OperatorPromotionApproval,
   type PromotionAuthorityConfig,
-} from "../../../Skills/zouroboros-governance/scripts/promotion-authorization-ledger";
+  type PullRequestBinding,
+} from "./governance-stub";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 

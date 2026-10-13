@@ -5,7 +5,7 @@ import {
   type DataClassification,
   type RoutingDecision,
   type RoutingPolicy,
-} from "../../../packages/core/src/compute";
+} from "./core-compute-stub";
 import type { FactoryGateDecision, ExecutionLaneDecision } from "./execution-lane";
 
 export type FactoryComputeRouterMode = "off" | "shadow" | "enforce";

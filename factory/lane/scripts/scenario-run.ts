@@ -27,7 +27,7 @@ import { createHash } from "node:crypto";
 import { appendFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { buildHoldoutSandboxEnv } from "../../../packages/selfheal/src/introspect/holdout-sandbox.ts";
+import { buildHoldoutSandboxEnv } from "./holdout-sandbox-stub";
 import {
   loadActorSystemContract,
   startActorSystemTwin,

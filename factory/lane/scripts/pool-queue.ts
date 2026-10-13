@@ -32,7 +32,7 @@ import { parseHoldoutScenarios, type HoldoutScenario } from "./factory-holdouts"
 import {
   verifySeedAdmission,
   type ProjectDelegationPaths,
-} from "../../../Skills/zouroboros-governance/scripts/project-delegation-receipt";
+} from "./project-delegation-stub";
 
 declare const Bun: { YAML: { parse(text: string): unknown } };
 

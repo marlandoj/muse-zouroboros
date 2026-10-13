@@ -4,7 +4,7 @@ import {
   DEFAULT_ROUTING_POLICY,
   type ProviderAdapter,
   type RoutingDecision,
-} from "../../../packages/core/src/compute";
+} from "./core-compute-stub";
 import { createComputeDispatcher } from "../../../packages/zo-swarm-orchestrator/src/compute/dispatcher";
 import type { ComputeIntent, Task } from "../../../packages/zo-swarm-orchestrator/src/types";
 import { executionLaneForTicket } from "./execution-lane";

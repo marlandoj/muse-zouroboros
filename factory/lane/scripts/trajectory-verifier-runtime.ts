@@ -2,7 +2,7 @@ import { execFile, type ExecFileException } from "node:child_process";
 import { existsSync, mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { isAbsolute, join, resolve } from "node:path";
-import { buildHoldoutSandboxEnv } from "../../../packages/selfheal/src/introspect/holdout-sandbox.ts";
+import { buildHoldoutSandboxEnv } from "./holdout-sandbox-stub";
 import { canonicalize } from "./run-receipt-contract.ts";
 import {
   buildTrajectoryHoldReport,
