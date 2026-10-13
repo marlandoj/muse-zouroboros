@@ -1,9 +1,68 @@
 import { createHash } from "node:crypto";
-import {
-  PORTABLE_HARNESS_IDS,
-  type HarnessId,
-  type PortableHarnessInventory,
-} from "../../../packages/zo-swarm-orchestrator/src/executor/portability.ts";
+import { canonicalize, CONTRACT_ID } from "./run-receipt-contract.ts";
+
+// Local copy of the swarm's portability contract
+// (packages/zo-swarm-orchestrator/src/executor/portability.ts). That module
+// cannot load in this distribution — it imports the non-vendored
+// zouroboros-core package — so the small stable surface is duplicated here.
+// PORTABLE_HARNESS_IDS membership is asserted exactly below, so any upstream
+// drift is caught loudly rather than silently.
+export type HarnessId =
+  | "claude-code"
+  | "codex"
+  | "gemini"
+  | "hermes"
+  | "kimi"
+  | "opencode"
+  | "pi";
+
+export interface PortableHarnessInventoryEntry {
+  id: HarnessId;
+  adapterSha256: string;
+  [key: string]: unknown;
+}
+
+export interface PortableHarnessInventory {
+  schema: "harness-adapter-inventory/v1";
+  contractVersion: 1;
+  entries: PortableHarnessInventoryEntry[];
+  inventorySha256: string;
+}
+
+// RB-8 (2026-09-07): live VPS harness set — kimi/opencode/pi added; cursor dropped.
+export const PORTABLE_HARNESS_IDS: readonly HarnessId[] = [
+  "claude-code",
+  "codex",
+  "gemini",
+  "hermes",
+  "kimi",
+  "opencode",
+  "pi",
+];
+
+/**
+ * Local synthetic inventory builder. The swarm's buildPortableHarnessInventory
+ * resolves live executor definitions through the registry (which needs the
+ * non-vendored zouroboros-core package). For synthetic cohort construction a
+ * stable placeholder inventory with the contract-mandated membership is
+ * sufficient — adapter hashes are derived deterministically from the id.
+ */
+export function buildPortableHarnessInventory(): PortableHarnessInventory {
+  const entries: PortableHarnessInventoryEntry[] = PORTABLE_HARNESS_IDS.map(
+    (id) => ({
+      id,
+      adapterSha256: createHash("sha256").update(`synthetic:${id}`).digest("hex"),
+    }),
+  );
+  return {
+    schema: "harness-adapter-inventory/v1",
+    contractVersion: 1,
+    entries,
+    inventorySha256: createHash("sha256")
+      .update(entries.map((e) => e.adapterSha256).join(","))
+      .digest("hex"),
+  };
+}
 import { canonicalize, CONTRACT_ID } from "./run-receipt-contract.ts";
 import {
   TRAJECTORY_CLAIM_FIELDS,

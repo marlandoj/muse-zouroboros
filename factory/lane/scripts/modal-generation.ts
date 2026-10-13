@@ -15,7 +15,7 @@ import {
   type ModalGenerationResult,
   type ModalGenerationWorkload,
   type ModalOpenAIClientConfig,
-} from "../../../packages/modal-exec/src/modal-openai-client";
+} from "./modal-exec-stub";
 import type { AskAttempt, AskResult } from "./model-chain";
 
 export const MODAL_OVERFLOW_CONFIG_ENV = "FACTORY_MODAL_OVERFLOW_CONFIG";

@@ -100,7 +100,7 @@ function modelFamily(modelId: string): string | null {
   if (modelId === "non-llm/arbiter-v1") return "arbiter";
   if (modelId === "xai:grok-3-mini") return "grok";
   const catalogPath = modelId.startsWith("byok:")
-    ? resolve(import.meta.dir, "../../../Skills/consensus-gate/assets/byok-registry.json")
+    ? resolve(import.meta.dir, "../../../packages/consensus-gate/assets/byok-registry.json")
     : modelId.startsWith("oc:")
       ? resolve(homedir(), ".zouroboros/opencode-catalog.json")
       : /^(?:hf:|syn:)/.test(modelId)

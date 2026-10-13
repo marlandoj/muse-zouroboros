@@ -1,5 +1,11 @@
 #!/usr/bin/env bun
 /**
+ * RETIRED 2026-10-13: Zo Computer no longer exists (retired 2026-10-03).
+ * This module implemented provider rotation for the agentic /zo/ask transport.
+ * It is kept for historical reference only — nothing imports it as a value
+ * anymore, and all live /zo/ask call sites have been removed. The historical
+ * comments below describe the retired architecture.
+ *
  * Provider rotation for the agentic /zo/ask transport.
  *
  * The factory executes via /zo/ask — an AGENTIC endpoint: the child Zo runs the

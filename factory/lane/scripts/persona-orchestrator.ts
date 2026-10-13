@@ -154,7 +154,8 @@ interface InvocationArtifact {
   error: string | null;
 }
 
-const ZO_ASK_URL = "https://api.zo.computer/zo/ask";
+// Zo Computer was retired on 2026-10-03 and no longer exists; the /zo/ask
+// transport below has been removed. invokeZoPersona now fails fast.
 // ZOU-1576 defect 1: persona reviewers run an agentic session (inspect the
 // worktree, run checks) rather than a single completion. Measured ZOU-1566
 // round-4 elapsed was 171-246s per reviewer, so a 120s wall failed closed on
@@ -207,13 +208,6 @@ export function writeFailureAttempt(canonicalPath: string, artifact: unknown): s
 
 function finiteCost(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : null;
-}
-
-function responseOutput(payload: Record<string, unknown>): string {
-  const output = payload.output ?? payload.result ?? payload.message;
-  if (typeof output === "string" && output.trim()) return output.trim();
-  if (output && typeof output === "object") return JSON.stringify(output);
-  throw new Error("persona /zo/ask response has no non-empty output");
 }
 
 export function resolvePersonaOrchestrationMode(
@@ -357,37 +351,13 @@ export function defaultPersonaDirectoryCaller(): () => Promise<unknown> {
 }
 
 export async function invokeZoPersona(request: PersonaCallRequest): Promise<PersonaCallResult> {
-  if (nativePersonaDeployment()) throw new Error("Native VPS Diversity of Thought requires a qualified native persona invocation adapter; Zo API is disabled");
-  const authorization = resolvePersonaZoAskAuthorization();
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), request.timeout_ms);
-  try {
-    const response = await fetch(ZO_ASK_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", authorization, connection: "close" },
-      body: JSON.stringify(buildPersonaZoAskBody(request.input, request.model_name, request.persona_id)),
-      signal: controller.signal,
-    });
-    if (!response.ok) throw new Error(`/zo/ask returned ${response.status}: ${await response.text()}`);
-    const payload = await response.json() as Record<string, unknown>;
-    const metadata = payload.metadata && typeof payload.metadata === "object"
-      ? payload.metadata as Record<string, unknown>
-      : {};
-    const usage = payload.usage && typeof payload.usage === "object"
-      ? payload.usage as Record<string, unknown>
-      : {};
-    return {
-      output: responseOutput(payload),
-      model_name: typeof payload.model_name === "string"
-        ? payload.model_name
-        : typeof payload.model === "string"
-          ? payload.model
-          : request.model_name,
-      cost_usd: finiteCost(payload.cost_usd) ?? finiteCost(usage.cost_usd) ?? finiteCost(metadata.cost_usd),
-    };
-  } finally {
-    clearTimeout(timer);
-  }
+  // Zo Computer was retired on 2026-10-03 and no longer exists. The /zo/ask
+  // transport this function used has been removed; failing fast rather than
+  // attempting the dead endpoint.
+  void request;
+  throw new Error(
+    "invokeZoPersona requires Zo Computer (/zo/ask), retired 2026-10-03: Zouroboros System is harness-only",
+  );
 }
 
 function pathContains(parent: string, child: string): boolean {

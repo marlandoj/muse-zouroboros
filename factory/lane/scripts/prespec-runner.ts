@@ -50,14 +50,11 @@ import {
   type PersonaAssociationLineage,
 } from "./pool-queue";
 import { appendRow, canonicalSeedHash, sourceHash } from "./intake-ledger";
-import { askWithFailover, formatTrail, loadModelChain } from "./model-chain";
-import { generatePrespecWithOverflow } from "./modal-generation";
 import { atomicPublishSeed, parseSeedYaml } from "./recovery-artifacts";
 import { productGateMode, runProductPreflight, type ProductPreflightResult } from "./product-lifecycle-gate";
 
 // ─── Config ─────────────────────────────────────────────────────────────────
 
-const ZO_ASK_URL = "https://api.zo.computer/zo/ask";
 export const PRESPEC_ZO_REQUEST_TIMEOUT_MS = 45_000;
 export const PRESPEC_ZO_CHAIN_DEPTH = 1;
 const API = process.env.LINEAR_API_URL ?? "https://api.linear.app/graphql";
@@ -503,47 +500,13 @@ export async function run(opts: {
   return result;
 }
 
-async function interviewAndCache(ticket: IntakeTicket, seedPath: string): Promise<void> {
-  const token = process.env.ZO_CLIENT_IDENTITY_TOKEN;
-  if (!token) throw new Error("ZO_CLIENT_IDENTITY_TOKEN not set — cannot run pre-spec interview");
-
-  const input = buildPrespecPrompt(ticket);
-  const askRes = await generatePrespecWithOverflow({
-    input,
-    zoCall: () => askWithFailover({
-      url: ZO_ASK_URL,
-      token,
-      input,
-      chain: prespecZoModelChain(loadModelChain()),
-      timeoutMs: PRESPEC_ZO_REQUEST_TIMEOUT_MS,
-      maxAttemptsPerModel: 1,
-    }),
-  });
-  const { seedYaml, notes } = parsePrespecOutput(askRes.output || "");
-  if (!seedYaml) {
-    throw new Error(`pre-spec for ${ticket.identifier}: /zo/ask returned no parseable seed (model=${askRes.model})`);
-  }
-  validatePrespecSeed(seedYaml);
-
-  const hash = sourceHash(ticket.title, ticket.description);
-  const stamped = stampSourceHash(seedYaml, hash);
-  atomicPublishSeed(seedPath, stamped.endsWith("\n") ? stamped : `${stamped}\n`);
-  writeFileSync(
-    notesPathFor(ticket.identifier),
-    `# Pre-Spec Interview — ${ticket.identifier}\n\n` +
-      `_Speculative pre-spec (SF-P3). Model: ${askRes.model}. Trail: ${formatTrail(askRes.trail)}._\n\n` +
-      `${notes ?? "(no notes emitted)"}\n`,
+async function interviewAndCache(_ticket: IntakeTicket, _seedPath: string): Promise<void> {
+  // Zo Computer was retired on 2026-10-03 and no longer exists. The pre-spec
+  // interview ran through /zo/ask; without that transport this opt-in producer
+  // cannot run. Failing fast rather than attempting the dead endpoint.
+  throw new Error(
+    "pre-spec interview requires Zo Computer (/zo/ask), retired 2026-10-03: Zouroboros System is harness-only",
   );
-
-  // Audit-only ledger row: stage="prespec", seed_hash=canonical seed hash. No new
-  // required field; source_hash lives stamped in the seed, not the ledger.
-  appendRow({
-    ticket_id: ticket.linear_id,
-    identifier: ticket.identifier,
-    execution_id: `prespec-${Date.now()}`,
-    stage: "prespec",
-    seed_hash: canonicalSeedHash(parseSeedYaml(stamped)),
-  });
 }
 
 // ─── CLI ────────────────────────────────────────────────────────────────────

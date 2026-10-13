@@ -2,8 +2,8 @@ import { parseSupplyChainOutput, runSupplyChainPreflight } from "./factory-suppl
 import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { buildAttestation, sourceDigest } from "../../../Skills/skill-security-gate/scripts/supply-chain/attestation";
-import type { SupplyChainReport } from "../../../Skills/skill-security-gate/scripts/supply-chain/types";
+import { buildAttestation, sourceDigest } from "./supply-chain-stub";
+import type { SupplyChainReport } from "./supply-chain-stub";
 
 let failures = 0;
 function check(name: string, condition: boolean): void {

@@ -5,7 +5,7 @@ import {
   PlanGateLedger,
   type HashChainResult,
   type StoredLedgerRecord,
-} from "../../../packages/workflow/src/plan-gate/index.ts";
+} from "./plan-gate-ledger-stub";
 
 export interface PlanGateEvidenceOptions {
   target?: number;

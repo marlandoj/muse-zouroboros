@@ -3,7 +3,7 @@
 import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { ModalOpenAIClient, type ModalGenerationResult } from "../../../packages/modal-exec/src/modal-openai-client";
+import { ModalOpenAIClient, type ModalGenerationResult } from "./modal-exec-stub";
 import {
   generatePrespecWithOverflow,
   isEligibleZoOverflowFailure,

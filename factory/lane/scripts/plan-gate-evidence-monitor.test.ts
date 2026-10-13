@@ -5,7 +5,7 @@ import { join } from "node:path";
 import {
   PlanGateLedger,
   type LedgerRecord,
-} from "../../../packages/workflow/src/plan-gate/index.ts";
+} from "./plan-gate-ledger-stub";
 import {
   analyzePlanGateEvidence,
   monitorPlanGateEvidence,
