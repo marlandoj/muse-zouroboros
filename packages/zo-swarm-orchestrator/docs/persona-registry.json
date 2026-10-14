@@ -831,6 +831,27 @@
         "multi-provider coding",
         "independent implementation"
       ]
+    },
+    {
+      "id": "financial-advisor",
+      "name": "Financial Advisor",
+      "expertise": [
+        "portfolio analysis",
+        "risk assessment",
+        "financial planning",
+        "tax-aware investing"
+      ],
+      "best_for": [
+        "investment review",
+        "financial advice",
+        "risk flagging",
+        "retirement planning"
+      ],
+      "source": "zouroboros-core",
+      "forbiddenCapabilities": [
+        "shellExec",
+        "fileWrite"
+      ]
     }
   ],
   "schemaVersion": 2,

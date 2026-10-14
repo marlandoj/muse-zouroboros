@@ -1,5 +1,5 @@
 import { describe, test, expect } from 'bun:test';
-import { selectExecutor } from '../selector/executor-selector.js';
+import { selectExecutor, resolvePersonaRestrictions } from '../selector/executor-selector.js';
 import type { Task, ExecutorRegistryEntry } from '../types.js';
 import type { BudgetSnapshot, HealthSnapshot } from '../selector/executor-selector.js';
 import { RoutingEngine } from '../routing/engine.js';
@@ -170,5 +170,55 @@ describe('Executor Selector', () => {
     const pi = selectExecutor(makeTask({ executor: 'pi' }), null, HEALTHY, EXECUTORS);
     expect(kimi.fallbacks).toEqual(['pi', 'opencode', 'gemini', 'claude-code']);
     expect(pi.fallbacks).toEqual(['gemini', 'opencode', 'kimi', 'codex', 'claude-code']);
+  });
+});
+
+describe('Persona tool restrictions (registry-driven)', () => {
+  const SHELL_CAPABLE: ExecutorRegistryEntry = {
+    id: 'codex', name: 'Codex CLI', executor: 'local', description: '',
+    expertise: [], bestFor: [], config: { defaultTimeout: 600 },
+    capabilities: { fileRead: true, fileWrite: true, shellExec: true, webResearch: true, imageGen: false, mcp: false, streaming: false },
+  };
+  const SANDBOXED: ExecutorRegistryEntry = {
+    id: 'gemini', name: 'Gemini CLI', executor: 'local', description: '',
+    expertise: [], bestFor: [], config: { defaultTimeout: 300 },
+    capabilities: { fileRead: true, fileWrite: false, shellExec: false, webResearch: true, imageGen: false, mcp: false, streaming: false },
+  };
+
+  test('financial-advisor restrictions come from the persona registry', () => {
+    expect(resolvePersonaRestrictions('financial-advisor')).toEqual(['shellExec', 'fileWrite']);
+  });
+
+  test('persona names normalize (case/whitespace)', () => {
+    expect(resolvePersonaRestrictions('Financial Advisor')).toEqual(['shellExec', 'fileWrite']);
+  });
+
+  test('harness labels are not treated as restricted personas', () => {
+    expect(resolvePersonaRestrictions('claude-code')).toEqual([]);
+    expect(resolvePersonaRestrictions('codex')).toEqual([]);
+  });
+
+  test('unknown personas keep previous behavior (no restrictions)', () => {
+    expect(resolvePersonaRestrictions('nonexistent-persona-xyz')).toEqual([]);
+    expect(resolvePersonaRestrictions(undefined)).toEqual([]);
+  });
+
+  test('restricted persona with explicit shell-capable executor falls back', () => {
+    const result = selectExecutor(
+      makeTask({ persona: 'financial-advisor', executor: 'codex' }),
+      null, HEALTHY, [SHELL_CAPABLE, SANDBOXED],
+    );
+    expect(result.executorId).toBe('gemini');
+    expect(result.confidence).toBe(0.4);
+    expect(result.reasoning).toContain('blocked by persona');
+  });
+
+  test('unrestricted persona keeps the explicit executor', () => {
+    const result = selectExecutor(
+      makeTask({ persona: 'research-analyst', executor: 'codex' }),
+      null, HEALTHY, [SHELL_CAPABLE, SANDBOXED],
+    );
+    expect(result.executorId).toBe('codex');
+    expect(result.confidence).toBe(1.0);
   });
 });

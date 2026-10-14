@@ -10,6 +10,9 @@
 
 import type { Task, ExecutorRegistryEntry, ComplexityTier, BudgetSnapshot, HealthSnapshot } from '../types.js';
 import type { RoutingEngine } from '../routing/engine.js';
+import { readFileSync, existsSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 // Re-export from types.ts for backward compatibility
 export type { BudgetSnapshot, HealthSnapshot } from '../types.js';
@@ -28,23 +31,89 @@ interface RoleResolution {
 }
 
 /**
- * P1-3: Persona tool scope enforcement.
+ * P1-3: Persona tool scope enforcement — registry-driven.
  *
- * Maps persona names to the capabilities they are FORBIDDEN from using.
- * When a task carries a forbidden persona, the selector excludes any executor
- * whose capabilities would give the persona access to the forbidden toolset.
+ * Restrictions are declared on persona registry entries
+ * (packages/swarm/assets/persona-registry.json, `forbiddenCapabilities`).
+ * When a task carries a restricted persona, the selector excludes any
+ * executor whose capabilities would give the persona access to the forbidden
+ * toolset. Previously, persona restrictions (e.g. Financial Advisor "no
+ * system tools") were advisory-only in prompt rules; the hardcoded map below
+ * was the only mechanical enforcement. The registry is now the source of
+ * truth; the map remains as a backwards-compat fallback for personas absent
+ * from the registry.
  *
- * Previously, persona restrictions (e.g. Financial Advisor "no system tools")
- * were advisory-only in prompt rules. This converts them into mechanical
- * enforcement at the dispatch boundary.
+ * Fail-closed: a declared capability name the selector does not recognize
+ * excludes the executor — its safety cannot be established (Art IX).
+ * Personas absent from the registry (including harness labels like
+ * "claude-code", which share the task.persona field) keep the previous
+ * behavior of no restrictions, so routing never breaks on unknown names.
  */
-const PERSONA_TOOL_RESTRICTIONS: Record<string, string[]> = {
+const PERSONA_TOOL_RESTRICTIONS_FALLBACK: Record<string, string[]> = {
   "financial-advisor": ["shellExec", "fileWrite"],
 };
 
+/** Capability keys the selector understands (mirrors ExecutorCapabilities). */
+const KNOWN_CAPABILITIES = new Set([
+  "fileRead", "fileWrite", "shellExec", "webResearch", "imageGen", "mcp", "streaming",
+]);
+
+/** Harness names that are executor labels, not domain personas (mirrors bridge.ts). */
+const HARNESS_LABELS = new Set([
+  'codex', 'claude-code', 'hermes', 'gemini', 'kimi', 'opencode', 'pi',
+  'codex-cli', 'claude code', 'hermes agent', 'gemini cli', 'codex cli',
+  'kimi code cli', 'pi coding agent',
+]);
+
+interface RegistryPersonaEntry {
+  id: string;
+  name: string;
+  forbiddenCapabilities?: string[];
+}
+
+let personaRegistryCache: RegistryPersonaEntry[] | null = null;
+
+/** Load the persona registry once; empty on any failure (fail open to fallback). */
+function loadPersonaRegistry(): RegistryPersonaEntry[] {
+  if (personaRegistryCache !== null) return personaRegistryCache;
+  let loaded: RegistryPersonaEntry[] = [];
+  try {
+    const here = dirname(fileURLToPath(import.meta.url));
+    const registryPath = join(here, '..', '..', 'assets', 'persona-registry.json');
+    if (existsSync(registryPath)) {
+      const raw = JSON.parse(readFileSync(registryPath, 'utf8'));
+      const list = Array.isArray(raw) ? raw : raw.personas || [];
+      if (Array.isArray(list)) loaded = list;
+    }
+  } catch {
+    loaded = [];
+  }
+  personaRegistryCache = loaded;
+  return loaded;
+}
+
+/**
+ * Resolve the forbidden capability names for a task persona: registry first,
+ * hardcoded fallback second, none for harness labels / unknown names.
+ * Exported for unit tests.
+ */
+export function resolvePersonaRestrictions(persona: string | undefined): string[] {
+  if (!persona) return [];
+  const normalized = persona.trim().toLowerCase();
+  if (HARNESS_LABELS.has(normalized)) return [];
+  const entry = loadPersonaRegistry().find(
+    (p) => p.id?.toLowerCase() === normalized || p.name?.toLowerCase() === normalized,
+  );
+  if (entry && Array.isArray(entry.forbiddenCapabilities) && entry.forbiddenCapabilities.length > 0) {
+    return entry.forbiddenCapabilities;
+  }
+  return PERSONA_TOOL_RESTRICTIONS_FALLBACK[normalized] ?? [];
+}
+
 /**
  * Check whether an executor's capabilities violate a persona's tool restrictions.
- * Returns a list of violating capability names (empty = clean).
+ * Returns a list of violating capability names (empty = clean). Unknown
+ * capability names fail closed: the executor is excluded.
  */
 function checkPersonaRestrictions(
   executor: ExecutorRegistryEntry,
@@ -53,6 +122,10 @@ function checkPersonaRestrictions(
   if (!restrictedTools.length || !executor.capabilities) return [];
   const violations: string[] = [];
   for (const tool of restrictedTools) {
+    if (!KNOWN_CAPABILITIES.has(tool)) {
+      violations.push(`${tool} (unknown capability — fail closed)`);
+      continue;
+    }
     if ((executor.capabilities as any)[tool]) {
       violations.push(tool);
     }
@@ -103,11 +176,9 @@ export function selectExecutor(
   if (task.executor === 'cursor') throw new Error('Cursor is retired from active selection');
   const availableIds = new Set(executors.map(e => e.id));
 
-  // P1-3: Resolve persona tool restrictions — exclude executors that give
-  // a restricted persona access to forbidden tools.
-  const restrictedTools = task.persona
-    ? PERSONA_TOOL_RESTRICTIONS[task.persona.toLowerCase()] ?? []
-    : [];
+  // P1-3: Resolve persona tool restrictions from the registry (fallback: hardcoded
+  // map) — exclude executors that give a restricted persona forbidden tools.
+  const restrictedTools = resolvePersonaRestrictions(task.persona);
   let restrictedExecutors: Set<string> | undefined;
   if (restrictedTools.length > 0) {
     restrictedExecutors = new Set<string>();
