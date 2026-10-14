@@ -28,7 +28,7 @@ const HEALTHY: HealthSnapshot = {
 function makeTask(overrides: Partial<Task> = {}): Task {
   return {
     id: 'test-task',
-    persona: 'test',
+    // No persona by default: unknown names now fail closed (governance review 2026-10-14).
     task: 'Do something',
     priority: 'medium',
     ...overrides,
@@ -198,8 +198,8 @@ describe('Persona tool restrictions (registry-driven)', () => {
     expect(resolvePersonaRestrictions('codex')).toEqual([]);
   });
 
-  test('unknown personas keep previous behavior (no restrictions)', () => {
-    expect(resolvePersonaRestrictions('nonexistent-persona-xyz')).toEqual([]);
+  test('unknown personas fail closed (governance review 2026-10-14)', () => {
+    expect(() => resolvePersonaRestrictions('nonexistent-persona-xyz')).toThrow('Unknown persona');
     expect(resolvePersonaRestrictions(undefined)).toEqual([]);
   });
 
@@ -220,5 +220,39 @@ describe('Persona tool restrictions (registry-driven)', () => {
     );
     expect(result.executorId).toBe('codex');
     expect(result.confidence).toBe(1.0);
+  });
+
+  test('unknown persona name fails closed in selectExecutor (governance review 2026-10-14)', () => {
+    expect(() => selectExecutor(
+      makeTask({ persona: 'definitely-not-a-real-persona' }),
+      null, HEALTHY, [SHELL_CAPABLE, SANDBOXED],
+    )).toThrow('Unknown persona');
+  });
+
+  test('missing executor health is not routable (governance review 2026-10-14)', () => {
+    // An executor with no health entry must not be selected; the selector
+    // should fall back to one with explicit CLOSED health.
+    const partialHealth: HealthSnapshot = {
+      'codex': { state: 'CLOSED', failures: 0 },
+    };
+    const result = selectExecutor(
+      makeTask({ task: 'Design the architecture and planning for the new system' }),
+      null, partialHealth, [SHELL_CAPABLE, SANDBOXED],
+    );
+    // codex is the only one with health data; it should be selected
+    expect(result.executorId).toBe('codex');
+  });
+
+  test('executor with missing health is excluded from fallbacks', () => {
+    const partialHealth: HealthSnapshot = {
+      'gemini': { state: 'CLOSED', failures: 0 },
+    };
+    // codex has no health entry; gemini does. Even though codex might
+    // otherwise be preferred, the healthy one wins.
+    const result = selectExecutor(
+      makeTask({ executor: 'codex' }),
+      null, partialHealth, [SHELL_CAPABLE, SANDBOXED],
+    );
+    expect(result.executorId).toBe('gemini');
   });
 });

@@ -33,7 +33,8 @@ const HEALTHY: HealthSnapshot = {
 };
 
 function makeTask(overrides: Partial<Task> = {}): Task {
-  return { id: 'test', persona: 'test', task: 'test task', priority: 'medium', ...overrides };
+  // No persona by default: unknown names now fail closed (governance review 2026-10-14).
+  return { id: 'test', task: 'test task', priority: 'medium', ...overrides };
 }
 
 beforeEach(() => {
@@ -248,7 +249,7 @@ describe('Selector fallback chains', () => {
     expect(['codex', 'hermes']).toContain(selection.executorId);
   });
 
-  test('all executors open still returns something', () => {
+  test('all executors open fails closed (governance review 2026-10-14)', () => {
     const allOpen: HealthSnapshot = {
       'claude-code': { state: 'OPEN', failures: 5 },
       'gemini': { state: 'OPEN', failures: 5 },
@@ -256,7 +257,6 @@ describe('Selector fallback chains', () => {
       'hermes': { state: 'OPEN', failures: 5 },
     };
 
-    const selection = selectExecutor(makeTask(), null, allOpen, EXECUTORS);
-    expect(selection.executorId).toBeDefined();
+    expect(() => selectExecutor(makeTask(), null, allOpen, EXECUTORS)).toThrow('No healthy executor');
   });
 });

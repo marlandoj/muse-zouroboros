@@ -34,7 +34,7 @@ interface RoleResolution {
  * P1-3: Persona tool scope enforcement — registry-driven.
  *
  * Restrictions are declared on persona registry entries
- * (packages/swarm/assets/persona-registry.json, `forbiddenCapabilities`).
+ * (packages/zo-swarm-orchestrator/assets/persona-registry.json, `forbiddenCapabilities`).
  * When a task carries a restricted persona, the selector excludes any
  * executor whose capabilities would give the persona access to the forbidden
  * toolset. Previously, persona restrictions (e.g. Financial Advisor "no
@@ -45,9 +45,11 @@ interface RoleResolution {
  *
  * Fail-closed: a declared capability name the selector does not recognize
  * excludes the executor — its safety cannot be established (Art IX).
- * Personas absent from the registry (including harness labels like
- * "claude-code", which share the task.persona field) keep the previous
- * behavior of no restrictions, so routing never breaks on unknown names.
+ * Harness labels like "claude-code" (which share the task.persona field)
+ * carry no restrictions. Unknown persona names fail closed: the selector
+ * throws rather than routing an unrecognized persona unrestricted —
+ * register the persona (with explicit forbiddenCapabilities, possibly
+ * empty) or use a harness label.
  */
 const PERSONA_TOOL_RESTRICTIONS_FALLBACK: Record<string, string[]> = {
   "financial-advisor": ["shellExec", "fileWrite"],
@@ -94,7 +96,9 @@ function loadPersonaRegistry(): RegistryPersonaEntry[] {
 
 /**
  * Resolve the forbidden capability names for a task persona: registry first,
- * hardcoded fallback second, none for harness labels / unknown names.
+ * hardcoded fallback second. Harness labels (executor names, not personas)
+ * carry no restrictions. Unknown names fail closed: the selector refuses to
+ * route rather than silently running an unrecognized persona unrestricted.
  * Exported for unit tests.
  */
 export function resolvePersonaRestrictions(persona: string | undefined): string[] {
@@ -104,10 +108,28 @@ export function resolvePersonaRestrictions(persona: string | undefined): string[
   const entry = loadPersonaRegistry().find(
     (p) => p.id?.toLowerCase() === normalized || p.name?.toLowerCase() === normalized,
   );
-  if (entry && Array.isArray(entry.forbiddenCapabilities) && entry.forbiddenCapabilities.length > 0) {
-    return entry.forbiddenCapabilities;
+  if (entry) {
+    return Array.isArray(entry.forbiddenCapabilities) ? entry.forbiddenCapabilities : [];
   }
-  return PERSONA_TOOL_RESTRICTIONS_FALLBACK[normalized] ?? [];
+  if (normalized in PERSONA_TOOL_RESTRICTIONS_FALLBACK) {
+    return PERSONA_TOOL_RESTRICTIONS_FALLBACK[normalized];
+  }
+  throw new Error(
+    `Unknown persona "${persona}": not a harness label, not in the persona registry, ` +
+    `and not in the fallback map. Refusing to route unrestricted. ` +
+    `Add the persona to packages/zo-swarm-orchestrator/assets/persona-registry.json ` +
+    `(with explicit forbiddenCapabilities, possibly empty) or use a harness label.`,
+  );
+}
+
+/**
+ * An executor is routable only when its health is explicitly CLOSED or
+ * HALF_OPEN. Missing health data fails closed: unknown health is not
+ * routable. (Previously, missing health was treated as healthy because
+ * `undefined !== 'OPEN'`.)
+ */
+function isHealthy(entry: { state: string } | undefined): boolean {
+  return entry?.state === 'CLOSED' || entry?.state === 'HALF_OPEN';
 }
 
 /**
@@ -198,13 +220,13 @@ export function selectExecutor(
   if (nativeCatalog && (!task.executor || task.executor === 'auto')) {
     restrictedExecutors ??= new Set<string>();
     for (const id of availableIds) if (!qualifiedHarnesses.has(id) && id !== roleResolution?.executorId) restrictedExecutors.add(id);
-    if (![...availableIds].some(id => !restrictedExecutors!.has(id) && health[id]?.state !== 'OPEN')) {
+    if (![...availableIds].some(id => !restrictedExecutors!.has(id) && isHealthy(health[id]))) {
       throw new Error('No healthy, qualified native swarm harness is available');
     }
   }
   // Helper: filter fallback chain to registered, permitted, healthy executors.
   const safeFallbacks = (chain: string[]): string[] =>
-    chain.filter(id => id !== 'cursor' && (!nativeCatalog || qualifiedHarnesses.has(id)) && availableIds.has(id) && !restrictedExecutors?.has(id) && health[id]?.state !== 'OPEN');
+    chain.filter(id => id !== 'cursor' && (!nativeCatalog || qualifiedHarnesses.has(id)) && availableIds.has(id) && !restrictedExecutors?.has(id) && isHealthy(health[id]));
 
   // Priority 1: Explicit executorId in task (backward compat)
   if (task.executor && task.executor !== 'auto') {
@@ -223,6 +245,26 @@ export function selectExecutor(
       }
       console.error(`[selector] no fallback available for blocked executor "${task.executor}"`);
     }
+    // Governance 2026-10-14: explicit executor with missing/unhealthy status
+    // fails closed — fall back to healthy alternatives rather than routing blind.
+    if (!isHealthy(health[task.executor])) {
+      const fallbacks = safeFallbacks(FALLBACK_CHAINS[task.executor] ?? []);
+      if (fallbacks.length > 0) {
+        console.error(
+          `[selector] explicit executor "${task.executor}" not healthy — falling back to "${fallbacks[0]}"`
+        );
+        return {
+          executorId: fallbacks[0],
+          confidence: 0.4,
+          reasoning: `Explicit executor "${task.executor}" not healthy — falling back to "${fallbacks[0]}"`,
+          fallbacks: fallbacks.slice(1),
+        };
+      }
+      throw new Error(
+        `Explicit executor "${task.executor}" is not healthy and has no healthy fallbacks. ` +
+        `Refusing to route to an executor with unknown or unhealthy status.`,
+      );
+    }
     return {
       executorId: task.executor,
       confidence: 1.0,
@@ -233,7 +275,7 @@ export function selectExecutor(
 
   // Priority 2: A healthy role binding is authoritative, even with composite routing enabled.
   if (roleResolution && availableIds.has(roleResolution.executorId) && !restrictedExecutors?.has(roleResolution.executorId)) {
-    if (health[roleResolution.executorId]?.state !== 'OPEN') {
+    if (isHealthy(health[roleResolution.executorId])) {
       return {
         executorId: roleResolution.executorId,
         model: roleResolution.model,
@@ -243,7 +285,7 @@ export function selectExecutor(
       };
     }
     const fallbacks = safeFallbacks(FALLBACK_CHAINS[roleResolution.executorId] ?? []);
-    const fallback = fallbacks.find(id => availableIds.has(id) && health[id]?.state !== 'OPEN');
+    const fallback = fallbacks.find(id => availableIds.has(id) && isHealthy(health[id]));
     if (fallback) {
       return {
         executorId: fallback,
@@ -281,7 +323,7 @@ export function selectExecutor(
     // P1-3: Check persona restrictions on routing engine decision
     if (restrictedExecutors?.has(decision.executorId)) {
       const fallbacks = safeFallbacks(FALLBACK_CHAINS[decision.executorId] ?? []);
-      const fb = fallbacks.find(f => health[f]?.state !== 'OPEN' && availableIds.has(f));
+      const fb = fallbacks.find(f => isHealthy(health[f]) && availableIds.has(f));
       if (fb) {
         return {
           executorId: fb,
@@ -293,11 +335,11 @@ export function selectExecutor(
       throw new Error('Routing decision is blocked and has no qualified permitted fallback');
     }
 
-    // Check health — skip if circuit breaker open
-    if (health[decision.executorId]?.state === 'OPEN') {
+    // Check health — skip if not explicitly healthy (fail closed on missing data)
+    if (!isHealthy(health[decision.executorId])) {
       const fallbacks = safeFallbacks(FALLBACK_CHAINS[decision.executorId] ?? []);
       const fallback = fallbacks.find(
-        fb => health[fb]?.state !== 'OPEN' && availableIds.has(fb)
+        fb => isHealthy(health[fb]) && availableIds.has(fb)
       );
       if (fallback) {
         return {
@@ -326,6 +368,9 @@ export function selectExecutor(
     if (!availableIds.has(executorId)) continue;
     // P1-3: skip executors restricted for this persona
     if (restrictedExecutors?.has(executorId)) continue;
+    // Governance 2026-10-14: skip executors without explicit healthy status.
+    // Missing health data fails closed — unknown health is not routable.
+    if (!isHealthy(health[executorId])) continue;
     let score = 0;
     for (const tag of tags) {
       if (taskText.includes(tag)) score++;
@@ -345,27 +390,34 @@ export function selectExecutor(
   // If all executors are restricted, fall back to the first unrestricted executor
   if (bestScore === 0 && restrictedExecutors) {
     for (const id of COST_RANKING) {
-      if (availableIds.has(id) && !restrictedExecutors.has(id)) {
+      if (availableIds.has(id) && !restrictedExecutors.has(id) && isHealthy(health[id])) {
         bestId = id;
         break;
       }
     }
   }
 
-  // Check health — skip if circuit breaker open
-  if (health[bestId]?.state === 'OPEN') {
+  // Check health — skip if not explicitly healthy (fail closed on missing data)
+  if (!isHealthy(health[bestId])) {
     const fallbacks = safeFallbacks(FALLBACK_CHAINS[bestId] ?? []);
     const fallback = fallbacks.find(
-      fb => health[fb]?.state !== 'OPEN' && availableIds.has(fb)
+      fb => isHealthy(health[fb]) && availableIds.has(fb)
     );
     if (fallback) {
+      const reason = health[bestId]?.state === 'OPEN'
+        ? `Primary "${bestId}" circuit breaker OPEN — falling back to "${fallback}"`
+        : `Primary "${bestId}" not healthy — falling back to "${fallback}"`;
       return {
         executorId: fallback,
         confidence: 0.6,
-        reasoning: `Primary "${bestId}" circuit breaker OPEN — falling back to "${fallback}"`,
+        reasoning: reason,
         fallbacks: fallbacks.filter(f => f !== fallback),
       };
     }
+    throw new Error(
+      `No healthy executor available: "${bestId}" is not healthy and has no healthy fallbacks. ` +
+      `Refusing to route to an executor with unknown or unhealthy status.`,
+    );
   }
 
   const confidence = bestScore > 0 ? Math.min(0.95, 0.5 + bestScore * 0.15) : 0.5;
@@ -382,7 +434,7 @@ export function selectExecutor(
 
 function findCheapestHealthy(health: HealthSnapshot, available: Set<string>, restrictedExecutors?: Set<string>): string {
   for (const id of COST_RANKING) {
-    if (available.has(id) && health[id]?.state !== 'OPEN' && !restrictedExecutors?.has(id)) return id;
+    if (available.has(id) && isHealthy(health[id]) && !restrictedExecutors?.has(id)) return id;
   }
   // Last resort: cheapest unrestricted executor (even if unhealthy)
   for (const id of COST_RANKING) {
