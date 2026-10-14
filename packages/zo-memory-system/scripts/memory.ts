@@ -35,6 +35,24 @@ import {
 } from "./continuation";
 import { generate as mcGenerate, embeddings as mcEmbeddings } from "./model-client";
 import { applyDefense, resolveDefensePolicy, DefenseBlockedError } from "./defense";
+import {
+  ensureIntelligencePlaneSchema,
+  newCallId,
+  notForgottenSql,
+  recordAudit,
+  requireActor,
+  resolveScope,
+  scopeSql,
+} from "./scope";
+import {
+  forgetFact,
+  restoreFact,
+  listForgottenFacts,
+  purgeForgottenFacts,
+  sweepDecay,
+  DEFAULT_RETENTION_THRESHOLD,
+} from "./forgetting";
+import { sweepPromotions, listReviewQueue, resolveReview, type ReviewDecision } from "./promotion";
 
 // --- Configuration ---
 const DB_PATH = process.env.ZO_MEMORY_DB || "/home/workspace/.zo/memory/shared-facts.db";
@@ -50,10 +68,10 @@ const TTL_DEFAULTS: Record<string, number | null> = {
   checkpoint: 4 * 3600,
 };
 
-type DecayClass = "permanent" | "stable" | "active" | "session" | "checkpoint";
-type Category = "preference" | "fact" | "decision" | "convention" | "other" | "reference" | "project";
+export type DecayClass = "permanent" | "stable" | "active" | "session" | "checkpoint";
+export type Category = "preference" | "fact" | "decision" | "convention" | "other" | "reference" | "project";
 
-interface MemoryEntry {
+export interface MemoryEntry {
   id: string;
   persona: string;
   entity: string;
@@ -116,11 +134,21 @@ interface Procedure {
 // --- Database Setup ---
 let db: Database;
 let dbInitialized = false;
+let dbCurrentPath: string | null = null;
 
-async function initDb(): Promise<Database> {
-  if (dbInitialized && db) return db;
+export async function initDb(pathOverride?: string): Promise<Database> {
+  // No-arg calls return the CURRENT singleton unchanged (whatever path it
+  // was opened on); only an explicit different pathOverride re-points it
+  // (hermetic evals/tests open scratch DBs).
+  if (dbInitialized && db && (!pathOverride || dbCurrentPath === pathOverride)) return db;
+  const targetPath = pathOverride || DB_PATH;
+  if (dbInitialized && db) {
+    try { db.close(); } catch { /* already closed */ }
+    dbInitialized = false;
+  }
 
-  db = new Database(DB_PATH);
+  db = new Database(targetPath);
+  dbCurrentPath = targetPath;
   db.exec("PRAGMA journal_mode = WAL");
   db.exec("PRAGMA foreign_keys = ON");
 
@@ -232,9 +260,19 @@ async function initDb(): Promise<Database> {
   `);
 
   ensureContinuationSchema(db);
-  
+  ensureIntelligencePlaneSchema(db);
+
   dbInitialized = true;
   return db;
+}
+
+/** Close and reset the singleton; the next initDb() reopens the default path. */
+export function closeDb(): void {
+  if (dbInitialized && db) {
+    try { db.close(); } catch { /* already closed */ }
+  }
+  dbInitialized = false;
+  dbCurrentPath = null;
 }
 
 async function runMigration(): Promise<void> {
@@ -250,7 +288,15 @@ async function runMigration(): Promise<void> {
       db.exec(sqlV3);
     } catch {
     }
-    
+
+    const v4Path = join(import.meta.dir, "migrate-v4.sql");
+    try {
+      const sqlV4 = readFileSync(v4Path, "utf-8");
+      db.exec(sqlV4);
+    } catch {
+    }
+
+
     const tables = db.prepare(
       "SELECT name FROM sqlite_master WHERE type='table' AND name IN ('episodes','episode_entities','procedures','procedure_episodes','episode_documents','open_loops') ORDER BY name"
     ).all() as Array<{ name: string }>;
@@ -311,14 +357,22 @@ function cosineSimilarity(a: number[], b: number[]): number {
 
 // --- Store with Embedding ---
 
-interface StoreOptions {
+export interface StoreOptions {
+  /**
+   * REQUIRED caller identity (fail-closed, Track 1): there is no silent
+   * default persona. The fact's persona defaults to the actor; pass
+   * entry.persona explicitly (e.g. 'shared') to store elsewhere in scope.
+   */
+  actor: string;
   skipWikilinkEnforcement?: boolean;
 }
 
-async function storeWithEmbedding(
-  entry: Omit<MemoryEntry, "id" | "createdAt" | "expiresAt" | "lastAccessed">,
-  options?: StoreOptions
+export async function storeWithEmbedding(
+  entry: Omit<MemoryEntry, "id" | "createdAt" | "expiresAt" | "lastAccessed" | "persona"> & { persona?: string },
+  options: StoreOptions
 ): Promise<MemoryEntry | null> {
+  const actor = requireActor(options?.actor, "storeWithEmbedding");
+  const persona = entry.persona || actor;
   const db = await initDb();
   const id = randomUUID();
   const now = Date.now();
@@ -379,7 +433,7 @@ async function storeWithEmbedding(
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     id,
-    entry.persona,
+    persona,
     entry.entity,
     entry.key,
     storeValue,
@@ -410,7 +464,7 @@ async function storeWithEmbedding(
   const wikilinks = extractWikilinks(storeValue);
   if (wikilinks.length > 0) {
     const resolved = resolveWikilinkTargets(db, wikilinks, {
-      sourcePersona: entry.persona,
+      sourcePersona: persona,
       sourceId: id,
     });
     for (const link of resolved) {
@@ -420,8 +474,11 @@ async function storeWithEmbedding(
     }
   }
 
+  recordAudit(db, { actor, scope: persona, action: "store", factId: id });
+
   return {
     ...entry,
+    persona,
     value: storeValue,
     id,
     createdAt: now,
@@ -432,13 +489,21 @@ async function storeWithEmbedding(
 }
 
 // --- Hybrid Search ---
-async function hybridSearch(
+export async function hybridSearch(
   query: string,
-  options: { persona?: string; limit?: number; useHyde?: boolean; useGraph?: boolean } = {}
+  options: { actor: string; persona?: string; limit?: number; useHyde?: boolean; useGraph?: boolean }
 ): Promise<Array<{ entry: MemoryEntry; score: number; sources: string[] }>> {
+  const scope = resolveScope(options?.actor, "hybridSearch");
   const db = await initDb();
   const { persona, limit = 10, useHyde = true, useGraph = true } = options;
   const nowSec = Math.floor(Date.now() / 1000);
+
+  // Single choke point (Track 1): visibility = actor scope; the optional
+  // persona arg only narrows WITHIN that scope, never widens it.
+  const scoped = scopeSql(scope, "f.persona");
+  const visibilitySql = `${scoped.sql} AND ${notForgottenSql("f.id")}${persona ? " AND f.persona = ?" : ""}`;
+  const visibilityParams: string[] = [...scoped.params, ...(persona ? [persona] : [])];
+  recordAudit(db, { actor: scope.actor, scope: scope.personas.join(","), action: "search", callId: newCallId() });
 
   // PARALLEL: Run FTS for original query + HyDE + embedding simultaneously
   const [ftsBaseResults, queryVariants, queryEmbedding] = await Promise.all([
@@ -459,10 +524,10 @@ async function hybridSearch(
         JOIN facts_fts fts ON f.rowid = fts.rowid
         WHERE facts_fts MATCH ?
           AND (f.expires_at IS NULL OR f.expires_at > ?)
-          ${persona ? "AND f.persona = ?" : ""}
+          AND ${visibilitySql}
         ORDER BY rank
         LIMIT ${limit * 2}
-      `).all(...[safeQuery, nowSec, ...(persona ? [persona] : [])]) as Array<Record<string, unknown>>;
+      `).all(...[safeQuery, nowSec, ...visibilityParams]) as Array<Record<string, unknown>>;
     })(),
     // HyDE expansion (slow, runs in parallel)
     useHyde ? hydeExpand(query) : Promise.resolve([query]),
@@ -499,10 +564,10 @@ async function hybridSearch(
         JOIN facts_fts fts ON f.rowid = fts.rowid
         WHERE facts_fts MATCH ?
           AND (f.expires_at IS NULL OR f.expires_at > ?)
-          ${persona ? "AND f.persona = ?" : ""}
+          AND ${visibilitySql}
         ORDER BY rank
         LIMIT ${limit}
-      `).all(...[safeHydeQuery, nowSec, ...(persona ? [persona] : [])]) as Array<Record<string, unknown>>;
+      `).all(...[safeHydeQuery, nowSec, ...visibilityParams]) as Array<Record<string, unknown>>;
       
       for (const row of hydeRows) {
         const id = row.id as string;
@@ -527,8 +592,8 @@ async function hybridSearch(
       FROM fact_embeddings fe
       JOIN facts f ON fe.fact_id = f.id
       WHERE (f.expires_at IS NULL OR f.expires_at > ?)
-        ${persona ? "AND f.persona = ?" : ""}
-    `).all(...[nowSec, ...(persona ? [persona] : [])]) as Array<{ fact_id: string; embedding: Buffer }>;
+        AND ${visibilitySql}
+    `).all(...[nowSec, ...visibilityParams]) as Array<{ fact_id: string; embedding: Buffer }>;
     
     for (const row of embeddings) {
       const embedding = Array.from(new Float32Array(row.embedding.buffer, row.embedding.byteOffset, row.embedding.length / 4));
@@ -617,13 +682,15 @@ async function hybridSearch(
   // Apply graph boost (reweights composite scores when links exist)
   const boosted = computeGraphBoost(db, preBoosted);
 
-  // Inject graph-discovered neighbors (facts linked to top results but not in current set)
+  // Inject graph-discovered neighbors (facts linked to top results but not in
+  // current set). Scope-leak fix: the neighbor fetch is scope-filtered — a
+  // cross-actor fact can no longer surface through the graph arm.
   const topIds = boosted
     .sort((a, b) => b.composite - a.composite)
     .slice(0, 3)
     .map(r => r.id);
   const existingIds = new Set(boosted.map(r => r.id));
-  const neighbors = findGraphNeighbors(db, topIds, existingIds, 2);
+  const neighbors = findGraphNeighbors(db, topIds, existingIds, 2, scope);
 
   const finalResults: Array<{ entry: MemoryEntry; score: number; sources: string[] }> = boosted.map(r => ({
     entry: r.entry,
@@ -631,9 +698,11 @@ async function hybridSearch(
     sources: r.graphBoost > 0 ? [...r.sources, "graph"] : r.sources,
   }));
 
-  // Add injected neighbors with a graph-only score
+  // Add injected neighbors with a graph-only score (re-checked against scope)
   for (const neighbor of neighbors) {
-    const fact = db.prepare("SELECT * FROM facts WHERE id = ?").get(neighbor.factId) as Record<string, unknown>;
+    const fact = db.prepare(
+      `SELECT f.* FROM facts f WHERE f.id = ? AND ${visibilitySql}`
+    ).get(neighbor.factId, ...visibilityParams) as Record<string, unknown>;
     if (fact) {
       finalResults.push({
         entry: rowToEntry(fact),
@@ -648,7 +717,8 @@ async function hybridSearch(
 }
 
 // --- FTS-only Search (v1 compatible) ---
-async function ftsSearch(query: string, options: { persona?: string; limit?: number; entity?: string } = {}): Promise<Array<{ entry: MemoryEntry; score: number }>> {
+export async function ftsSearch(query: string, options: { actor: string; persona?: string; limit?: number; entity?: string }): Promise<Array<{ entry: MemoryEntry; score: number }>> {
+  const scope = resolveScope(options?.actor, "ftsSearch");
   const db = await initDb();
   const { persona, limit = 5, entity } = options;
   const nowSec = Math.floor(Date.now() / 1000);
@@ -662,7 +732,9 @@ async function ftsSearch(query: string, options: { persona?: string; limit?: num
 
   if (!safeQuery) return [];
 
-  const params: SQLQueryBindings[] = [safeQuery, nowSec];
+  recordAudit(db, { actor: scope.actor, scope: scope.personas.join(","), action: "search", callId: newCallId() });
+  const scoped = scopeSql(scope, "f.persona");
+  const params: SQLQueryBindings[] = [safeQuery, nowSec, ...scoped.params];
   let entityFilter = "";
   if (persona) { entityFilter += " AND f.persona = ?"; params.push(persona); }
   if (entity) { entityFilter += " AND f.entity = ?"; params.push(entity); }
@@ -674,6 +746,8 @@ async function ftsSearch(query: string, options: { persona?: string; limit?: num
     JOIN facts_fts fts ON f.rowid = fts.rowid
     WHERE facts_fts MATCH ?
       AND (f.expires_at IS NULL OR f.expires_at > ?)
+      AND ${scoped.sql}
+      AND ${notForgottenSql("f.id")}
       ${entityFilter}
     ORDER BY rank
     LIMIT ?
@@ -687,6 +761,48 @@ async function ftsSearch(query: string, options: { persona?: string; limit?: num
     entry: rowToEntry(row),
     score: 1 - ((row.rank as number) - minRank) / range || 0.8,
   }));
+}
+
+// --- Vector-only Search (per-signal ablation arm; Track 3) ---
+export async function vectorSearch(
+  query: string,
+  options: { actor: string; persona?: string; limit?: number; minSimilarity?: number }
+): Promise<Array<{ entry: MemoryEntry; score: number }>> {
+  const scope = resolveScope(options?.actor, "vectorSearch");
+  const db = await initDb();
+  const { persona, limit = 5, minSimilarity = 0.35 } = options;
+  const nowSec = Math.floor(Date.now() / 1000);
+
+  const queryEmbedding = await getEmbedding(query);
+  if (!queryEmbedding) return [];
+
+  recordAudit(db, { actor: scope.actor, scope: scope.personas.join(","), action: "search_vector", callId: newCallId() });
+  const scoped = scopeSql(scope, "f.persona");
+  const params: SQLQueryBindings[] = [nowSec, ...scoped.params, ...(persona ? [persona] : [])];
+  const rows = db.prepare(`
+    SELECT fe.fact_id, fe.embedding
+    FROM fact_embeddings fe
+    JOIN facts f ON fe.fact_id = f.id
+    WHERE (f.expires_at IS NULL OR f.expires_at > ?)
+      AND ${scoped.sql}
+      AND ${notForgottenSql("f.id")}
+      ${persona ? "AND f.persona = ?" : ""}
+  `).all(...params) as Array<{ fact_id: string; embedding: Buffer }>;
+
+  const scoredRows: Array<{ id: string; similarity: number }> = [];
+  for (const row of rows) {
+    const embedding = Array.from(new Float32Array(row.embedding.buffer, row.embedding.byteOffset, row.embedding.length / 4));
+    const similarity = cosineSimilarity(queryEmbedding, embedding);
+    if (similarity > minSimilarity) scoredRows.push({ id: row.fact_id, similarity });
+  }
+  scoredRows.sort((a, b) => b.similarity - a.similarity);
+
+  const results: Array<{ entry: MemoryEntry; score: number }> = [];
+  for (const { id, similarity } of scoredRows.slice(0, limit)) {
+    const fact = db.prepare("SELECT * FROM facts WHERE id = ?").get(id) as Record<string, unknown> | null;
+    if (fact) results.push({ entry: rowToEntry(fact), score: similarity });
+  }
+  return results;
 }
 
 function rowToEntry(row: Record<string, unknown>): MemoryEntry {
@@ -768,16 +884,18 @@ async function createEpisode(episode: Omit<Episode, "id" | "createdAt">): Promis
   return { ...episode, id, createdAt: nowSec };
 }
 
-async function continuationSearch(
+export async function continuationSearch(
   query: string,
-  options: { persona?: string; limit?: number; windowDays?: number; useHyde?: boolean } = {}
+  options: { actor: string; persona?: string; limit?: number; windowDays?: number; useHyde?: boolean }
 ): Promise<{ items: Array<{ kind: string; score: number; summary: string; title: string }>; context: string; detection: ReturnType<typeof detectContinuation> }> {
+  const actor = requireActor(options?.actor, "continuationSearch");
   const db = await initDb();
   const limit = options.limit || 6;
   const windowDays = options.windowDays || 14;
   const detection = detectContinuation(query);
 
   const factResults = await hybridSearch(query, {
+    actor,
     persona: options.persona,
     limit,
     useHyde: options.useHyde ?? false,
@@ -824,7 +942,7 @@ async function continuationSearch(
 
   const openLoopItems = searchOpenLoopsForContinuation(db, query, {
     limit,
-    persona: options.persona,
+    persona: options.persona || actor,
     includeResolved: false,
   }).map((item) => ({ kind: item.kind, score: item.score, title: item.title, summary: item.summary }));
 
@@ -1248,12 +1366,17 @@ async function autoCreateProcedureFromEpisodes(
 }
 
 // --- Delete & Prune ---
-async function deleteFact(factId: string): Promise<boolean> {
+export async function deleteFact(factId: string, options: { actor: string }): Promise<boolean> {
+  const scope = resolveScope(options?.actor, "deleteFact");
   const db = await initDb();
-  const existing = db.prepare("SELECT id FROM facts WHERE id = ?").get(factId) as Record<string, unknown> | null;
+  const scoped = scopeSql(scope);
+  const existing = db.prepare(
+    `SELECT id FROM facts WHERE id = ? AND ${scoped.sql}`
+  ).get(factId, ...scoped.params) as Record<string, unknown> | null;
   if (!existing) return false;
   db.exec("PRAGMA foreign_keys = ON");
   db.prepare("DELETE FROM facts WHERE id = ?").run(factId);
+  recordAudit(db, { actor: scope.actor, scope: scope.personas.join(","), action: "delete", factId });
   return true;
 }
 
@@ -1262,20 +1385,26 @@ interface PruneResult {
   ids: string[];
 }
 
-async function pruneExpired(dryRun: boolean = false): Promise<PruneResult> {
+async function pruneExpired(options: { actor: string }, dryRun: boolean = false): Promise<PruneResult> {
+  const scope = resolveScope(options?.actor, "pruneExpired");
   const db = await initDb();
+  const scoped = scopeSql(scope);
   const nowSec = Math.floor(Date.now() / 1000);
   const rows = db.prepare(
-    "SELECT id, entity, key, value FROM facts WHERE expires_at IS NOT NULL AND expires_at < ?"
-  ).all(nowSec) as Array<Record<string, unknown>>;
+    `SELECT id, entity, key, value FROM facts WHERE expires_at IS NOT NULL AND expires_at < ? AND ${scoped.sql}`
+  ).all(nowSec, ...scoped.params) as Array<Record<string, unknown>>;
   if (!dryRun && rows.length > 0) {
     db.exec("PRAGMA foreign_keys = ON");
-    db.prepare("DELETE FROM facts WHERE expires_at IS NOT NULL AND expires_at < ?").run(nowSec);
+    db.prepare(
+      `DELETE FROM facts WHERE expires_at IS NOT NULL AND expires_at < ? AND ${scoped.sql}`
+    ).run(nowSec, ...scoped.params);
+    recordAudit(db, { actor: scope.actor, scope: scope.personas.join(","), action: "purge" });
   }
   return { deleted: dryRun ? 0 : rows.length, ids: rows.map(r => r.id as string) };
 }
 
-async function pruneBelowActivation(threshold: number, dryRun: boolean = false): Promise<PruneResult> {
+async function pruneBelowActivation(options: { actor: string }, threshold: number, dryRun: boolean = false): Promise<PruneResult> {
+  const scope = resolveScope(options?.actor, "pruneBelowActivation");
   const db = await initDb();
   const hasActr = db.prepare(
     "SELECT name FROM sqlite_master WHERE type=\'table\' AND name=\'actr_activation\'"
@@ -1284,14 +1413,16 @@ async function pruneBelowActivation(threshold: number, dryRun: boolean = false):
     console.error("ACT-R activation table not found. Run the system with ACT-R enabled first.");
     return { deleted: 0, ids: [] };
   }
+  const scoped = scopeSql(scope, "f.persona");
   const rows = db.prepare(
-    "SELECT f.id, f.entity, f.key, f.value, a.total_activation FROM facts f JOIN actr_activation a ON f.id = a.fact_id WHERE a.total_activation < ?"
-  ).all(threshold) as Array<Record<string, unknown>>;
+    `SELECT f.id, f.entity, f.key, f.value, a.total_activation FROM facts f JOIN actr_activation a ON f.id = a.fact_id WHERE a.total_activation < ? AND ${scoped.sql}`
+  ).all(threshold, ...scoped.params) as Array<Record<string, unknown>>;
   if (!dryRun && rows.length > 0) {
     db.exec("PRAGMA foreign_keys = ON");
     db.prepare(
-      "DELETE FROM facts WHERE id IN (SELECT f.id FROM facts f JOIN actr_activation a ON f.id = a.fact_id WHERE a.total_activation < ?)"
-    ).run(threshold);
+      `DELETE FROM facts WHERE id IN (SELECT f.id FROM facts f JOIN actr_activation a ON f.id = a.fact_id WHERE a.total_activation < ? AND ${scoped.sql})`
+    ).run(threshold, ...scoped.params);
+    recordAudit(db, { actor: scope.actor, scope: scope.personas.join(","), action: "purge" });
   }
   return { deleted: dryRun ? 0 : rows.length, ids: rows.map(r => r.id as string) };
 }
@@ -1360,21 +1491,37 @@ Usage:
 
 Commands:
   init      Initialize/verify database schema
-  store     Store a new fact with embedding
-  search    FTS-only search (v1 compatible)
-  hybrid    Hybrid search (FTS + vectors + HyDE)
-  continuation  Blended continuation recall across facts, episodes, and open loops
+  store     Store a new fact with embedding (requires --actor)
+  search    FTS-only search (v1 compatible; requires --actor)
+  hybrid    Hybrid search (FTS + vectors + HyDE; requires --actor)
+  vector    Vector-only search (requires --actor)
+  continuation  Blended continuation recall across facts, episodes, and open loops (requires --actor)
   open-loops    List open loops
   resolve-loop  Resolve matching open loops from text
   index     Backfill embeddings for existing facts
   stats     Show memory statistics
-  migrate   Run database migration (adds episodes + procedures tables)
+  migrate   Run database migration (adds episodes + procedures + intelligence-plane tables)
   episodes  List/query episodic memory (--create to add)
   procedures  List/manage workflow procedures (--create, --show, --evolve, --auto, --feedback)
   trends    Show velocity trends for an entity
-  delete    Delete a specific fact by ID (cascades to embeddings, links, activation)
-  prune     Garbage-collect expired facts and/or low-activation facts
+  delete    Delete a specific fact by ID (requires --actor; scope-checked; cascades)
+  prune     Garbage-collect expired facts and/or low-activation facts (requires --actor; scoped)
   defense   Dry-run the Memory Defense secret/PII scanner (scan|patterns)
+  forget    Reversibly forget a fact: hidden from retrieval, restorable (requires --actor)
+  restore   Restore a reversibly-forgotten fact (requires --actor)
+  forgotten List reversibly-forgotten facts in scope (requires --actor)
+  purge-forgotten  Hard-delete facts forgotten longer than the retention window (requires --actor)
+  decay-sweep      Reversibly forget low-retention / expired facts on the canonical decay vocabulary (requires --actor)
+  promote-sweep    Run the rules-based promotion pipeline: capture -> extraction -> review|promotion (requires --actor)
+  review-queue     List facts awaiting human review (contradictions only; requires --actor)
+  resolve-review   Resolve a review item: --id <fact> --decision supersede|merge|flag (requires --actor)
+
+Actor scoping (Track 1, fail-closed):
+  Every fact read/write requires --actor <identity> (persona/seat). There is
+  no silent default: a missing actor is an error (MISSING_ACTOR), never a
+  fallback to 'shared'. Visibility = own persona + the shared pool. Use
+  --actor shared (deliberately) for cross-harness facts. Every access is
+  recorded in the memory_audit table.
 
 
 Delete options:
@@ -1386,15 +1533,18 @@ Prune options:
   --dry-run            Preview what would be pruned without deleting
 
 Store options:
+  --actor <identity>   REQUIRED caller identity; fact persona defaults to it
   --entity <name>      Entity name (required)
   --key <name>         Key/attribute (optional)
   --value <text>       Value (required)
   --category <type>    preference|fact|decision|convention|other
   --decay <class>      permanent|stable|active|session|checkpoint
   --text <text>        Full context for embedding
+  --persona <name>     Store under this persona instead of the actor (e.g. shared)
 
 Search options:
-  --persona <name>     Filter by persona
+  --actor <identity>   REQUIRED caller identity; results scoped to actor + shared
+  --persona <name>     Narrow results to one persona within scope
   --limit <n>          Max results (default: 5/6)
   --no-hyde            Disable HyDE expansion
   --no-graph           Skip graph boost and neighbor injection
@@ -1435,20 +1585,25 @@ Defense options:
 
 Examples:
   bun memory.ts init
-  bun memory.ts continuation "where did we leave off on the dashboard?"
+  bun memory.ts continuation "where did we leave off on the dashboard?" --actor claude-code
   bun memory.ts open-loops --status open
   bun memory.ts resolve-loop "The dashboard issue is fixed now"
-  bun memory.ts store --entity "user" --key "name" --value "Alice"
-  bun memory.ts hybrid "router password"
+  bun memory.ts store --actor claude-code --entity "user" --key "name" --value "Alice"
+  bun memory.ts store --actor claude-code --persona shared --entity "team" --value "Cross-harness fact"
+  bun memory.ts hybrid "router password" --actor claude-code
   bun memory.ts migrate
   bun memory.ts episodes --entity "swarm.ffb" --since "7 days ago"
   bun memory.ts episodes --create --summary "Fixed auth bug" --outcome success --entities "auth,security"
   bun memory.ts procedures --create --name "deploy-flow" --steps '[{"executor":"claude-code","taskPattern":"build","timeoutSeconds":300}]'
   bun memory.ts procedures --auto "swarm" --since "7 days ago"
-  bun memory.ts delete --id "abc-123-def"
-  bun memory.ts prune --expired --dry-run
-  bun memory.ts prune --below-activation -3.0
-  bun memory.ts prune --expired --below-activation -3.0
+  bun memory.ts delete --id "abc-123-def" --actor claude-code
+  bun memory.ts forget --id "abc-123-def" --actor claude-code --reason "stale guidance"
+  bun memory.ts restore --id "abc-123-def" --actor claude-code
+  bun memory.ts decay-sweep --actor claude-code --dry-run
+  bun memory.ts promote-sweep --actor claude-code
+  bun memory.ts review-queue --actor claude-code
+  bun memory.ts resolve-review --id "abc-123-def" --decision supersede --actor claude-code
+  bun memory.ts prune --expired --dry-run --actor claude-code
   bun memory.ts stats
 `);
 }
@@ -1492,12 +1647,16 @@ async function main() {
     }
 
     case "store": {
+      if (!flags.actor) {
+        console.error("Error: --actor is required (fail-closed; no default persona). Use --actor shared for deliberately cross-harness facts.");
+        process.exit(1);
+      }
       if (!flags.entity || !flags.value) {
         console.error("Error: --entity and --value are required");
         process.exit(1);
       }
       const entry = await storeWithEmbedding({
-        persona: flags.persona || "shared",
+        persona: flags.persona || undefined,
         entity: flags.entity,
         key: flags.key || null,
         value: flags.value,
@@ -1507,7 +1666,7 @@ async function main() {
         importance: parseFloat(flags.importance) || 1.0,
         source: flags.source || "cli",
         confidence: 1.0,
-      });
+      }, { actor: flags.actor });
       if (entry) {
         console.log(`Stored: ${entry.id}`);
         console.log(`Embedding: ${entry.embedding ? "generated" : "failed"}`);
@@ -1542,6 +1701,8 @@ async function main() {
         process.exit(1);
       }
 
+      const batchActor = requireActor(flags.actor, "batch-store (--actor)");
+      const batchCallId = newCallId();
       const db = await initDb();
       const noEmbed = flags["no-embed"] === "true";
       const nowSec = Math.floor(Date.now() / 1000);
@@ -1565,7 +1726,7 @@ async function main() {
             continue;
           }
           const key = (item.key as string) || null;
-          const persona = (item.persona as string) || "shared";
+          const persona = (item.persona as string) || batchActor;
           const category = (item.category as string) || "fact";
           const decayClass = (item.decay as string) || "stable";
           const importance = parseFloat(String(item.importance)) || 1.0;
@@ -1599,6 +1760,7 @@ async function main() {
           }
 
           insertStmt.run(id, persona, entity, key, safeValue, safeText, category, decayClass, importance, source, nowSec, expiresAt, nowSec, 1.0, itemMetadata);
+          recordAudit(db, { actor: batchActor, scope: persona, action: "store", factId: id, callId: batchCallId });
           ids.push(id);
         }
         db.exec("COMMIT");
@@ -1651,7 +1813,8 @@ async function main() {
         console.error("Error: search query required");
         process.exit(1);
       }
-      const searchOpts: { persona?: string; limit?: number; entity?: string } = {
+      const searchOpts: { actor: string; persona?: string; limit?: number; entity?: string } = {
+        actor: flags.actor,
         persona: flags.persona,
         limit: parseInt(flags.limit) || 5,
       };
@@ -1687,6 +1850,7 @@ async function main() {
         console.log(`Searching: "${query}" ${flags.hyde === "false" ? "(no HyDE)" : "(with HyDE)"}${flags.graph === "false" ? " (no graph)" : ""}\n`);
       }
       const results = await hybridSearch(query, {
+        actor: flags.actor,
         persona: flags.persona,
         limit: parseInt(flags.limit) || 6,
         useHyde: flags.hyde !== "false",
@@ -1719,6 +1883,7 @@ async function main() {
         process.exit(1);
       }
       const result = await continuationSearch(query, {
+        actor: flags.actor,
         persona: flags.persona,
         limit: parseInt(flags.limit) || 6,
         windowDays: parseInt(flags.window) || 14,
@@ -2048,13 +2213,137 @@ async function main() {
         console.error("Error: --id <fact_id> is required");
         process.exit(1);
       }
-      const deleted = await deleteFact(factId);
+      const deleted = await deleteFact(factId, { actor: flags.actor });
       if (deleted) {
         console.log(`Deleted fact: ${factId} (cascaded embeddings, links, activation)`);
       } else {
-        console.error(`Fact not found: ${factId}`);
+        console.error(`Fact not found (or outside actor scope): ${factId}`);
         process.exit(1);
       }
+      break;
+    }
+
+    case "vector": {
+      const query = positional[0];
+      if (!query) {
+        console.error("Error: search query required");
+        process.exit(1);
+      }
+      const results = await vectorSearch(query, {
+        actor: flags.actor,
+        persona: flags.persona,
+        limit: parseInt(flags.limit) || 6,
+      });
+      if (flags.json === "true") {
+        console.log(JSON.stringify(results.map(({ entry, score }) => ({
+          id: entry.id, persona: entry.persona, entity: entry.entity,
+          key: entry.key, value: entry.value, score,
+        }))));
+      } else {
+        console.log(`Found ${results.length} results:\n`);
+        for (const { entry, score } of results) {
+          console.log(`[${entry.decayClass}] ${entry.entity}.${entry.key || "_"} = ${entry.value.slice(0, 80)}`);
+          console.log(`    similarity: ${score.toFixed(3)}`);
+          console.log();
+        }
+      }
+      break;
+    }
+
+    case "forget": {
+      const factId = flags.id || positional[0];
+      if (!factId) {
+        console.error("Error: --id <fact_id> is required");
+        process.exit(1);
+      }
+      const db = await initDb();
+      const ok = forgetFact(db, factId, { actor: flags.actor, reason: flags.reason });
+      if (ok) console.log(`Forgot fact ${factId} (reversible; restore with 'restore --id ${factId}')`);
+      else { console.error(`Fact not found, already forgotten, or outside actor scope: ${factId}`); process.exit(1); }
+      break;
+    }
+
+    case "restore": {
+      const factId = flags.id || positional[0];
+      if (!factId) {
+        console.error("Error: --id <fact_id> is required");
+        process.exit(1);
+      }
+      const db = await initDb();
+      const ok = restoreFact(db, factId, { actor: flags.actor });
+      if (ok) console.log(`Restored fact ${factId}`);
+      else { console.error(`No forgotten fact in scope with id: ${factId}`); process.exit(1); }
+      break;
+    }
+
+    case "forgotten": {
+      const db = await initDb();
+      const rows = listForgottenFacts(db, { actor: flags.actor, limit: parseInt(flags.limit) || 50 });
+      if (rows.length === 0) { console.log("No forgotten facts in scope."); break; }
+      console.log(`${rows.length} forgotten fact(s):\n`);
+      for (const r of rows) {
+        const when = new Date(r.forgottenAt * 1000).toISOString().slice(0, 16).replace("T", " ");
+        console.log(`- ${r.factId} | ${r.entity} = ${r.value.slice(0, 60)}`);
+        console.log(`    forgotten ${when} by ${r.forgottenBy}${r.reason ? ` — ${r.reason}` : ""}${r.retentionScore !== null ? ` (retention ${r.retentionScore.toFixed(3)})` : ""}`);
+      }
+      break;
+    }
+
+    case "purge-forgotten": {
+      const db = await initDb();
+      const purged = purgeForgottenFacts(db, {
+        actor: flags.actor,
+        retentionDays: flags.days ? parseInt(flags.days) : undefined,
+      });
+      console.log(`Hard-deleted ${purged} fact(s) past the retention window.`);
+      break;
+    }
+
+    case "decay-sweep": {
+      const db = await initDb();
+      const result = sweepDecay(db, {
+        actor: flags.actor,
+        threshold: flags.threshold ? parseFloat(flags.threshold) : DEFAULT_RETENTION_THRESHOLD,
+        dryRun: flags["dry-run"] === "true",
+      });
+      console.log(`${result.dryRun ? "[DRY RUN] " : ""}Examined ${result.examined} facts; ${result.dryRun ? "would forget" : "forgot"} ${result.forgotten.length} (reversible).`);
+      for (const f of result.forgotten.slice(0, 10)) {
+        console.log(`  - ${f.factId} (retention ${f.score.toFixed(3)})`);
+      }
+      break;
+    }
+
+    case "promote-sweep": {
+      const db = await initDb();
+      const result = sweepPromotions(db, { actor: flags.actor, dryRun: flags["dry-run"] === "true" });
+      console.log(`${result.dryRun ? "[DRY RUN] " : ""}Examined ${result.examined} facts: ${result.promoted} promoted, ${result.sentToReview} sent to review, ${result.rejected.length} rejected by extraction rules.`);
+      for (const r of result.rejected.slice(0, 10)) console.log(`  rejected ${r.factId}: ${r.reason}`);
+      break;
+    }
+
+    case "review-queue": {
+      const db = await initDb();
+      const queue = listReviewQueue(db, { actor: flags.actor, limit: parseInt(flags.limit) || 50 });
+      if (queue.length === 0) { console.log("Review queue is empty."); break; }
+      console.log(`${queue.length} item(s) awaiting human review (contradictions only):\n`);
+      for (const item of queue) {
+        console.log(`- ${item.factId}${item.contested ? " [contested]" : ""}`);
+        console.log(`    ${item.entity}.${item.key || "_"} = ${item.value.slice(0, 80)}`);
+        if (item.contradictingValue) console.log(`    contradicts: ${item.contradictingValue.slice(0, 80)}`);
+      }
+      break;
+    }
+
+    case "resolve-review": {
+      const factId = flags.id || positional[0];
+      const decision = flags.decision as ReviewDecision;
+      if (!factId || !decision || !["supersede", "merge", "flag"].includes(decision)) {
+        console.error("Error: --id <fact_id> and --decision supersede|merge|flag are required");
+        process.exit(1);
+      }
+      const db = await initDb();
+      const result = resolveReview(db, factId, decision, { actor: flags.actor });
+      console.log(`Resolved ${factId}: ${decision} → stage ${result.stage}${result.forgottenFactId ? ` (reversibly forgot ${result.forgottenFactId})` : ""}`);
       break;
     }
 
@@ -2063,7 +2352,7 @@ async function main() {
       const results: PruneResult[] = [];
 
       if (flags.expired === "true" || (!flags["below-activation"] && !flags.expired)) {
-        const r = await pruneExpired(dryRun);
+        const r = await pruneExpired({ actor: flags.actor }, dryRun);
         if (r.ids.length > 0) {
           console.log(`${dryRun ? "[DRY RUN] Would prune" : "Pruned"} ${r.ids.length} expired facts`);
           if (dryRun) r.ids.slice(0, 10).forEach(id => console.log(`  - ${id}`));
@@ -2079,7 +2368,7 @@ async function main() {
           console.error("Error: --below-activation requires a numeric threshold (e.g. -1.5)");
           process.exit(1);
         }
-        const r = await pruneBelowActivation(threshold, dryRun);
+        const r = await pruneBelowActivation({ actor: flags.actor }, threshold, dryRun);
         if (r.ids.length > 0) {
           console.log(`${dryRun ? "[DRY RUN] Would prune" : "Pruned"} ${r.ids.length} facts below activation ${threshold}`);
           if (dryRun) r.ids.slice(0, 10).forEach(id => console.log(`  - ${id}`));
@@ -2136,4 +2425,9 @@ async function main() {
   }
 }
 
-main().catch(console.error);
+if (import.meta.main) {
+  main().catch((err) => {
+    console.error(err instanceof Error ? err.message : String(err));
+    process.exit(1);
+  });
+}

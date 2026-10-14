@@ -25,6 +25,14 @@ import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { embeddings as mcEmbeddings } from "./model-client";
 import { computeGraphBoost, findGraphNeighbors } from "./graph-boost";
+import {
+  ensureIntelligencePlaneSchema,
+  newCallId,
+  notForgottenSql,
+  recordAudit,
+  resolveScope,
+  scopeSql,
+} from "./scope";
 
 // --- Config ---
 const DB_PATH = process.env.ZO_MEMORY_DB || "/home/workspace/.zo/memory/shared-facts.db";
@@ -38,6 +46,7 @@ function getDb(): Database {
   if (!db) {
     db = new Database(DB_PATH);
     db.exec("PRAGMA journal_mode = WAL");
+    ensureIntelligencePlaneSchema(db);
   }
   return db;
 }
@@ -102,19 +111,25 @@ function parseRelativeTime(input: string): number {
 // TOOL IMPLEMENTATIONS
 // ==========================================================================
 
-async function toolMemorySearch(args: {
+export async function toolMemorySearch(args: {
+  actor: string;
   query: string;
   category?: string;
   persona?: string;
   limit?: number;
 }): Promise<string> {
+  // Fail-closed (Track 1): no actor, no read. Results are scoped to the
+  // actor's persona + the shared pool; `persona` only narrows within scope.
+  const scope = resolveScope(args?.actor, "memory_search");
   const db = getDb();
   const { query, category, persona, limit = 6 } = args;
   const nowSec = Math.floor(Date.now() / 1000);
+  recordAudit(db, { actor: scope.actor, scope: scope.personas.join(","), action: "search", callId: newCallId() });
 
   // FTS search
-  const ftsWhere = [];
-  const ftsParams: SQLQueryBindings[] = [];
+  const scoped = scopeSql(scope, "f.persona");
+  const ftsWhere = [scoped.sql, notForgottenSql("f.id")];
+  const ftsParams: SQLQueryBindings[] = [...scoped.params];
 
   if (persona) { ftsWhere.push("f.persona = ?"); ftsParams.push(persona); }
   if (category) { ftsWhere.push("f.category = ?"); ftsParams.push(category); }
@@ -154,10 +169,12 @@ async function toolMemorySearch(args: {
       SELECT fe.fact_id, fe.embedding FROM fact_embeddings fe
       JOIN facts f ON f.id = fe.fact_id
       WHERE (f.expires_at IS NULL OR f.expires_at > ?)
+      AND ${scoped.sql}
+      AND ${notForgottenSql("f.id")}
       ${persona ? "AND f.persona = ?" : ""}
       ${category ? "AND f.category = ?" : ""}
     `).all(
-      ...[nowSec, ...(persona ? [persona] : []), ...(category ? [category] : [])]
+      ...[nowSec, ...scoped.params, ...(persona ? [persona] : []), ...(category ? [category] : [])]
     ) as Array<{ fact_id: string; embedding: Buffer }>;
 
     vectorResults = rows.map(r => {
@@ -208,7 +225,8 @@ async function toolMemorySearch(args: {
       .slice(0, 3)
       .map((r) => r.id);
     const existingIds = new Set(boosted.map((r) => r.id));
-    const neighbors = findGraphNeighbors(db, topIds, existingIds, 2);
+    // Scope-leak fix: neighbor injection is scope-filtered.
+    const neighbors = findGraphNeighbors(db, topIds, existingIds, 2, scope);
 
     finalOrder = boosted
       .sort((a, b) => b.composite - a.composite)
@@ -222,10 +240,12 @@ async function toolMemorySearch(args: {
     finalOrder = ranked.map(([id, score]) => ({ id, score, viaGraph: false }));
   }
 
-  // Fetch full facts
+  // Fetch full facts (re-checked against scope)
   const results: string[] = [];
   for (const { id, score, viaGraph } of finalOrder) {
-    const row = db.prepare("SELECT * FROM facts WHERE id = ?").get(id) as Record<string, unknown> | null;
+    const row = db.prepare(
+      `SELECT f.* FROM facts f WHERE f.id = ? AND ${scoped.sql} AND ${notForgottenSql("f.id")}`
+    ).get(id, ...scoped.params) as Record<string, unknown> | null;
     if (row) {
       results.push(
         `[${row.decay_class}] ${row.entity}.${row.key || "_"} = ${(row.value as string).slice(0, 200)}` +
@@ -235,12 +255,14 @@ async function toolMemorySearch(args: {
     }
   }
 
+  const scopeLine = `scope: actor=${scope.actor} personas=[${scope.personas.join(", ")}]`;
   return results.length > 0
-    ? `Found ${results.length} results for "${query}":\n\n${results.join("\n\n")}`
-    : `No results found for "${query}".`;
+    ? `Found ${results.length} results for "${query}" (${scopeLine}):\n\n${results.join("\n\n")}`
+    : `No results found for "${query}" (${scopeLine}).`;
 }
 
-async function toolMemoryStore(args: {
+export async function toolMemoryStore(args: {
+  actor: string;
   entity: string;
   key?: string;
   value: string;
@@ -249,12 +271,16 @@ async function toolMemoryStore(args: {
   persona?: string;
   text?: string;
 }): Promise<string> {
+  // Fail-closed (Track 1): no actor, no write. The fact's persona defaults
+  // to the actor — never silently to 'shared'.
+  const scope = resolveScope(args?.actor, "memory_store");
   const db = getDb();
   const id = randomUUID();
   const now = Date.now();
   const nowSec = Math.floor(now / 1000);
   const category = args.category || "fact";
   const decayClass = args.decay_class || "stable";
+  const persona = args.persona || scope.actor;
 
   const TTL: Record<string, number | null> = {
     permanent: null, stable: 90 * 86400, active: 14 * 86400,
@@ -268,8 +294,10 @@ async function toolMemoryStore(args: {
     INSERT INTO facts (id, persona, entity, key, value, text, category, decay_class,
                        importance, source, created_at, expires_at, last_accessed, confidence)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1.0, 'mcp', ?, ?, ?, 1.0)
-  `).run(id, args.persona || "shared", args.entity, args.key || null,
+  `).run(id, persona, args.entity, args.key || null,
     args.value, text, category, decayClass, now, expiresAt, nowSec);
+
+  recordAudit(db, { actor: scope.actor, scope: persona, action: "store", factId: id });
 
   // Generate embedding
   const embedding = await getEmbedding(text);
@@ -278,7 +306,7 @@ async function toolMemoryStore(args: {
       .run(id, Buffer.from(new Float32Array(embedding).buffer), EMBEDDING_MODEL);
   }
 
-  return `Stored fact ${id}\n  entity: ${args.entity}\n  key: ${args.key || "(none)"}\n  value: ${args.value.slice(0, 100)}\n  embedding: ${embedding ? "generated" : "failed"}`;
+  return `Stored fact ${id}\n  entity: ${args.entity}\n  key: ${args.key || "(none)"}\n  value: ${args.value.slice(0, 100)}\n  persona: ${persona}\n  scope: actor=${scope.actor} personas=[${scope.personas.join(", ")}]\n  embedding: ${embedding ? "generated" : "failed"}`;
 }
 
 function toolMemoryEpisodes(args: {
@@ -448,33 +476,35 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
     {
       name: "memory_search",
-      description: "Search the memory system using hybrid FTS + vector search with RRF fusion. Returns facts matching the query.",
+      description: "Search the memory system using hybrid FTS + vector search with RRF fusion. Requires a caller identity (actor); calls without one fail closed with MISSING_ACTOR. Results are scoped to the actor plus the shared pool.",
       inputSchema: {
         type: "object" as const,
         properties: {
+          actor: { type: "string", description: "REQUIRED caller identity (persona/seat, e.g. 'claude-code'). Fail-closed: calls without an actor are rejected. Visibility = own persona + shared pool." },
           query: { type: "string", description: "Search query" },
           category: { type: "string", description: "Filter by category (preference, fact, decision, convention, other, reference, project)", enum: ["preference", "fact", "decision", "convention", "other", "reference", "project"] },
-          persona: { type: "string", description: "Filter by persona name" },
+          persona: { type: "string", description: "Narrow results to one persona WITHIN the actor scope" },
           limit: { type: "number", description: "Max results (default: 6)" },
         },
-        required: ["query"],
+        required: ["actor", "query"],
       },
     },
     {
       name: "memory_store",
-      description: "Store a new fact in the memory system with automatic embedding generation.",
+      description: "Store a new fact in the memory system with automatic embedding generation. Requires a caller identity (actor); calls without one fail closed with MISSING_ACTOR.",
       inputSchema: {
         type: "object" as const,
         properties: {
+          actor: { type: "string", description: "REQUIRED caller identity (persona/seat). Fail-closed: calls without an actor are rejected. Use 'shared' only for deliberately cross-persona facts." },
           entity: { type: "string", description: "Entity name (e.g., 'user', 'project.ffb')" },
           key: { type: "string", description: "Key/attribute (optional)" },
           value: { type: "string", description: "Value to store" },
           category: { type: "string", description: "Category (default: fact)", enum: ["preference", "fact", "decision", "convention", "other", "reference", "project"] },
           decay_class: { type: "string", description: "Decay class (default: stable)", enum: ["permanent", "stable", "active", "session", "checkpoint"] },
-          persona: { type: "string", description: "Persona name (default: shared)" },
+          persona: { type: "string", description: "Persona the fact is stored under (defaults to the actor, never silently 'shared')" },
           text: { type: "string", description: "Full text for embedding (auto-generated if not provided)" },
         },
-        required: ["entity", "value"],
+        required: ["actor", "entity", "value"],
       },
     },
     {
@@ -556,6 +586,9 @@ async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("zo-memory-system MCP server running on stdio");
+  console.error("memory_search/memory_store require an 'actor' argument (fail-closed; old clients get MISSING_ACTOR)");
 }
 
-main().catch(console.error);
+if (import.meta.main) {
+  main().catch(console.error);
+}

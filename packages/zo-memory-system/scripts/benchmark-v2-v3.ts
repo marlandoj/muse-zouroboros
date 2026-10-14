@@ -459,7 +459,7 @@ async function benchmarkGraphSearch(db: Database, facts: SeedFact[]) {
     // Check neighbor injection
     const topIds = v3Results.slice(0, 3).map(r => r.id);
     const existingIds = new Set(v3Results.map(r => r.id));
-    const neighbors = findGraphNeighbors(db, topIds, existingIds, 2);
+    const neighbors = findGraphNeighbors(db, topIds, existingIds, 2, { personas: ["shared"] });
 
     record({
       test: `${description} — scoring overhead`,
@@ -845,7 +845,7 @@ async function benchmarkLatency(db: Database) {
     const v3Boosted = runV3Scoring(db, v3Scored);
     const topIds = v3Boosted.slice(0, 3).map(r => r.id);
     const existingIds = new Set(v3Boosted.map(r => r.id));
-    findGraphNeighbors(db, topIds, existingIds, 2);
+    findGraphNeighbors(db, topIds, existingIds, 2, { personas: ["shared"] });
     const v3Ms = v3Timer();
 
     const overhead = v3Ms - v2Ms;

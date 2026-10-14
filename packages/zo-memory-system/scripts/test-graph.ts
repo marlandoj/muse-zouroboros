@@ -178,7 +178,7 @@ function testFindNeighbors() {
   insertLink(db, idA, idD, "depends_on", 0.8);
 
   const existingIds = new Set([idA, idB]);
-  const neighbors = findGraphNeighbors(db, [idA], existingIds, 3);
+  const neighbors = findGraphNeighbors(db, [idA], existingIds, 3, { personas: ["shared"] });
 
   assert(neighbors.length === 2, `Found 2 neighbors (got ${neighbors.length})`);
   assert(neighbors.some(n => n.factId === idC), "Found neighbor C");
@@ -196,7 +196,7 @@ function testEmptyResults() {
   const results = computeGraphBoost(db, []);
   assert(results.length === 0, "Returns empty array for empty input");
 
-  const neighbors = findGraphNeighbors(db, [], new Set(), 3);
+  const neighbors = findGraphNeighbors(db, [], new Set(), 3, { personas: ["shared"] });
   assert(neighbors.length === 0, "Returns empty neighbors for empty input");
 
   db.close();
