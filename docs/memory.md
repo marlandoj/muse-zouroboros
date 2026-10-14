@@ -18,6 +18,15 @@ loops (unfinished tasks as queryable records), continuation recall (the last
 14 days blended into context when a message looks like a continuation), and a
 5-tier decay system (permanent → stable → active → session → checkpoint).
 
+Since 2026-10-14 it also carries the intelligence plane: actor-scoped access
+(every fact read/write requires a caller identity; fail-closed), a single
+scope choke point (`scripts/scope.ts`) with a `memory_audit` trail, the
+graph-arm scope-leak fix (neighbor injection is scope-filtered), reversible
+forgetting on the decay vocabulary (`forget`/`restore`/`decay-sweep`/
+`purge-forgotten`), a rules-based promotion pipeline whose human review queue
+receives only contradictions, and a hermetic three-signal retrieval eval
+(`scripts/eval-three-signal.ts`, CI-gated).
+
 ## How retrieval works
 
 `hybrid` = BM25 (FTS5) + vector cosine similarity, fused with RRF, then
@@ -45,10 +54,14 @@ This creates `~/.zo/memory/shared-facts.db` and applies the migration chain
 ```bash
 M=scripts/memory.ts
 bun $M stats
-bun $M store --persona shared --entity "demo" --key "smoke" \
+bun $M store --actor claude-code --persona shared --entity "demo" --key "smoke" \
   --value "Memory is alive" --decay session
-bun $M hybrid "memory alive"
+bun $M hybrid "memory alive" --actor claude-code
 ```
+
+(`--actor` is required on every fact read/write — fail-closed, no silent
+default. The fact's persona defaults to the actor; pass `--persona shared`
+for deliberately cross-harness facts.)
 
 ## Wiring the MCP server
 
@@ -70,7 +83,18 @@ Each harness gets the same stdio server. Add to the harness's MCP config
 
 (Use the exact config shape your harness expects; the server itself is just
 `bun scripts/mcp-server.ts` on stdio.) Tools exposed: `memory_search`,
-`memory_store`, `memory_episodes`, `memory_procedures`, `cognitive_profile`.
+`memory_store`, `memory_episodes`, `memory_procedures`, `cognitive_profile`
+(plus `memory_delete`/`memory_prune` on the HTTP server).
+
+**BREAKING — actor cutover (2026-10-14):** `memory_search`, `memory_store`,
+`memory_delete`, and `memory_prune` require an `actor` argument identifying
+the calling persona/seat (e.g. `"claude-code"`). A call without it fails
+closed with a `MISSING_ACTOR` error — that is the intended behavior for old
+clients, not a bug; it replaces the old silent default to the `shared`
+persona, which leaked by default. When updating a harness's MCP config, also
+update any prompt/tool-use guidance so calls pass `actor`; results are scoped
+to the actor's persona + the shared pool and include the resolved scope, and
+every access lands in the `memory_audit` table.
 
 For Muse itself, this is the **memory read seam**: point Muse at the CLI or
 the MCP server for build context. One-way read is the recommended starting
@@ -94,12 +118,24 @@ startup.
 
 ## Operating notes
 
-- **Personas:** `--persona shared` for cross-harness facts;
-  `--persona <harness>` for harness-specific ones. Persona briefing files live
+- **Actors:** every fact read/write requires `--actor <identity>` (or the
+  MCP `actor` arg). Visibility = own persona + shared pool; a missing actor
+  is a `MISSING_ACTOR` error. Every access writes a `memory_audit` row.
+- **Personas:** the stored persona defaults to the actor; `--persona shared`
+  for cross-harness facts. Persona briefing files live
   in `~/.zo/memory/personas/`.
 - **Decay:** choose honestly. `permanent` is for decisions and preferences;
   `session`/`checkpoint` for scratch. The decay job promotes/demotes on
-  access patterns.
+  access patterns. `decay-sweep` reversibly forgets low-retention facts
+  (restore with `restore --id`); only `purge-forgotten` hard-deletes, after
+  a 30-day retention window.
+- **Promotion:** `promote-sweep` runs the rules-based
+  capture → extraction → review/promotion ledger; `review-queue` +
+  `resolve-review` (supersede/merge/flag) handle contradictions — the only
+  thing humans are asked to review.
+- **Retrieval eval:** `bun scripts/eval-three-signal.ts` runs the hermetic
+  keyword/vector/graph ablation; `bun test scripts/eval-three-signal.test.ts`
+  is the CI gate.
 - **Auto-capture:** the post-session capture pipeline extracts facts from
   transcripts. Review what it stores for the first week — tune the gate
   threshold if it's noisy or silent.

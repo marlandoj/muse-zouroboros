@@ -14,6 +14,8 @@ metadata:
 
 Give your Zo personas persistent memory with semantic understanding, graph intelligence, and automatic fact capture.
 
+**v4.1 Updates (2026-10-14, intelligence plane):** Actor-scoped memory substrate — every fact read/write now requires a caller identity (`--actor` on the CLI, `actor` on MCP tools; fail-closed, no silent default to `shared`), one scope choke point (`scripts/scope.ts`) replaces all hand-rolled persona predicates, graph-arm scope-leak fix (neighbor injection is scope-filtered), `memory_audit` trail for every access, reversible forgetting on the canonical decay vocabulary (`forget`/`restore`/`decay-sweep`/`purge-forgotten`), rules-based promotion pipeline with a contradiction-only human review queue (`promote-sweep`/`review-queue`/`resolve-review`), and a hermetic three-signal retrieval eval harness (`eval-three-signal.ts`, deterministic pseudo-embeddings, CI gate). **BREAKING:** MCP clients that do not pass `actor` fail closed with `MISSING_ACTOR` — that is correct behavior; update client configs.
+
 **v4.0 Updates (Q2-Q4 2026):** Context budget awareness (token tracking + proactive checkpointing), recursive episode summarization (model-routed FIFO compression), metrics dashboard (latency/recall/capture/gate stats), iterative multi-hop retrieval (confidence-based BFS with query refinement), cross-persona memory sharing (pools + inheritance hierarchy), conflict resolution (semantic/temporal detection + provenance tracking), enhanced knowledge graph (typed relations, cycle detection, DOT export, co-occurrence inference), embedding model benchmarking (3-model comparison + recall measurement).
 
 **v3.2 Updates:** Procedural memory (versioned workflow patterns with model-routed evolution), cognitive profiles (executor failure patterns + entity affinities), orchestrator integration (6-signal composite routing with procedure + temporal scoring, auto-episode creation after swarm runs)
@@ -26,6 +28,12 @@ Give your Zo personas persistent memory with semantic understanding, graph intel
 
 ## What You Get
 
+- **Actor-scoped access (fail-closed)** — every fact read/write requires an actor identity; visibility = own persona + shared pool; missing actor = `MISSING_ACTOR` error, never a silent `shared` default
+- **Single scope choke point** — `scripts/scope.ts` builds every persona predicate; no retrieval path hand-rolls its own (the definer-rights leak class is structurally closed)
+- **Audit trail** — every store/search/delete/forget/restore/purge writes a `memory_audit` row (actor, scope, action, fact, call id)
+- **Reversible forgetting** — `forget` hides a fact from all retrieval, `restore` brings it back; `decay-sweep` scores retention (recency/importance/relevance) on the canonical vocabulary (permanent facts never decay); hard deletion only via `purge-forgotten` after a retention window
+- **Promotion pipeline** — rules-based capture → extraction → review → promotion ledger; ONLY contradictions reach the human review queue (`resolve-review`: supersede/merge/flag)
+- **Three-signal eval harness** — `eval-three-signal.ts` ablates keyword/vector/graph arms on a hermetic scratch DB with deterministic pseudo-embeddings; CI-gated
 - **Automatic continuation recall** — Detects continuation-like messages and silently blends relevant context from the last 14 days
 - **First-class open loops** — Stores unfinished tasks, unresolved bugs/incidents, pending approvals, and next-step commitments as queryable records
 - **Searchable session summaries** — Episodes are indexed for continuation retrieval, not just listed by time
@@ -105,15 +113,16 @@ bun scripts/memory.ts init
 # Add memory to a persona
 bun scripts/add-persona.sh "my-persona" "Role description"
 
-# Store a fact
+# Store a fact (every read/write requires --actor; fail-closed)
 bun scripts/memory.ts store \
+  --actor "my-persona" \
   --entity "user" \
   --key "preference" \
   --value "value" \
   --decay permanent
 
 # Search with semantic understanding + graph boost
-bun scripts/memory.ts hybrid "why did we choose the database"
+bun scripts/memory.ts hybrid "why did we choose the database" --actor "my-persona"
 
 # Manage knowledge graph
 bun scripts/graph.ts link --source <id1> --target <id2> --relation "depends_on"
@@ -129,7 +138,10 @@ bun scripts/auto-capture.ts --input conversation.md --dry-run
 
 ### Store Facts
 ```bash
+# --actor is REQUIRED (fail-closed). The fact's persona defaults to the
+# actor; pass --persona shared for deliberately cross-harness facts.
 bun scripts/memory.ts store \
+  --actor claude-code \
   --persona shared \
   --entity "user" \
   --key "name" \
@@ -140,17 +152,20 @@ bun scripts/memory.ts store \
 
 ### Search Memory
 
+All searches require `--actor`; results are scoped to the actor's persona
+plus the shared pool, and every access is recorded in `memory_audit`.
+
 **Continuation Recall (facts + episodes + open loops):**
 ```bash
-bun scripts/memory.ts continuation "where did we leave off on the health dashboard?"
+bun scripts/memory.ts continuation "where did we leave off on the health dashboard?" --actor claude-code
 bun scripts/memory.ts open-loops --status open
 bun scripts/memory.ts resolve-loop "The dashboard issue is fixed now"
 ```
 
 **Hybrid Search (semantic + exact + graph boost):**
 ```bash
-bun scripts/memory.ts hybrid "database decision rationale"
-bun scripts/memory.ts hybrid "why did we pick SQLite" --no-hyde  # Skip HyDE for speed
+bun scripts/memory.ts hybrid "database decision rationale" --actor claude-code
+bun scripts/memory.ts hybrid "why did we pick SQLite" --actor claude-code --no-hyde  # Skip HyDE for speed
 ```
 
 Hybrid search now includes graph-boosted scoring. When facts are linked via `fact_links`, linked results boost each other. Scoring weights:
@@ -166,7 +181,12 @@ When no graph links exist for any result, original weights (0.70/0.20/0.10) are 
 
 **Fast Exact Search (FTS5 only):**
 ```bash
-bun scripts/memory.ts search "router password"
+bun scripts/memory.ts search "router password" --actor claude-code
+```
+
+**Vector-only Search (per-signal ablation arm):**
+```bash
+bun scripts/memory.ts vector "network credential we set up" --actor claude-code
 ```
 
 **Lookup by entity:**
@@ -183,8 +203,8 @@ bun scripts/memory.ts stats
 # Backfill embeddings for all facts
 bun scripts/memory.ts index
 
-# Prune expired facts and orphaned embeddings
-bun scripts/memory.ts prune
+# Prune expired facts and orphaned embeddings (scoped to the actor)
+bun scripts/memory.ts prune --actor claude-code
 
 # Apply adaptive decay (demotes stale, promotes frequently-accessed)
 bun scripts/memory.ts decay
@@ -192,6 +212,53 @@ bun scripts/memory.ts decay
 # Consolidate duplicate facts (merge same entity+key entries)
 bun scripts/memory.ts consolidate
 ```
+
+### Reversible Forgetting (Track 1)
+```bash
+# Hide a fact from every retrieval path (restorable; row is kept)
+bun scripts/memory.ts forget --id <fact-id> --actor claude-code --reason "stale guidance"
+bun scripts/memory.ts restore --id <fact-id> --actor claude-code
+bun scripts/memory.ts forgotten --actor claude-code          # list what is hidden
+
+# Decay sweep on the canonical vocabulary (permanent never decays):
+# scores retention = 0.5*recency + 0.35*importance + 0.15*relevance and
+# reversibly forgets facts below threshold (plus expired facts).
+bun scripts/memory.ts decay-sweep --actor claude-code --dry-run
+bun scripts/memory.ts decay-sweep --actor claude-code
+
+# Hard deletion ONLY through the purge, after the retention window (30d default)
+bun scripts/memory.ts purge-forgotten --actor claude-code --days 30
+```
+
+### Promotion Pipeline (Track 1)
+```bash
+# Rules-based state machine: capture -> extraction -> review|promotion.
+# A fact's stage is its latest fact_promotions ledger row. No LLM anywhere.
+bun scripts/memory.ts promote-sweep --actor claude-code --dry-run
+bun scripts/memory.ts promote-sweep --actor claude-code
+
+# The human review queue contains ONLY contradictions/contested facts.
+bun scripts/memory.ts review-queue --actor claude-code
+bun scripts/memory.ts resolve-review --id <fact-id> --decision supersede --actor claude-code
+# decisions: supersede (contradicted fact reversibly forgotten, new promotes)
+#            merge     (both stand, new promotes)
+#            flag      (contested; stays in review)
+```
+
+### Three-Signal Eval Harness (Track 3)
+```bash
+# Hermetic per-signal ablation: keyword / vector / graph / keyword-vector /
+# all-three (production default) / no-graph-boost (A/B mirror). Scratch DB,
+# API keys stripped, deterministic pseudo-embeddings — zero network, zero cost.
+bun scripts/eval-three-signal.ts            # markdown report
+bun scripts/eval-three-signal.ts --json     # machine-readable
+
+# CI gate (exact deterministic counts + two-fresh-DB determinism check):
+bun test scripts/eval-three-signal.test.ts
+```
+A nightly lane on real embeddings is supported (unset `ZO_MODEL_EMBEDDING`,
+provide `OPENAI_API_KEY`, run with `--json`) but must stay OUT of the merge
+gate: network and billing never gate merges.
 
 ### Memory Defense (defense.ts)
 Every `store` / `batch-store` write is scanned for secrets and PII before it
@@ -553,13 +620,34 @@ bun scripts/memory.ts mcp          # Via CLI
 
 ### Available Tools
 
-| Tool | Description |
-|------|-------------|
-| `memory_search` | Hybrid FTS + vector search with RRF fusion |
-| `memory_store` | Store a new fact with auto-generated embedding |
-| `memory_episodes` | Query episodic memory with temporal/entity filters |
-| `memory_procedures` | List or show workflow procedures |
-| `cognitive_profile` | Show executor cognitive profile (history, patterns, affinities) |
+| Tool | Actor required | Description |
+|------|----------------|-------------|
+| `memory_search` | **yes** | Hybrid FTS + vector search with RRF fusion, scoped to actor + shared |
+| `memory_store` | **yes** | Store a new fact (persona defaults to the actor) with auto-generated embedding |
+| `memory_delete` | **yes** (HTTP server) | Delete a fact by ID; only in-scope facts deletable |
+| `memory_prune` | **yes** (HTTP server) | Garbage-collect expired facts within the actor scope |
+| `memory_episodes` | no | Query episodic memory with temporal/entity filters |
+| `memory_procedures` | no | List or show workflow procedures |
+| `cognitive_profile` | no | Show executor cognitive profile (history, patterns, affinities) |
+
+### BREAKING: the `actor` cutover (2026-10-14)
+
+Every fact-touching tool now REQUIRES an `actor` argument — the caller's
+persona/seat identity (e.g. `"claude-code"`, `"codex"`, `"hermes"`). This is
+fail-closed by design (operator decision Q2): **old clients that do not send
+`actor` are rejected with a `MISSING_ACTOR` error. That is correct behavior,
+not a bug.** There is no silent default to `shared`; use `actor: "shared"`
+only for deliberately cross-harness identity. Roll out by updating each
+harness's MCP config/prompt so tool calls include `actor`, then restart the
+server. Results now include the resolved scope
+(`actor=<a> personas=[<a>, shared]`), and every access is written to the
+`memory_audit` table for after-the-fact attribution.
+
+Example tool call after the cutover:
+
+```json
+{ "name": "memory_search", "arguments": { "actor": "claude-code", "query": "router password" } }
+```
 
 ### Client Configuration
 

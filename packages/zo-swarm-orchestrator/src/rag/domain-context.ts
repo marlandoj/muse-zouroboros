@@ -98,6 +98,9 @@ export function fetchDomainContext(domain: string, keywords: string[]): string |
       'hybrid',
       searchTerms,
       '--limit', '5',
+      // Actor-scoped memory (fail-closed): identify this caller. Older
+      // memory CLIs ignore the flag; newer ones require it.
+      '--actor', process.env.ZO_MEMORY_ACTOR || 'swarm-orchestrator',
     ], {
       timeout: 5000,
       encoding: 'utf-8',

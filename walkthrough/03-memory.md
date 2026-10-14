@@ -15,10 +15,15 @@ This creates `~/.zo/memory/shared-facts.db` and runs the migration chain
 ```bash
 M=scripts/memory.ts
 bun $M stats
-bun $M store --persona shared --entity "workshop" --key "smoke" \
+bun $M store --actor claude-code --persona shared --entity "workshop" --key "smoke" \
   --value "Memory is alive" --decay session
-bun $M hybrid "memory alive"
+bun $M hybrid "memory alive" --actor claude-code
 ```
+
+Every fact read/write requires `--actor <identity>` (your persona/seat —
+fail-closed; a missing actor is a `MISSING_ACTOR` error, never a silent
+default). The stored persona defaults to the actor; `--persona shared` makes
+the fact deliberately cross-harness.
 
 You should see the fact you just stored come back in the hybrid results. If
 `OPENAI_API_KEY` isn't set, you'll see a note that it's running FTS5-only —
@@ -47,10 +52,21 @@ same):
 }
 ```
 
+**Actor cutover (breaking, 2026-10-14):** `memory_store` and `memory_search`
+require an `actor` argument naming the calling harness/persona (e.g.
+`"claude-code"`). Old clients that omit it fail closed with `MISSING_ACTOR`
+— correct behavior, not a bug. Tell each harness to pass its identity, e.g.:
+
+```json
+{ "name": "memory_store", "arguments": { "actor": "claude-code", "entity": "workshop", "value": "wired up", "persona": "shared" } }
+```
+
 **Prove it:** in that harness, ask it to store a fact through the MCP tools
-(`memory_store`), then in a *different* harness (or a fresh session), search
-for it (`memory_search`). Cross-harness recall on day one is the whole point
-— if it works now, the substrate is real.
+(`memory_store` with its own `actor`, `persona: "shared"`), then in a
+*different* harness (or a fresh session), search for it (`memory_search` with
+that harness's `actor`). Cross-harness recall on day one is the whole point
+— if it works now, the substrate is real. Then check the audit trail:
+`sqlite3 ~/.zo/memory/shared-facts.db "SELECT actor, action, scope FROM memory_audit ORDER BY id DESC LIMIT 5"`.
 
 ## Set your model routing (optional)
 

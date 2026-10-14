@@ -70,7 +70,11 @@ One SQLite database, `~/.zo/memory/shared-facts.db`, is the well that Claude Cod
 | `SourceChunk` / `Topic` | Cited source text and topical grouping of facts | `chunk_md5`, `cited_text`; `slug`, `fact_count` | `schema.sql` |
 | `CaptureLog` | Record of one transcript-to-facts extraction | `facts_extracted`, `facts_skipped`, `contradictions`, `model` | `schema.sql` |
 | `MemoryGate` | Decides at prompt time whether background memory is needed | exit 0 found, 2 not needed, 3 needed but missing, 1 error; methods include `continuation`, `keyword_heuristic`, `llm_classifier` | `memory-gate.ts` |
-| `MemoryMcpServer` | stdio server `zo-memory-system` v3.2.0 | tools `memory_search`, `memory_store`, `memory_episodes`, `memory_procedures`, `cognitive_profile` | `mcp-server.ts` |
+| `MemoryMcpServer` | stdio server `zo-memory-system` v3.2.0 | tools `memory_search`, `memory_store` (both REQUIRE `actor`; fail closed with `MISSING_ACTOR`), `memory_episodes`, `memory_procedures`, `cognitive_profile`; HTTP variant adds `memory_delete`, `memory_prune` (also actor-required) | `mcp-server.ts` |
+| `Scope` | Actor-resolved visibility (own persona + shared pool); the single choke point for every persona predicate | `actor`, `personas`; `MISSING_ACTOR` on absent identity | `scope.ts` |
+| `MemoryAudit` | One row per scoped memory access | `actor`, `scope`, `action` (`store`, `search`, `search_vector`, `get`, `delete`, `forget`, `restore`, `purge`, `promotion_stage`, `review_decision`), `call_id` | `scope.ts` |
+| `FactPromotion` | Append-only promotion ledger; a fact's stage is its latest row | `stage` (`capture`, `extraction`, `review`, `promotion`), `decided_by`, `contradiction_of` | `promotion.ts` |
+| `FactForgotten` | Reversible-forgetting marker hiding a fact from all retrieval | `forgotten_by`, `reason`, `retention_score`; removal = restore; hard delete only via retention-window purge | `forgetting.ts` |
 
 ## Multi-harness swarm
 
