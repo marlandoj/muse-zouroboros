@@ -31,7 +31,8 @@ interface AlertRecord {
 
 const RATE_LIMIT_MS = 15 * 60 * 1000; // 15 minutes per event type
 const STATE_FILE = "/tmp/swarm-alert-state.json";
-const ZO_API_URL = "https://api.zo.computer/zo/ask";
+// ZO_API_URL removed (governance review 2026-10-14): the Zo /zo/ask SMS
+// path is gone with the retired platform; sendAlert logs locally.
 
 function loadState(): Map<AlertType, AlertRecord> {
   const map = new Map<AlertType, AlertRecord>();
@@ -72,13 +73,6 @@ function recordSent(type: AlertType): void {
   saveState(state);
 }
 
-const SEVERITY_EMOJI: Record<AlertType, string> = {
-  swarm_failure: "🔴",
-  autoloop_regression: "⚠️",
-  service_critical: "🔴",
-  sentinel_overload: "⚡",
-};
-
 export async function sendAlert(
   type: AlertType,
   summary: string,
@@ -88,47 +82,16 @@ export async function sendAlert(
     return { sent: false, reason: `Rate limited (${type}): max 1 per 15min` };
   }
 
-  const emoji = SEVERITY_EMOJI[type] || "⚠️";
-  const timestamp = new Date().toLocaleString("en-US", { timeZone: "America/Phoenix" });
-  const message = `${emoji} ${type.replace("_", " ").toUpperCase()}\n${summary}\n${timestamp}`;
-
-  // Use Zo API to send SMS
-  const token = process.env.ZO_CLIENT_IDENTITY_TOKEN;
-  if (!token) {
-    // Fallback: write to file for manual review
-    const alertLog = "/tmp/swarm-alerts.log";
-    const entry = `[${new Date().toISOString()}] ${type}: ${summary}\n`;
-    try {
-      const { appendFileSync } = await import("fs");
-      appendFileSync(alertLog, entry);
-    } catch {}
-    return { sent: false, reason: "No ZO_CLIENT_IDENTITY_TOKEN — logged to /tmp/swarm-alerts.log" };
-  }
-
+  // The Zo API SMS path was removed outright (governance review 2026-10-14,
+  // operator's order): Zo Computer is retired. Alerts are written to the
+  // local log for manual review.
+  const alertLog = "/tmp/swarm-alerts.log";
+  const entry = `[${new Date().toISOString()}] ${type}: ${summary}\n`;
   try {
-    const resp = await fetch(ZO_API_URL, {
-      method: "POST",
-      headers: {
-        authorization: token,
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        input: `Send an SMS to the user with this exact message (do not modify it): ${message}`,
-        // Portable: operator may pin a model via SWARM_ALERT_MODEL_NAME; otherwise
-        // omit it so /zo/ask falls back to the workspace default model.
-        model_name: process.env.SWARM_ALERT_MODEL_NAME || undefined,
-      }),
-    });
-
-    if (resp.ok) {
-      recordSent(type);
-      return { sent: true };
-    } else {
-      return { sent: false, reason: `Zo API returned ${resp.status}` };
-    }
-  } catch (err) {
-    return { sent: false, reason: `Zo API error: ${err}` };
-  }
+    const { appendFileSync } = await import("fs");
+    appendFileSync(alertLog, entry);
+  } catch {}
+  return { sent: false, reason: "Zo SMS removed (platform retired) — logged to /tmp/swarm-alerts.log" };
 }
 
 export async function sendSwarmFailureAlert(
