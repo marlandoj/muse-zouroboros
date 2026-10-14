@@ -31,7 +31,7 @@
 // Cost tracking: every call returns { content, latency_ms, provider, model, cost_usd }
 // =============================================================================
 
-export type Provider = "openai" | "anthropic";
+export type Provider = "openai" | "anthropic" | "deterministic";
 export type Workload =
   | "gate" | "hyde" | "extraction"
   | "summarization" | "briefing"
@@ -88,7 +88,7 @@ const WORKLOAD_MAX_TOKENS: Record<Workload, number> = {
 
 // ─── Model spec parser ────────────────────────────────────────────────────────
 
-const ALL_PROVIDERS: Provider[] = ["openai", "anthropic"];
+const ALL_PROVIDERS: Provider[] = ["openai", "anthropic", "deterministic"];
 
 const KNOWN_OPENAI_MODELS = new Set([
   "gpt-4o", "gpt-4o-mini", "gpt-4o-large", "gpt-4-turbo", "gpt-4",
@@ -298,11 +298,67 @@ async function anthropicEmbeddings(_text: string): Promise<EmbedResult> {
   return { embedding: [], latency_ms: 0, provider: "anthropic", model: "unknown", cost_usd: 0, error: "Anthropic has no embeddings API — use OpenAI embeddings" };
 }
 
+// ─── Deterministic (hermetic eval) provider ──────────────────────────────────
+
+export const DETERMINISTIC_EMBEDDING_MODEL = "deterministic-hash-v1";
+export const DETERMINISTIC_EMBEDDING_DIMENSION = 1536;
+
+/**
+ * Deterministic pseudo-embedding: signed hashing-trick bag-of-tokens.
+ *
+ * Each lowercased alphanumeric token is projected onto 4 signed dimensions
+ * derived from its SHA-256 digest, then the vector is L2-normalized. Cosine
+ * similarity therefore tracks token overlap: paraphrases sharing content
+ * words score high, disjoint texts score near zero. No network, no keys,
+ * identical output across processes and machines — this is the hermetic CI
+ * substitute for real embeddings (it exercises the vector plumbing and RRF
+ * fusion, not real semantic quality; a nightly real-embedding lane owns
+ * that). Select it with ZO_MODEL_EMBEDDING="deterministic:hash-v1".
+ */
+export function deterministicEmbedding(
+  text: string,
+  dimension: number = DETERMINISTIC_EMBEDDING_DIMENSION
+): number[] {
+  const { createHash } = require("crypto");
+  const vec = new Array<number>(dimension).fill(0);
+  const tokens = text.toLowerCase().match(/[a-z0-9]+/g) ?? [];
+  for (const token of tokens) {
+    const digest = createHash("sha256").update(token).digest();
+    for (let probe = 0; probe < 4; probe++) {
+      const offset = probe * 3;
+      const idx = ((digest[offset] << 8) | digest[offset + 1]) % dimension;
+      const sign = (digest[offset + 2] & 1) === 0 ? 1 : -1;
+      vec[idx] += sign;
+    }
+  }
+  let norm = Math.sqrt(vec.reduce((sum, v) => sum + v * v, 0));
+  if (norm === 0) {
+    // Empty token set: fail closed to a fixed unit vector rather than NaN.
+    vec[0] = 1;
+    norm = 1;
+  }
+  return vec.map((v) => v / norm);
+}
+
+function deterministicEmbeddings(text: string): EmbedResult {
+  const start = Date.now();
+  return {
+    embedding: deterministicEmbedding(text),
+    latency_ms: Date.now() - start,
+    provider: "deterministic",
+    model: DETERMINISTIC_EMBEDDING_MODEL,
+    cost_usd: 0,
+  };
+}
+
 // ─── Health checks ────────────────────────────────────────────────────────────
 
 export async function modelHealthCheck(provider: Provider): Promise<HealthResult> {
   const start = Date.now();
   try {
+    if (provider === "deterministic") {
+      return { available: true, latency_ms: 0 };
+    }
     if (provider === "openai" && OPENAI_TOKEN) {
       const resp = await fetch("https://api.openai.com/v1/models", {
         headers: { "Authorization": `Bearer ${OPENAI_TOKEN}` },
@@ -367,6 +423,9 @@ export async function generate(opts: GenerateOptions): Promise<GenerateResult> {
     switch (provider) {
       case "openai":    result = await openaiGenerate(opts); break;
       case "anthropic": result = await anthropicGenerate(opts); break;
+      case "deterministic":
+        // Embeddings-only provider: generation through it is a config error.
+        throw new Error("deterministic provider supports embeddings only (set a real model for generation workloads)");
     }
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
@@ -382,5 +441,6 @@ export async function embeddings(text: string, explicitModel?: string): Promise<
   switch (provider) {
     case "openai":    { const r = await openaiEmbeddings(text, model); logEmbedCall(r); return r; }
     case "anthropic": return anthropicEmbeddings(text);
+    case "deterministic": return deterministicEmbeddings(text);
   }
 }
