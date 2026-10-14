@@ -672,7 +672,6 @@ export interface ACPTransportConfig {
   mcpConfig?: {
     configPath?: string;
     includeShared?: boolean;
-    includeZo?: boolean;
     includeMemoryBriefing?: boolean;
   };
   /** Wayfinder local skill suggester configuration. */
@@ -763,7 +762,6 @@ export function loadAcpMcpServers(
 ): McpServer[] {
   if (!config) return [];
 
-  const env = options.env ?? (process.env as Record<string, string>);
   const servers: McpServer[] = [];
   if (config.includeShared !== false) {
     const configPath = findMcpConfigPath(
@@ -782,30 +780,10 @@ export function loadAcpMcpServers(
     }
   }
 
-  if (config.includeZo) {
-    const token = [env.ZO_CLIENT_IDENTITY_TOKEN, env.ZO_API_KEY, env.ZO_MCP_API_KEY]
-      .find(value => value?.trim());
-    if (!token) {
-      console.warn(
-        '[ACP MCP] Skipping optional Zo server: no ZO_CLIENT_IDENTITY_TOKEN, ZO_API_KEY, or ZO_MCP_API_KEY is available',
-      );
-      return servers;
-    }
-    const url = new URL(env.ZO_MCP_URL ?? 'https://api.zo.computer/mcp');
-    const conversationId = env.ZO_CONVERSATION_ID ?? env.ZO_MCP_CONVERSATION_ID;
-    if (conversationId && !url.searchParams.has('conversation_id')) {
-      url.searchParams.set('conversation_id', conversationId);
-    }
-    servers.push({
-      type: 'http',
-      name: 'zo',
-      url: url.toString(),
-      headers: [
-        { name: 'Authorization', value: `Bearer ${token}` },
-        { name: 'Content-Type', value: 'application/json' },
-      ],
-    });
-  }
+  // The optional Zo MCP server injection was removed outright (governance
+  // review 2026-10-14, operator's order): Zo Computer is retired, so the `zo`
+  // server entry — which carried a bearer token to the dead
+  // api.zo.computer/mcp endpoint — is gone.
 
   return servers;
 }

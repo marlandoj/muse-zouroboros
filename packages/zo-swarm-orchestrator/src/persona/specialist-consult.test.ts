@@ -5,7 +5,6 @@ import {
   renderSpecialistOutputs,
   selectIndependentReviewerModel,
   resolveSpecialistConsultMode,
-  resolveZoAskAuthorization,
   resolveSpecialistReviewerCandidates,
   DEFAULT_SPECIALIST_REVIEWER_MODELS,
   SPECIALIST_REVIEWER_MODELS_ENV,
@@ -253,13 +252,16 @@ describe("specialist consultation", () => {
     expect(() => resolveSpecialistConsultMode("active")).toThrow("off|shadow|enforce");
   });
 
-  test("uses raw identity-token auth and bearer API-key fallback", () => {
-    expect(resolveZoAskAuthorization({
-      ZO_CLIENT_IDENTITY_TOKEN: "identity-token",
-      ZO_API_KEY: "api-key",
-    })).toBe("identity-token");
-    expect(resolveZoAskAuthorization({ ZO_API_KEY: "api-key" })).toBe("Bearer api-key");
-    expect(() => resolveZoAskAuthorization({})).toThrow("not set");
+  test("enforce without explicit adapters fails closed (Zo transport removed)", async () => {
+    const result = await consultSpecialists({
+      mode: "enforce",
+      phase: "advise",
+      taskId: "task-1",
+      task: "Build a mobile-first web app",
+      assignments: [assignment],
+    });
+    expect(result.ok).toBe(false);
+    expect(result.blockedReason).toContain("Zo persona directory was removed");
   });
 });
 

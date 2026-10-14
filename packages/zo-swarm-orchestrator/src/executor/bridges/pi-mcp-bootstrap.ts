@@ -25,7 +25,7 @@ export function findMcpConfigPath(configPath: string, workdir: string): string {
 
 export function buildPiMcpConfig(
   sourcePath: string,
-  env: Record<string, string | undefined> = process.env,
+  _env: Record<string, string | undefined> = process.env,
 ): Record<string, unknown> {
   if (!existsSync(sourcePath)) {
     throw new Error(`Pi MCP config does not exist: ${sourcePath}`);
@@ -34,37 +34,14 @@ export function buildPiMcpConfig(
     mcpServers?: Record<string, JsonMcpServer>;
     settings?: Record<string, unknown>;
   };
-  const config = {
+  // The optional Zo MCP server injection was removed outright (governance
+  // review 2026-10-14, operator's order): Zo Computer is retired, so the
+  // `zo` server entry — which POSTed a bearer token to the dead
+  // api.zo.computer/mcp endpoint — is gone. Shared servers pass through
+  // unchanged.
+  return {
     settings: parsed.settings ?? {},
     mcpServers: { ...(parsed.mcpServers ?? {}) },
-  };
-  const tokenEnv = ['ZO_CLIENT_IDENTITY_TOKEN', 'ZO_API_KEY', 'ZO_MCP_API_KEY']
-    .find(name => env[name]?.trim());
-  if (!tokenEnv) {
-    console.warn(
-      '[Pi MCP] Skipping optional Zo server: no ZO_CLIENT_IDENTITY_TOKEN, ZO_API_KEY, or ZO_MCP_API_KEY is available',
-    );
-    return config;
-  }
-  const url = new URL(env.ZO_MCP_URL ?? 'https://api.zo.computer/mcp');
-  const conversationId = env.ZO_CONVERSATION_ID ?? env.ZO_MCP_CONVERSATION_ID;
-  if (conversationId && !url.searchParams.has('conversation_id')) {
-    url.searchParams.set('conversation_id', conversationId);
-  }
-
-  return {
-    settings: config.settings,
-    mcpServers: {
-      ...config.mcpServers,
-      zo: {
-        url: url.toString(),
-        headers: {
-          Authorization: `Bearer \${${tokenEnv}}`,
-          'Content-Type': 'application/json',
-        },
-        lifecycle: 'lazy',
-      },
-    },
   };
 }
 

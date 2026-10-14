@@ -197,7 +197,9 @@ import json, os, pathlib, sys
 args = sys.argv[1:]
 assert '--approve' not in args
 config = json.loads(pathlib.Path(args[args.index('--mcp-config') + 1]).read_text())
-assert 'zo' in config['mcpServers']
+# The Zo MCP server injection was removed outright (governance review
+# 2026-10-14): no zo server is ever added, even with a Zo token present.
+assert 'zo' not in config['mcpServers']
 assert args[args.index('--model') + 1] == 'openrouter/moonshotai/kimi-k3'
 print('PI_MCP_OK')
 `);
@@ -232,7 +234,9 @@ print('PI_LOCAL_MCP_OK')
     }, data.directory);
     expect(result.code).toBe(0);
     expect(result.stdout.trim()).toBe('PI_LOCAL_MCP_OK');
-    expect(result.stderr).toContain('Skipping optional Zo server');
+    // The 'Skipping optional Zo server' warning is gone with the injection
+    // itself (governance review 2026-10-14): nothing Zo-related is logged.
+    expect(result.stderr).not.toContain('Zo server');
   });
 
   test('Hermes retains the Anthropic subscription pin for provider-relative tiers', async () => {

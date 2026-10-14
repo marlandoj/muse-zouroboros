@@ -879,8 +879,6 @@
           "PI_MCP_EXTENSION_PATH": "Optional pi-mcp-adapter entrypoint override",
           "OPENROUTER_API_KEY": "Required for the default OpenRouter Kimi K3 route",
           "KIMI_API_KEY": "Required only when explicitly routing Pi through kimi-coding",
-          "ZO_CLIENT_IDENTITY_TOKEN": "Preferred authenticated Zo MCP credential",
-          "ZO_MCP_URL": "Optional Zo MCP endpoint override",
           "MEMORY_GATE_URL": "Optional memory-gate endpoint override"
         }
       },

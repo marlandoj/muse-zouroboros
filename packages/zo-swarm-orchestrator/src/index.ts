@@ -145,7 +145,6 @@ export { RoleRegistry, type Role, type RoleResolution } from './roles/registry.j
 export { seedPersonasToRegistry, type PersonaEntry, type PersonaSeedOptions } from './roles/persona-seeder.js';
 export {
   consultSpecialists,
-  invokeZoSpecialist,
   renderSpecialistOutputs,
   resolveSpecialistConsultMode,
 } from './persona/specialist-consult.js';

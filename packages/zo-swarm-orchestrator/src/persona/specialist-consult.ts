@@ -1,6 +1,5 @@
 import { createHash } from "node:crypto";
 import {
-  createZoMcpListPersonasCaller,
   resolvePersonas,
   type ResolvedPersona,
 } from "./directory.js";
@@ -98,7 +97,6 @@ export interface ConsultSpecialistsOptions {
   invokePersona?: (request: SpecialistInvocationRequest) => Promise<SpecialistInvocationResponse>;
 }
 
-const ZO_ASK_URL = "https://api.zo.computer/zo/ask";
 const DEFAULT_TIMEOUT_MS = 600_000;
 const MAX_SPECIALISTS_PER_PHASE = 8;
 
@@ -230,17 +228,6 @@ function sha256(value: string): string {
   return createHash("sha256").update(value).digest("hex");
 }
 
-function finiteCost(value: unknown): number | null {
-  return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : null;
-}
-
-function responseOutput(payload: Record<string, unknown>): string {
-  const output = payload.output ?? payload.result ?? payload.message;
-  if (typeof output === "string" && output.trim()) return output.trim();
-  if (output && typeof output === "object") return JSON.stringify(output);
-  throw new Error("specialist /zo/ask response has no non-empty output");
-}
-
 export function resolveSpecialistConsultMode(
   value = process.env.SWARM_PERSONA_ROUTING_MODE ?? "off",
 ): SpecialistConsultMode {
@@ -250,51 +237,11 @@ export function resolveSpecialistConsultMode(
   return value;
 }
 
-export function resolveZoAskAuthorization(
-  env: Record<string, string | undefined> = process.env,
-): string {
-  const identityToken = env.ZO_CLIENT_IDENTITY_TOKEN?.trim();
-  if (identityToken) return identityToken;
-  const apiKey = env.ZO_API_KEY?.trim();
-  if (apiKey) return `Bearer ${apiKey}`;
-  throw new Error("ZO_CLIENT_IDENTITY_TOKEN or ZO_API_KEY not set");
-}
-
-export async function invokeZoSpecialist(
-  request: SpecialistInvocationRequest,
-): Promise<SpecialistInvocationResponse> {
-  const authorization = resolveZoAskAuthorization();
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), request.timeoutMs);
-  try {
-    const response = await fetch(ZO_ASK_URL, {
-      method: "POST",
-      headers: {
-        authorization,
-        connection: "close",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        input: request.input,
-        model_name: request.modelName,
-        persona_id: request.personaId,
-      }),
-      signal: controller.signal,
-    });
-    if (!response.ok) throw new Error(`/zo/ask returned ${response.status}: ${await response.text()}`);
-    const payload = await response.json() as Record<string, unknown>;
-    const usage = payload.usage && typeof payload.usage === "object"
-      ? payload.usage as Record<string, unknown>
-      : {};
-    return {
-      output: responseOutput(payload),
-      modelName: typeof payload.model_name === "string" ? payload.model_name : request.modelName,
-      costUsd: finiteCost(payload.cost_usd) ?? finiteCost(usage.cost_usd),
-    };
-  } finally {
-    clearTimeout(timer);
-  }
-}
+// The Zo-based specialist invocation (invokeZoSpecialist → api.zo.computer/zo/ask)
+// was removed outright (governance review 2026-10-14, operator's order): Zo
+// Computer is retired. There is no default persona directory or invocation
+// transport left; callers in shadow/enforce mode must supply `listPersonas`
+// and `invokePersona` explicitly, otherwise the consult fails closed below.
 
 function buildPrompt(
   options: Pick<ConsultSpecialistsOptions, "taskId" | "task" | "phase" | "implementationOutput">,
@@ -406,7 +353,12 @@ export async function consultSpecialists(
       required: assignment.required,
       required_scopes: (assignment.requiredScopes ?? ["files:read"]).filter((scope) => scope !== "files:write"),
     })),
-    listPersonas: options.listPersonas ?? createZoMcpListPersonasCaller(),
+    listPersonas: options.listPersonas ?? (async () => {
+      throw new Error(
+        "specialist consult needs an explicit listPersonas: the Zo persona directory " +
+        "was removed (Zo Computer retired 2026-10-14).",
+      );
+    }),
     timeoutMs: options.timeoutMs ?? DEFAULT_TIMEOUT_MS,
   });
   const byRole = new Map(assignments.map((assignment) => [assignment.roleId, assignment]));
@@ -477,7 +429,12 @@ export async function consultSpecialists(
     };
   }
 
-  const invoke = options.invokePersona ?? invokeZoSpecialist;
+  const invoke = options.invokePersona ?? (async () => {
+    throw new Error(
+      "specialist consult needs an explicit invokePersona: the Zo /zo/ask invocation " +
+      "transport was removed (Zo Computer retired 2026-10-14).",
+    );
+  });
   let totalCostUsd = 0;
   let blockedReason: string | null = null;
   for (const persona of resolution.resolved) {

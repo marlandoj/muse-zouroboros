@@ -601,61 +601,7 @@ export async function resolvePersonas(
   return result;
 }
 
-// Live MCP caller for production wiring (T4/T5). Not invoked by tests.
-export interface ZoMcpCallerOptions {
-  endpoint?: string;
-  apiKey?: string;
-  authorization?: string;
-  fetch_impl?: (input: string | URL | Request, init?: RequestInit) => Promise<Response>;
-}
-
-export function resolveZoMcpAuthorization(
-  options: Pick<ZoMcpCallerOptions, "apiKey" | "authorization"> = {},
-  env: Record<string, string | undefined> = process.env,
-): string | undefined {
-  if (options.authorization !== undefined) return options.authorization;
-  if (options.apiKey !== undefined) return `Bearer ${options.apiKey}`;
-  if (env.ZO_CLIENT_IDENTITY_TOKEN) return env.ZO_CLIENT_IDENTITY_TOKEN;
-  if (env.ZO_API_KEY) return `Bearer ${env.ZO_API_KEY}`;
-  return undefined;
-}
-
-export function createZoMcpListPersonasCaller(
-  options: ZoMcpCallerOptions = {},
-): () => Promise<unknown> {
-  const endpoint = options.endpoint ?? process.env.ZO_MCP_ENDPOINT ?? "https://api.zo.computer/mcp";
-  const authorization = resolveZoMcpAuthorization(options);
-  const fetchImpl = options.fetch_impl ?? fetch;
-
-  return async () => {
-    if (!authorization?.trim()) {
-      throw new PersonaDirectoryError("unavailable",
-        "Zo specialist routing requires ZO_CLIENT_IDENTITY_TOKEN or ZO_API_KEY. Local persona files are not Zo directory identities; use shadow/off or an explicitly supplied directory and invocation adapter.");
-    }
-    const resp = await fetchImpl(endpoint, {
-      method: "POST",
-      headers: {
-        ...(authorization ? { authorization } : {}),
-        connection: "close",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        method: "tools/call",
-        id: Date.now(),
-        params: { name: "list_personas", arguments: {} },
-      }),
-    });
-    if (!resp.ok) {
-      throw new PersonaDirectoryError("unavailable", `HTTP ${resp.status}`);
-    }
-    const payload = await resp.json() as Record<string, unknown>;
-    if (payload.error && typeof payload.error === "object") {
-      const error = payload.error as Record<string, unknown>;
-      const code = typeof error.code === "number" || typeof error.code === "string" ? String(error.code) : "unknown";
-      const message = typeof error.message === "string" ? error.message : "unknown MCP error";
-      throw new PersonaDirectoryError("unavailable", `MCP ${code}: ${message}`);
-    }
-    return payload;
-  };
-}
+// The live Zo MCP persona-directory caller (list_personas over
+// api.zo.computer/mcp) was removed outright (governance review 2026-10-14,
+// operator's order): Zo Computer is retired. Persona resolution now works
+// purely from local snapshots; see resolveAgainstSnapshot above.
