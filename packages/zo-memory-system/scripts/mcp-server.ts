@@ -11,6 +11,8 @@
  *   memory_episodes — Query episodic memory
  *   memory_procedures — List/show procedures
  *   cognitive_profile — Show executor cognitive profile
+ *   memory_session_observations — Read-only retrieval over session-kind observations
+ *     (plane-native observation layer; strictly per-actor, actor fail-closed)
  */
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
@@ -33,6 +35,11 @@ import {
   resolveScope,
   scopeSql,
 } from "./scope";
+import { ensureObservationSchema } from "./observations";
+import {
+  searchSessionObservations,
+  retrieveSessionObservations,
+} from "./session-observer";
 
 // --- Config ---
 const DB_PATH = process.env.ZO_MEMORY_DB || "/home/workspace/.zo/memory/shared-facts.db";
@@ -42,11 +49,13 @@ const HISTORY_PATH = join(process.env.HOME || "/tmp", ".swarm", "executor-histor
 // --- DB ---
 let db: Database;
 
-function getDb(): Database {
+/** Exported for tests: the server's own DB handle (bound at first use). */
+export function getDb(): Database {
   if (!db) {
     db = new Database(DB_PATH);
     db.exec("PRAGMA journal_mode = WAL");
     ensureIntelligencePlaneSchema(db);
+    ensureObservationSchema(db);
   }
   return db;
 }
@@ -369,6 +378,41 @@ function toolMemoryEpisodes(args: {
   return `Found ${rows.length} episodes:\n\n${results.join("\n\n")}`;
 }
 
+/**
+ * memory_session_observations — read-only retrieval over the plane-native
+ * observation layer (session-observer.ts). Curated, dated per-session
+ * digests with evidence links, returned bounded top-K (never whole-history
+ * in context). Strictly per-actor (v1 governance): actor is required and
+ * fail-closed; only observations with persona = actor are visible.
+ * Observer triggering (observeSessions/fade) is deliberately NOT exposed.
+ */
+export async function toolMemorySessionObservations(args: {
+  action: string;
+  actor: string;
+  query: string;
+  limit?: number;
+}): Promise<string> {
+  const db = getDb();
+  const action = args.action as string;
+  const query = args.query as string;
+  if (!query) throw new Error("query is required for memory_session_observations");
+  const hits =
+    action === "search"
+      ? searchSessionObservations(db, query, { actor: args.actor, limit: args.limit })
+      : action === "retrieve"
+        ? retrieveSessionObservations(db, query, { actor: args.actor, limit: args.limit })
+        : null;
+  if (!hits) throw new Error(`Unknown memory_session_observations action: ${action}`);
+  if (hits.length === 0) return "No session observations found.";
+  const lines = hits.map((h) => {
+    const date = h.observedAt
+      ? new Date(h.observedAt * 1000).toISOString().slice(0, 10)
+      : "undated";
+    return `- [${h.id}] ${date} (${h.decayClass}, ${h.proofCount} evidence)\n  ${h.text}`;
+  });
+  return `Found ${hits.length} session observation${hits.length === 1 ? "" : "s"}:\n\n${lines.join("\n\n")}`;
+}
+
 function toolMemoryProcedures(args: { name?: string }): string {
   const db = getDb();
 
@@ -472,8 +516,9 @@ const server = new Server(
 );
 
 // --- List tools ---
-server.setRequestHandler(ListToolsRequestSchema, async () => ({
-  tools: [
+// Extracted (and exported) so tests can pin the tool surface without
+// standing up the stdio server.
+export const TOOLS = [
     {
       name: "memory_search",
       description: "Search the memory system using hybrid FTS + vector search with RRF fusion. Requires a caller identity (actor); calls without one fail closed with MISSING_ACTOR. Results are scoped to the actor plus the shared pool.",
@@ -542,8 +587,23 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         required: ["executor_id"],
       },
     },
-  ],
-}));
+    {
+      name: "memory_session_observations",
+      description: "Read session-kind observations — the plane-native observation layer retrieval signal. Curated, dated per-session digests with evidence links, retrieved bounded top-K (never whole-history in context). Strictly per-actor (v1 governance): actor is required and fail-closed via requireActor; only observations with persona = actor are visible. Read-only: observer triggering is not exposed here.",
+      inputSchema: {
+        type: "object" as const,
+        properties: {
+          action: { type: "string", enum: ["search", "retrieve"], description: "search: keyword over session observations; retrieve: RRF-fused bounded top-K (the eval-probe read path)" },
+          actor: { type: "string", description: "Actor identity — required, fail-closed. Missing/empty actor throws MISSING_ACTOR." },
+          query: { type: "string", description: "Search query" },
+          limit: { type: "number", description: "Max results (default 10)" },
+        },
+        required: ["action", "actor", "query"],
+      },
+    },
+  ];
+
+server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: TOOLS }));
 
 // --- Call tool ---
 server.setRequestHandler(CallToolRequestSchema, async (request) => {
@@ -567,6 +627,9 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         break;
       case "cognitive_profile":
         result = toolCognitiveProfile(args as any);
+        break;
+      case "memory_session_observations":
+        result = await toolMemorySessionObservations(args as any);
         break;
       default:
         result = `Unknown tool: ${name}`;

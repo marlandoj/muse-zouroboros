@@ -44,6 +44,7 @@ import {
   resolveScope,
   scopeSql,
 } from "./scope";
+import { ensureObservationSchema } from "./observations";
 import {
   forgetFact,
   restoreFact,
@@ -261,6 +262,10 @@ export async function initDb(pathOverride?: string): Promise<Database> {
 
   ensureContinuationSchema(db);
   ensureIntelligencePlaneSchema(db);
+  // Plane-native observation layer: idempotent DDL doubles as the migration —
+  // this package has no _migrations framework, so every entry point upgrades
+  // pre-existing DBs in place (cf. the monorepo's 103_observation_layer_indexes).
+  ensureObservationSchema(db);
 
   dbInitialized = true;
   return db;

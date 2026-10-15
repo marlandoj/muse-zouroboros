@@ -111,6 +111,7 @@ export function ensureIntelligencePlaneSchema(db: Database): void {
       action TEXT NOT NULL,
       fact_id TEXT,
       call_id TEXT,
+      observation_id TEXT,
       created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'now'))
     );
     CREATE INDEX IF NOT EXISTS idx_memory_audit_actor ON memory_audit(actor, created_at DESC);
@@ -139,6 +140,19 @@ export function ensureIntelligencePlaneSchema(db: Database): void {
     );
     CREATE INDEX IF NOT EXISTS idx_fact_forgotten_at ON fact_forgotten(forgotten_at);
   `);
+
+  // Upgrade path for memory_audit tables created before the plane-native
+  // observation layer: the CREATE TABLE above is a no-op there, so add the
+  // column explicitly. Pragma-guarded — SQLite has no ADD COLUMN IF NOT EXISTS.
+  const auditCols = db
+    .query(`PRAGMA table_info(memory_audit)`)
+    .all() as Array<{ name: string }>;
+  if (!auditCols.some((c) => c.name === "observation_id")) {
+    db.exec(`ALTER TABLE memory_audit ADD COLUMN observation_id TEXT`);
+  }
+  // Index after the upgrade: on a pre-existing memory_audit the CREATE TABLE
+  // above is a no-op, and indexing a missing column would throw.
+  db.exec(`CREATE INDEX IF NOT EXISTS idx_memory_audit_observation ON memory_audit(observation_id);`);
 }
 
 // ---------------------------------------------------------------------------
@@ -155,7 +169,8 @@ export type AuditAction =
   | "restore"
   | "purge"
   | "promotion_stage"
-  | "review_decision";
+  | "review_decision"
+  | "observe";
 
 export interface AuditEvent {
   actor: string;
@@ -165,6 +180,13 @@ export interface AuditEvent {
   factId?: string | null;
   /** Correlates the rows of one logical call (e.g. hybrid = keyword + vector legs). */
   callId?: string | null;
+  /**
+   * Observation id for observation-lifecycle actions (observe/refine/fade).
+   * Dedicated column: forensic queries stay single-predicate instead of
+   * union-typing fact_id with an action predicate. Nullable — existing rows
+   * are untouched.
+   */
+  observationId?: string | null;
 }
 
 /** Mint a correlation id for one logical memory call. */
@@ -180,7 +202,7 @@ export function newCallId(): string {
 export function recordAudit(db: Database, event: AuditEvent): void {
   ensureIntelligencePlaneSchema(db);
   db.prepare(
-    `INSERT INTO memory_audit (actor, scope, action, fact_id, call_id)
-     VALUES (?, ?, ?, ?, ?)`
-  ).run(event.actor, event.scope, event.action, event.factId ?? null, event.callId ?? null);
+    `INSERT INTO memory_audit (actor, scope, action, fact_id, call_id, observation_id)
+     VALUES (?, ?, ?, ?, ?, ?)`
+  ).run(event.actor, event.scope, event.action, event.factId ?? null, event.callId ?? null, event.observationId ?? null);
 }
