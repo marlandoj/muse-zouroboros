@@ -356,7 +356,7 @@ function getReachabilityRemediation(type: string, issue: any): string {
 
 function getDataRemediation(prereq: DataPrerequisite, cap: Capability): string {
   if (prereq.checkFn === 'checkRolesSeeded') {
-    return 'Run: bun packages/swarm/src/roles/persona-seeder.ts (or zouroboros-swarm roles seed)';
+    return 'Run: bun packages/zo-swarm-orchestrator/src/roles/persona-seeder.ts (or zouroboros-swarm roles seed)';
   }
   if (prereq.checkFn === 'checkExecutorRegistryLoaded') {
     return 'Ensure executor-registry.json has at least one executor entry';

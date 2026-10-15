@@ -54,7 +54,7 @@ import {
 } from 'zouroboros-selfheal';
 import { runSwarmPlanGatePreflight } from './plan-gate-preflight.js';
 import { createComputeDispatcher } from './compute/dispatcher.js';
-import type { ProviderAdapter } from 'zouroboros-core';
+import type { ProviderAdapter } from './core-compute-types.js';
 import { resolvePortableHarness, type ResolvedPortableHarness } from './executor/portability.js';
 import {
   consultSpecialists,

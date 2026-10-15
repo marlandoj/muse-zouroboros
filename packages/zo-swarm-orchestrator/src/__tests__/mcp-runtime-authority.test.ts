@@ -13,7 +13,7 @@ afterEach(() => {
   for (const id of campaigns.splice(0)) rmSync(`/tmp/swarm-tasks-${id}.json`, { force: true });
 });
 
-for (const entrypoint of ['packages/swarm/scripts/mcp-server.ts', 'packages/swarm/src/standalone/mcp-server.ts']) {
+for (const entrypoint of ['packages/zo-swarm-orchestrator/scripts/mcp-server.ts', 'packages/zo-swarm-orchestrator/src/standalone/mcp-server.ts']) {
   test(`${entrypoint} launches the canonical runtime with its actual CLI and result paths`, async () => {
     const home = mkdtempSync(join(tmpdir(), 'rb2-mcp-'));
     roots.push(home);
@@ -45,7 +45,7 @@ cp "$HOME/result-fixture.json" "$HOME/.swarm/results/$FIXTURE_CAMPAIGN.json"
       expect(response.isError).not.toBe(true);
       expect(JSON.stringify(response.content)).toContain('Success: 1/1 tasks');
       expect(readFileSync(join(home, 'args'), 'utf8').trim().split('\n')).toEqual([
-        'run', join(root, 'packages/swarm/scripts/orchestrate-v5.ts'), `/tmp/swarm-tasks-${id}.json`,
+        'run', join(root, 'packages/zo-swarm-orchestrator/scripts/orchestrate-v5.ts'), `/tmp/swarm-tasks-${id}.json`,
         '--swarm-id', id, '--concurrency', '3', '--swarm-events',
       ]);
       expect(readFileSync(join(home, 'trace'), 'utf8')).toBe(id);

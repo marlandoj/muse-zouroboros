@@ -17,7 +17,7 @@
  *
  * The pre-existing `code-docs` collection (SDK docs) is left as-is.
  *
- * Run: bun packages/swarm/scripts/qdrant-indexer.ts [--collection=name] [--force-recreate]
+ * Run: bun packages/zo-swarm-orchestrator/scripts/qdrant-indexer.ts [--collection=name] [--force-recreate]
  * Env: QDRANT_URL (default http://127.0.0.1:6333), QDRANT_API_KEY,
  *      ZOUROBOROS_REPO (default: monorepo root), ZOUROBOROS_MEMORY_DB,
  *      OPENAI_API_KEY / ZO_OPENAI_API_KEY, OPENAI_BASE_URL
@@ -27,10 +27,29 @@ import { randomUUID } from "node:crypto";
 import { join, relative, extname, basename, resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Database } from "bun:sqlite";
-import { chunkText } from "zouroboros-rag";
+
+// chunkText — vendored from the Zouroboros monorepo (packages/rag/src/ingestion.ts).
+// The npm-published zouroboros-rag does not export it, and the monorepo's own
+// index.ts doesn't re-export it either, so the original `from "zouroboros-rag"`
+// import could never resolve. Semantics and defaults preserved verbatim.
+const RAG_CHUNK_CHARS = 1500;
+const RAG_CHUNK_OVERLAP = 200;
+function chunkText(text: string, chars = RAG_CHUNK_CHARS, overlap = RAG_CHUNK_OVERLAP): string[] {
+  if (!Number.isInteger(chars) || chars < 1) throw new Error('Chunk size must be a positive integer');
+  if (!Number.isInteger(overlap) || overlap < 0 || overlap >= chars) {
+    throw new Error('Chunk overlap must be a non-negative integer smaller than the chunk size');
+  }
+  if (text.length <= chars) return [text];
+  const advance = chars - overlap;
+  const chunks: string[] = [];
+  for (let index = 0; index < text.length; index += advance) {
+    chunks.push(text.slice(index, index + chars));
+  }
+  return chunks;
+}
 
 // Self-heal: source zouroboros.env if OPENAI_API_KEY is missing (e.g. scheduled agent
-// invoked us under `env -i`). Mirrors the pattern in packages/swarm/src/rag/enrichment.ts.
+// invoked us under `env -i`). Mirrors the pattern in packages/zo-swarm-orchestrator/src/rag/enrichment.ts.
 if (!process.env.OPENAI_API_KEY && !process.env.ZO_OPENAI_API_KEY) {
   try {
     const raw = readFileSync(process.env.ZO_SECRETS_PATH || "/etc/zouroboros/zouroboros.env", "utf8");

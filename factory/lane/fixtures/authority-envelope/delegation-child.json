@@ -1,0 +1,53 @@
+{
+  "contract_id": "zouroboros-authority-envelope/v1",
+  "schema_version": 1,
+  "envelope_id": "ae-01J0000000000000000000000B",
+  "principal": { "kind": "agent", "id": "fixture-subagent" },
+  "capabilities": [
+    {
+      "capability": "factory.contract-test",
+      "resources": [
+        "Projects/zouroboros-software-factory/fixtures/authority-envelope/subset/*",
+        "Projects/zouroboros-software-factory/contracts/authority-envelope-v1.schema.json"
+      ],
+      "argument_constraints": {
+        "mode": { "enum": ["read"] },
+        "depth": { "max_length": 4 }
+      },
+      "credential_classes": ["fixture-local"],
+      "revoked_at": null
+    }
+  ],
+  "validity": {
+    "not_before": "2026-02-01T00:00:00Z",
+    "expires_at": "2026-11-30T23:59:59Z"
+  },
+  "environment": {
+    "runtime_root": "fixture-root",
+    "isolation_mode": "disposable-temp",
+    "repository": "marlandoj/zouroboros",
+    "state_dir": "fixture-child-state"
+  },
+  "approval_binding": {
+    "actor": "fixture-operator",
+    "session_id": "fixture-session",
+    "run_id": "fixture-child-run",
+    "tool": "authority-envelope-check",
+    "bound_arguments_sha256": "e4c382018ca76d5da417e38889c611ef785a14cde816269c6b6cc06d966717b5",
+    "lifetime": { "kind": "terminal" },
+    "required_terminal_outcome": "success"
+  },
+  "global_rung_cap": "branch-write",
+  "delegation": { "parent_envelope_ref": "ae-01J0000000000000000000000A", "depth": 1 },
+  "integration_refs": {
+    "permission_rung_ref": "fixture:global-rung.json",
+    "skillspector_finding_refs": [],
+    "mcp_finding_refs": [],
+    "provenance_evidence_refs": ["provenance:fixture-chain-1"]
+  },
+  "enforcement_evidence": {
+    "kind": "fixture",
+    "evidence_ref": "fixtures/authority-envelope/evidence-v1",
+    "sha256": "78ab22b0afd5f1359c11d0b5d74be2a0555a55a7af2ff9fdc10bd02a6990403c"
+  }
+}

@@ -45,9 +45,21 @@ export function validateFactoryPathProfile(raw: unknown): FactoryPathProfile {
   if (Object.keys(value).length !== keys.length || keys.some(key => !Object.hasOwn(value, key)) || value.version !== 1) {
     throw new Error('Factory profile schema mismatch');
   }
-  for (const key of ['source_root', 'worktrees_root', 'releases_root', 'state_root'] as const) {
+  for (const key of ['worktrees_root', 'releases_root', 'state_root'] as const) {
     if (typeof value[key] !== 'string') throw new Error('Factory profile path must be a string');
     canonicalFactoryPath(value[key]);
+  }
+  // source_root is a pinned namespace constant, not a user-chosen path: enforce
+  // textual canonicity and the exact pin, but skip the symlink walk-up —
+  // on Hatch VMs /home/workspace is a platform-managed symlink, so the walk-up
+  // would reject every valid profile. The exact-string pin is the authority check.
+  if (
+    typeof value.source_root !== 'string' ||
+    !isAbsolute(value.source_root) ||
+    resolve(value.source_root) !== value.source_root ||
+    /[\0\r\n]/.test(value.source_root)
+  ) {
+    throw new Error('Factory profile path must be a string');
   }
   if (value.source_root !== '/home/workspace' || value.worktrees_root !== EXTERNAL_FACTORY_WORKTREES || value.releases_root !== EXTERNAL_FACTORY_RELEASES) {
     throw new Error('Factory profile namespace is not authorized');

@@ -5,7 +5,7 @@ import {
   type ExecutionEnvelope,
   type ExecutionAttempt,
   type ProviderAdapter,
-} from 'zouroboros-core';
+} from '../core-compute/compute.js';
 import { createComputeDispatcher } from '../compute/dispatcher.js';
 import { DAGExecutor, type ExecutionContext } from '../dag/executor.js';
 import type { SwarmConfig, Task } from '../types.js';

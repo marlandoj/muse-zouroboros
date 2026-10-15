@@ -53,7 +53,15 @@ interface LeaseRecord {
 
 const FACTORY_ROOT = join(import.meta.dir, "..");
 const DEFAULT_POLICY_PATH = join(FACTORY_ROOT, "config", "host-resource-policy.json");
-const DEFAULT_LEASE_PATH = factoryStatePath("host-resource-executor.lease.json");
+// Lazy: factoryStatePath() throws when FACTORY_STATE_DIR is unset outside
+// compatibility/test mode; the smoke command must work without it.
+function defaultLeasePath(): string {
+  try {
+    return factoryStatePath("host-resource-executor.lease.json");
+  } catch {
+    return join(FACTORY_ROOT, ".host-resource-executor.lease.json");
+  }
+}
 const MIB = 1024 * 1024;
 const DEFAULT_POLICY: HostResourcePolicy = {
   version: 1,
@@ -325,7 +333,7 @@ export function acquireExecutorLease(options: {
   processStartTicks?: string;
   isProcessAlive?: (pid: number, processStartTicks: string) => boolean;
 } = {}): ExecutorLease {
-  const path = options.path ?? DEFAULT_LEASE_PATH;
+  const path = options.path ?? defaultLeasePath();
   const now = options.now ?? new Date();
   const pid = options.pid ?? process.pid;
   const processStartTicks = options.processStartTicks ?? readProcessStartTicks(pid);

@@ -18,8 +18,8 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/marlandoj/zouroboros.git",
-    "directory": "packages/swarm"
+    "url": "https://github.com/marlandoj/muse-zouroboros.git",
+    "directory": "packages/zo-swarm-orchestrator"
   },
   "bin": {
     "zouroboros-swarm": "./dist/cli/index.js"
@@ -48,10 +48,9 @@
     "hono": "^4.12.12",
     "pi-mcp-adapter": "2.15.0",
     "yaml": "^2.9.0",
-    "zouroboros-core": "workspace:*",
-    "zouroboros-rag": "workspace:*",
-    "zouroboros-selfheal": "workspace:*",
-    "zouroboros-workflow": "workspace:*"
+    "zouroboros-core": "2.2.0",
+    "zouroboros-rag": "1.1.1",
+    "zouroboros-selfheal": "2.1.1"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -70,5 +69,5 @@
     "zouroboros"
   ],
   "license": "MIT",
-  "author": "marlandoj.zo.computer"
+  "author": "Marlando Jackson"
 }

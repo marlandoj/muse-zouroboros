@@ -8,8 +8,8 @@ The CLI inventory is `claude-code`, `codex`, `gemini`, `hermes`, `kimi`, `openco
 
 | Source | Active entries | Scope |
 |---|---|---|
-| `packages/swarm/src/executor/registry/harness-contract.json` | 7 | Portable CLI harnesses |
-| `packages/swarm/src/executor/registry/executor-registry.json` | 7 | The same CLI executors |
+| `packages/zo-swarm-orchestrator/src/executor/registry/harness-contract.json` | 7 | Portable CLI harnesses |
+| `packages/zo-swarm-orchestrator/src/executor/registry/executor-registry.json` | 7 | The same CLI executors |
 | `Skills/zo-swarm-executors/registry/executor-registry.json` | 7 | Byte-identical generated copy of the canonical package registry (RB-2) |
 
 Mimir uses `transport: "mimir"` and has no bridge. It is not a CLI harness, is excluded from the portability contract, and is not supported by the packaged transport factory (which supports ACP and bridge transports). Its complete entry is preserved under `services` in both registries, outside the active executor list (RB-2).

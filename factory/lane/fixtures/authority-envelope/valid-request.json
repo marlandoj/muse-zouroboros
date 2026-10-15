@@ -1,0 +1,18 @@
+{
+  "capability": "factory.contract-test",
+  "resource": "Projects/zouroboros-software-factory/contracts/authority-envelope-v1.schema.json",
+  "arguments": { "mode": "read" },
+  "credential_class": "fixture-local",
+  "ts": "2026-06-01T12:00:00Z",
+  "environment": {
+    "runtime_root": "fixture-root",
+    "isolation_mode": "isolated-worktree",
+    "repository": "marlandoj/zouroboros",
+    "state_dir": "fixture-state"
+  },
+  "enforcement_evidence": {
+    "kind": "fixture",
+    "evidence_ref": "fixtures/authority-envelope/evidence-v1",
+    "payload": "authority-envelope-fixture-evidence-v1"
+  }
+}

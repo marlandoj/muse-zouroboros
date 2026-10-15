@@ -1,0 +1,8 @@
+scenario_id: stale-lease-duplicate-claim
+description: Persistent workers reject duplicate claims and recover stale leases as dead letters.
+seed: 107
+steps:
+  - name: lease-recovery
+    run: bun {scripts_dir}/worker-supervisor-selftest.ts
+    timeout_ms: 30000
+    expect: { exit_code: 0 }

@@ -17,26 +17,26 @@ function createFixture(): { home: string; memoryDb: string; workspace: string } 
   const workspace = join(root, "workspace");
   const home = join(root, "home");
   const memoryDb = join(root, "memory.db");
-  const bridge = join(workspace, "packages/swarm/src/executor/bridges/test-bridge.sh");
+  const bridge = join(workspace, "packages/zo-swarm-orchestrator/src/executor/bridges/test-bridge.sh");
 
   mkdirSync(dirname(bridge), { recursive: true });
   writeFileSync(bridge, "#!/usr/bin/env bash\nexit 0\n");
   writeFileSync(memoryDb, "");
   writeJson(
-    join(workspace, "packages/swarm/src/executor/registry/executor-registry.json"),
+    join(workspace, "packages/zo-swarm-orchestrator/src/executor/registry/executor-registry.json"),
     {
       executors: [
         {
           id: "test-executor",
           name: "Test Executor",
           executor: "local",
-          bridge: "packages/swarm/src/executor/bridges/test-bridge.sh",
+          bridge: "packages/zo-swarm-orchestrator/src/executor/bridges/test-bridge.sh",
         },
       ],
     },
   );
   writeJson(
-    join(workspace, "Skills/zo-swarm-orchestrator/assets/persona-registry.json"),
+    join(workspace, "packages/zo-swarm-orchestrator/assets/persona-registry.json"),
     { personas: [{ id: "developer", name: "Developer" }] },
   );
 
@@ -76,23 +76,25 @@ describe("swarm doctor CLI", () => {
     expect(result.stdout).toContain("Doctor complete");
   });
 
-  test("prefers the canonical monorepo persona registry over the legacy skill copy", async () => {
+  test("prefers the package persona registry over the legacy skill copy", async () => {
     const fixture = createFixture();
-    const monorepoRegistry = join(fixture.workspace, "packages/swarm/assets/persona-registry.json");
-    writeJson(monorepoRegistry, {
+    const packageRegistry = join(fixture.workspace, "packages/zo-swarm-orchestrator/assets/persona-registry.json");
+    writeJson(join(fixture.workspace, "Skills/zo-swarm-orchestrator/assets/persona-registry.json"), {
+      personas: [{ id: "legacy-copy", name: "Legacy Copy" }],
+    });
+    writeJson(packageRegistry, {
       personas: [{ id: "gamedev-game-designer", name: "GameDev · Game Designer" }],
     });
-    rmSync(join(fixture.workspace, "Skills/zo-swarm-orchestrator/assets/persona-registry.json"));
     const result = await runDoctor(fixture);
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain(monorepoRegistry);
+    expect(result.stdout).toContain(packageRegistry);
     expect(result.stdout).toContain("Doctor complete");
   });
 
   test("fails when a required registry is missing", async () => {
     const fixture = createFixture();
     rmSync(
-      join(fixture.workspace, "packages/swarm/src/executor/registry/executor-registry.json"),
+      join(fixture.workspace, "packages/zo-swarm-orchestrator/src/executor/registry/executor-registry.json"),
     );
     const result = await runDoctor(fixture);
     expect(result.exitCode).toBe(1);
@@ -102,7 +104,7 @@ describe("swarm doctor CLI", () => {
 
   test("fails when a registered executor bridge is missing", async () => {
     const fixture = createFixture();
-    rmSync(join(fixture.workspace, "packages/swarm/src/executor/bridges/test-bridge.sh"));
+    rmSync(join(fixture.workspace, "packages/zo-swarm-orchestrator/src/executor/bridges/test-bridge.sh"));
     const result = await runDoctor(fixture);
     expect(result.exitCode).toBe(1);
     expect(result.stdout).toContain("test-executor");

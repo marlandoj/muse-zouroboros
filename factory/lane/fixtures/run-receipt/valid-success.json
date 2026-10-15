@@ -1,0 +1,216 @@
+{
+  "$schema": "https://zouroboros.ai/schemas/run-receipt-v1.schema.json",
+  "contract_id": "zouroboros-run-receipt/v1",
+  "schema_version": 1,
+  "receipt_id": "rr-01J00000000000000000000000",
+  "operation_id": "op-01J00000000000000000000001",
+  "idempotency_key": "factory:ZOU-1051:seed-9755ccf0",
+  "receipt_hash": "5e7ac36001c772d2c5d24223250715f836d87616a5cab6f0b6a38b29228737eb",
+  "trigger": {
+    "kind": "factory",
+    "identity": "ZOU-1051",
+    "intent": "Validate canonical run receipt",
+    "input_hash": "1111111111111111111111111111111111111111111111111111111111111111",
+    "ts": "2026-08-11T13:40:00.000Z"
+  },
+  "lineage": {
+    "parent_receipt_id": null,
+    "trace_id": "22222222222222222222222222222222",
+    "span_id": "3333333333333333",
+    "inherited_state_refs": ["checkpoint:ab81cd437"],
+    "wave_id": "phase-b-es05",
+    "seed_id": "seed-phase-b-es05-run-receipt-2026-08-11"
+  },
+  "versions": {
+    "contract_version": "zouroboros-run-receipt/v1",
+    "policy_version": "2026-08-11",
+    "model_versions": {},
+    "tool_versions": { "git_base": "ab81cd437c7b166b11d70ff3588a2767ef27d46d" },
+    "schema_migrations": []
+  },
+  "authority": {
+    "envelope_kind": "operator_approval",
+    "approving_authority": "operator",
+    "approval_ts": "2026-08-11T13:38:54.000Z",
+    "approval_ref": "seed:9755ccf0",
+    "autonomy_tier": null,
+    "authorization_evidence_ref": "authority:phase-b-es05"
+  },
+  "events": [
+    {
+      "event_id": "evt-accepted",
+      "source_event_id": "flight:zou-1051:1",
+      "causal_parent_id": null,
+      "sequence": 1,
+      "cursor": "rrc:op-01J00000000000000000000001:1",
+      "kind": "operation.accepted",
+      "ts": "2026-08-11T13:40:00.000Z",
+      "attempt_n": null,
+      "tool_call_id": null,
+      "tool_result_for": null,
+      "payload_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    },
+    {
+      "event_id": "evt-attempt-start",
+      "source_event_id": "flight:zou-1051:2",
+      "causal_parent_id": "evt-accepted",
+      "sequence": 2,
+      "cursor": "rrc:op-01J00000000000000000000001:2",
+      "kind": "attempt.started",
+      "ts": "2026-08-11T13:40:01.000Z",
+      "attempt_n": 1,
+      "tool_call_id": null,
+      "tool_result_for": null,
+      "payload_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+    },
+    {
+      "event_id": "evt-tool-call",
+      "source_event_id": "flight:zou-1051:3",
+      "causal_parent_id": "evt-attempt-start",
+      "sequence": 3,
+      "cursor": "rrc:op-01J00000000000000000000001:3",
+      "kind": "tool.called",
+      "ts": "2026-08-11T13:40:02.000Z",
+      "attempt_n": 1,
+      "tool_call_id": "tool-1",
+      "tool_result_for": null,
+      "payload_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+    },
+    {
+      "event_id": "evt-tool-result",
+      "source_event_id": "flight:zou-1051:4",
+      "causal_parent_id": "evt-tool-call",
+      "sequence": 4,
+      "cursor": "rrc:op-01J00000000000000000000001:4",
+      "kind": "tool.completed",
+      "ts": "2026-08-11T13:40:03.000Z",
+      "attempt_n": 1,
+      "tool_call_id": null,
+      "tool_result_for": "tool-1",
+      "payload_hash": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+    },
+    {
+      "event_id": "evt-attempt-complete",
+      "source_event_id": "flight:zou-1051:5",
+      "causal_parent_id": "evt-tool-result",
+      "sequence": 5,
+      "cursor": "rrc:op-01J00000000000000000000001:5",
+      "kind": "attempt.completed",
+      "ts": "2026-08-11T13:40:04.000Z",
+      "attempt_n": 1,
+      "tool_call_id": null,
+      "tool_result_for": null,
+      "payload_hash": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+    },
+    {
+      "event_id": "evt-operation-complete",
+      "source_event_id": "flight:zou-1051:6",
+      "causal_parent_id": "evt-attempt-complete",
+      "sequence": 6,
+      "cursor": "rrc:op-01J00000000000000000000001:6",
+      "kind": "operation.completed",
+      "ts": "2026-08-11T13:40:05.000Z",
+      "attempt_n": null,
+      "tool_call_id": null,
+      "tool_result_for": null,
+      "payload_hash": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    },
+    {
+      "event_id": "evt-delivery-visible",
+      "source_event_id": "delivery:zou-1051:1",
+      "causal_parent_id": "evt-operation-complete",
+      "sequence": 7,
+      "cursor": "rrc:op-01J00000000000000000000001:7",
+      "kind": "delivery.visible",
+      "ts": "2026-08-11T13:40:06.000Z",
+      "attempt_n": null,
+      "tool_call_id": null,
+      "tool_result_for": null,
+      "payload_hash": "abababababababababababababababababababababababababababababababab"
+    }
+  ],
+  "attempts": [
+    {
+      "attempt_n": 1,
+      "ts_start": "2026-08-11T13:40:01.000Z",
+      "ts_end": "2026-08-11T13:40:04.000Z",
+      "status": "success",
+      "side_effects": [
+        {
+          "effect_id": "effect-file-1",
+          "kind": "file_write",
+          "target": "Projects/example/output.json",
+          "committed": true,
+          "reversible": true,
+          "rollback_ref": "git:ab81cd437"
+        }
+      ],
+      "error": null,
+      "retry_reason": null
+    }
+  ],
+  "terminal": {
+    "outcome": "success",
+    "committed_state_hash": "1212121212121212121212121212121212121212121212121212121212121212",
+    "artifacts": [
+      {
+        "kind": "file",
+        "ref": "Projects/example/output.json",
+        "hash": "3434343434343434343434343434343434343434343434343434343434343434",
+        "description": "Fixture output"
+      }
+    ],
+    "ledger_entries": [
+      {
+        "ledger": "flight",
+        "record_hash": "5656565656565656565656565656565656565656565656565656565656565656",
+        "chain_verified": true
+      }
+    ]
+  },
+  "acknowledgements": {
+    "accepted": {
+      "kind": "accepted",
+      "event_id": "evt-accepted",
+      "ts": "2026-08-11T13:40:00.000Z",
+      "evidence_ref": "flight:zou-1051:1"
+    },
+    "completed": {
+      "kind": "completed",
+      "event_id": "evt-operation-complete",
+      "ts": "2026-08-11T13:40:05.000Z",
+      "evidence_ref": "flight:zou-1051:6"
+    },
+    "user_visible": {
+      "kind": "user_visible",
+      "event_id": "evt-delivery-visible",
+      "ts": "2026-08-11T13:40:06.000Z",
+      "evidence_ref": "delivery:zou-1051:1"
+    }
+  },
+  "verification": {
+    "verifier_identity": "fixture-verifier",
+    "verifier_org_separate": true,
+    "checks": [
+      {
+        "check_id": "fixture-mechanical",
+        "kind": "mechanical",
+        "pass": true,
+        "evidence_ref": "fixture:success",
+        "detail": "Fixture completed"
+      }
+    ],
+    "edge_proof": {
+      "chain_ok": true,
+      "anchor_ok": true,
+      "ledger_head": "5656565656565656565656565656565656565656565656565656565656565656"
+    }
+  },
+  "observation": {
+    "user_visible_outcome": "Fixture result delivered",
+    "user_confirmed": null,
+    "feedback_ref": null
+  },
+  "ts_created": "2026-08-11T13:40:00.000Z",
+  "ts_terminal": "2026-08-11T13:40:05.000Z"
+}

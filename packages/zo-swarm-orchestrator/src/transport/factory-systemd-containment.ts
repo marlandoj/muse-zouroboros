@@ -4,7 +4,7 @@
  */
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
-import { closeSync, constants, fchmodSync, fstatSync, lstatSync, openSync, readFileSync, readSync, realpathSync, writeSync } from 'node:fs';
+import { closeSync, constants, existsSync, fchmodSync, fstatSync, lstatSync, openSync, readFileSync, readSync, realpathSync, writeSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import type { AdapterSpawnSpec } from './agent-containment.js';
 
@@ -202,7 +202,11 @@ export function readManagedFactoryBoundary(): ManagedFactoryBoundary | null {
   controlled(`/etc/systemd/system/${MANAGED_FACTORY_UNIT}`,p.unit_fragment_sha256,0,32768);
   for (const key of ['adapter','native','node','bun','bwrap','systemctl','python'] as const) controlled(p[key].path,p[key].sha256);
   for (const item of p.runtime_files) controlled(item.path,item.sha256);
-  const registry = controlled(join(p.source_root,'packages/swarm/src/executor/registry/executor-registry.json'),p.registry_sha256,0,2_000_000);
+  const registryRel = ['packages/zo-swarm-orchestrator/src/executor/registry/executor-registry.json',
+    'packages/swarm/src/executor/registry/executor-registry.json']
+    .map(rel => join(p.source_root, rel)).find(candidate => existsSync(candidate))
+    ?? fail('executor registry present under source_root');
+  const registry = controlled(registryRel, p.registry_sha256, 0, 2_000_000);
   const entry = JSON.parse(registry.toString()).executors?.filter((item:any)=>item.id===p.harness);
   if (entry?.length!==1 || entry[0].transport!=='acp' || entry[0].acp?.adapterBin!==p.adapter.name || JSON.stringify(entry[0].acp?.adapterArgs??[])!==JSON.stringify(p.adapter.args)) fail('exact registry ACP route');
   const properties = ['Id','LoadState','ActiveState','SubState','User','Group','MainPID','ControlPID','FragmentPath','DropInPaths','SourcePath',

@@ -65,7 +65,7 @@ describe('ExecutorClient', () => {
     try {
       const status = await client.health();
       expect(status.healthy).toBe(false);
-      expect(status.message).toContain('/definitely/missing/runtime-root/packages/swarm');
+      expect(status.message).toContain('/definitely/missing/runtime-root/packages/zo-swarm-orchestrator');
     } finally {
       await client.dispose();
     }

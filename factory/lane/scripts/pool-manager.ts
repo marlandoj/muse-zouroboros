@@ -213,7 +213,12 @@ export interface PoolHandoffResult {
 export const POOL_GLOBAL_CAP = 20;
 export const MAX_ATTEMPTS = 3; // initial + ≤2 retries; equals failover-chain length
 
-const EXEC_STATE_DIR = factoryStateRoot();
+function execStateDir(): string {
+  // Lazy: factoryStateRoot() throws when FACTORY_STATE_DIR is unset outside
+  // compatibility/test mode; module-level evaluation would break importers
+  // (e.g. the smoke command) that establish the state dir later.
+  return factoryStateRoot();
+}
 
 export function currentReconcileMode(): ReconcileMode {
   const raw = process.env.SF003_POOL_MODE ?? "plan";
@@ -231,7 +236,7 @@ function eventsPath(): string {
 
 /** Non-pool in-flight: swarm-exec PipelineExecution records still open (held ≠ in-flight). */
 export function externalInFlight(): number {
-  return activeExecutionCount(EXEC_STATE_DIR);
+  return activeExecutionCount(execStateDir());
 }
 
 // ─── Reconcile ────────────────────────────────────────────────────────────────

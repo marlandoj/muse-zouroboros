@@ -18,7 +18,7 @@ import type {
   PlanGateMode,
   PlanGateContext,
   TrustedPublicKeys,
-} from 'zouroboros-workflow/plan-gate';
+} from './plan-gate/index.js';
 import type {
   ArtifactManifest,
   CleanupPolicy,
@@ -30,7 +30,7 @@ import type {
   ExecutionTelemetry,
   RoutingDecision,
   RoutingPolicy,
-} from 'zouroboros-core';
+} from './core-compute-types.js';
 import type {
   SpecialistAssignment,
   SpecialistConsultEvidence,

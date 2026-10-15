@@ -8,12 +8,21 @@
 #   WORKSPACE_DEFAULT — "$HOME/workspace" (de-Zo fallback workdir)
 #   resolve_harness_bin <VAR_NAME> <bin_name>
 #     Resolves a harness binary to an explicit path and assigns it to $VAR_NAME.
-#     Precedence: existing $VAR_NAME value (if executable) >
-#       $HOME/workspace/.local/bin > $HOME/.local/bin > /usr/local/bin > PATH.
+#     Precedence: existing $VAR_NAME value (if executable) > PATH >
+#       $HOME/workspace/.local/bin > $HOME/.local/bin > /usr/local/bin.
 #     Prints the resolved path; returns 1 when nothing is found.
 #
 # Nothing here is Zo-specific: all defaults are $HOME-relative so the same
 # file works on any host and in the de-Zo'd public package.
+
+# Bare-env spawns (notably the bridge-authority tests, which replace the
+# environment wholesale) may leave HOME unset. Resolve it from the passwd
+# database so the $HOME-relative defaults below survive `set -u` instead of
+# aborting on an unbound variable. No-op in normal operation where HOME is set.
+if [[ -z "${HOME:-}" ]]; then
+  HOME="$(getent passwd "$(id -u)" 2>/dev/null | cut -d: -f6)"
+  export HOME
+fi
 
 # shellcheck disable=SC2034
 WORKSPACE_DEFAULT="${HOME}/workspace"
@@ -25,6 +34,13 @@ resolve_harness_bin() {
     printf '%s' "$current"
     return 0
   fi
+  # The caller's PATH wins, as it did before this resolver existed; the
+  # well-known install locations only cover minimal PATHs (systemd units).
+  if command -v "$bin_name" >/dev/null 2>&1; then
+    printf -v "$var_name" '%s' "$bin_name"
+    printf '%s' "$bin_name"
+    return 0
+  fi
   local dir
   for dir in "${HOME}/workspace/.local/bin" "${HOME}/.local/bin" "/usr/local/bin"; do
     if [[ -x "$dir/$bin_name" ]]; then
@@ -33,10 +49,5 @@ resolve_harness_bin() {
       return 0
     fi
   done
-  if command -v "$bin_name" >/dev/null 2>&1; then
-    printf -v "$var_name" '%s' "$bin_name"
-    printf '%s' "$bin_name"
-    return 0
-  fi
   return 1
 }

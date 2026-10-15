@@ -12,7 +12,7 @@ import {
   type ExecutionEnvelope,
   type ProviderAdapter,
   type RoutingPolicy,
-} from 'zouroboros-core';
+} from '../core-compute/compute.js';
 import type { ComputeIntent, Task, TaskResult } from '../types.js';
 
 export interface ComputeDispatcher {

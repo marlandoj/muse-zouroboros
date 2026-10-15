@@ -7,7 +7,7 @@ import {
   signApprovalReceipt,
   type ApprovalReceipt,
   type PlanArtifact,
-} from 'zouroboros-workflow/plan-gate';
+} from '../plan-gate/index.js';
 import {
   evaluateSwarmPlanGatePreflight,
   normalizePlanArtifactInput,

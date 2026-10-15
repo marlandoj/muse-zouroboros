@@ -1,0 +1,8 @@
+scenario_id: interrupted-conveyor
+description: The stale execution reaper closes interrupted conveyor records with durable recovery evidence.
+seed: 131
+steps:
+  - name: interrupted-recovery
+    run: bun {scripts_dir}/reap-stale-execs.ts --selftest
+    timeout_ms: 30000
+    expect: { exit_code: 0 }

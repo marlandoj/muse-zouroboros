@@ -1,0 +1,8 @@
+scenario_id: ci-failure
+description: Pipeline contract rejects incomplete or failed delivery evidence instead of advancing.
+seed: 113
+steps:
+  - name: delivery-contract
+    run: bun {scripts_dir}/cycle-contract-selftest.ts
+    timeout_ms: 30000
+    expect: { exit_code: 0 }

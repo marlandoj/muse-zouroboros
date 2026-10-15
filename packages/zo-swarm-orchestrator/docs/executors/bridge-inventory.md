@@ -1,17 +1,17 @@
 # Bridge authority (RB-36)
 
 Edit executable bridge implementations only in
-`packages/swarm/src/executor/bridges/`. The package build copies the shell
+`packages/zo-swarm-orchestrator/src/executor/bridges/`. The package build copies the shell
 scripts and Pi MCP bootstrap into `dist/executor/bridges/`. Legacy entry points
 forward arguments, environment, working directory, output, and exit status to
 the canonical source; they contain no model or CLI policy.
 
 | Entry point | Role after consolidation |
 |---|---|
-| `packages/swarm/src/executor/bridges/*-bridge.sh` | Canonical implementations; Cursor remains available for explicit custom registries |
-| `Skills/zo-swarm-executors/bridges/{claude-code,codex,gemini,hermes,kimi,opencode,pi}-bridge.sh` | Generated forwarders to the corresponding canonical implementation |
-| `packages/swarm/scripts/claude-code-bridge.sh` | Generated Claude forwarder |
-| `Skills/zo-swarm-orchestrator/scripts/claude-code-bridge.sh` | Generated Claude forwarder; obsolete `--yolo` invocation removed |
+| `packages/zo-swarm-orchestrator/src/executor/bridges/*-bridge.sh` | Canonical implementations; Cursor remains available for explicit custom registries |
+| `packages/zo-swarm-executors/bridges/{claude-code,codex,gemini,hermes,kimi,opencode,pi}-bridge.sh` | Generated forwarders to the corresponding canonical implementation |
+| `packages/zo-swarm-orchestrator/scripts/claude-code-bridge.sh` | Generated Claude forwarder |
+| `packages/zo-swarm-orchestrator/scripts/claude-code-bridge.sh` | Generated Claude forwarder; obsolete `--yolo` invocation removed |
 | `Projects/zourobench-2026/hal-adapter/src/runners/claude-cli-direct.ts` | Resolves the canonical Claude bridge relative to its module, independent of the checkout path |
 
 The four Claude paths now have one implementation. Template scripts are examples
@@ -57,7 +57,7 @@ moving the mapping block.
 
 ## Updating compatibility paths
 
-Run `bun packages/swarm/scripts/sync-bridge-shims.ts --write` after initializing
+Run `bun packages/zo-swarm-orchestrator/scripts/sync-bridge-shims.ts --write` after initializing
 the executor and orchestrator submodules. Commit generated changes in their own
 repositories, review each full diff, then update the parent gitlinks through a
 workspace PR. The checker never silently changes files.
@@ -69,7 +69,7 @@ those private submodules skip their on-disk checks; the deployed workspace must
 run the strict check:
 
 ```bash
-bun packages/swarm/scripts/sync-bridge-shims.ts --require-submodules
+bun packages/zo-swarm-orchestrator/scripts/sync-bridge-shims.ts --require-submodules
 ```
 
 Merge/deploy order: canonical workspace implementation first, compatibility PRs

@@ -31,13 +31,10 @@
     "prepack": "bun run typecheck && bun run package-check"
   },
   "dependencies": {
-    "@zouroboros/capability-runtime": "workspace:*",
-    "@zouroboros/hetzner-exec": "workspace:*",
-    "@zouroboros/modal-exec": "workspace:*",
-    "zouroboros-core": "workspace:*",
-    "zouroboros-selfheal": "workspace:*",
-    "zouroboros-swarm": "workspace:*",
-    "zouroboros-workflow": "workspace:*"
+    "zouroboros-core": "2.2.0",
+    "zouroboros-selfheal": "2.1.1",
+    "zouroboros-swarm": "5.1.1",
+    "zouroboros-workflow": "2.1.1"
   },
   "devDependencies": {
     "@types/bun": "latest",
@@ -51,10 +48,10 @@
     "conveyor"
   ],
   "license": "MIT",
-  "author": "marlandoj.zo.computer",
+  "author": "Marlando Jackson",
   "repository": {
     "type": "git",
-    "url": "https://github.com/marlandoj/zouroboros.git",
-    "directory": "Projects/zouroboros-software-factory"
+    "url": "https://github.com/marlandoj/muse-zouroboros.git",
+    "directory": "factory/lane"
   }
 }

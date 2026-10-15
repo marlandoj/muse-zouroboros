@@ -1,0 +1,77 @@
+{
+  "fixture_version": 1,
+  "base_envelope": "valid-envelope.json",
+  "base_request": "valid-request.json",
+  "delegation_child": "delegation-child.json",
+  "global_rung": "global-rung.json",
+  "base_embedding_block": {
+    "envelope_ref": "fixtures/authority-envelope/valid-envelope.json",
+    "envelope_sha256": "78ab22b0afd5f1359c11d0b5d74be2a0555a55a7af2ff9fdc10bd02a6990403c",
+    "evaluation_summary": {
+      "decision": "PERMIT",
+      "evaluated_at": "2026-06-01T12:00:00Z",
+      "reason_count": 0
+    }
+  },
+  "base_authority_events": [
+    {
+      "sequence": 1,
+      "kind": "violation",
+      "capability": "factory.contract-test",
+      "decision": "DENY",
+      "reason": "resource_not_listed",
+      "ts": "2026-06-01T12:00:00Z"
+    },
+    {
+      "sequence": 2,
+      "kind": "decision",
+      "capability": "factory.contract-test",
+      "decision": "DENY",
+      "reason": null,
+      "ts": "2026-06-01T12:00:00Z"
+    }
+  ],
+  "cases": [
+    { "name": "valid-permit", "mode": "evaluate", "expect": "PERMIT", "expected_reasons": [], "envelope_mutations": [], "request_mutations": [] },
+    { "name": "wildcard-resource-permit", "mode": "evaluate", "expect": "PERMIT", "expected_reasons": [], "envelope_mutations": [], "request_mutations": [{ "op": "set", "path": ["resource"], "value": "Projects/zouroboros-software-factory/fixtures/authority-envelope/cases.json" }] },
+    { "name": "unknown-capability", "mode": "evaluate", "expect": "DENY", "expected_reasons": ["unknown_capability"], "envelope_mutations": [], "request_mutations": [{ "op": "set", "path": ["capability"], "value": "factory.unlisted" }] },
+    { "name": "prohibited-resource", "mode": "evaluate", "expect": "DENY", "expected_reasons": ["resource_not_listed"], "envelope_mutations": [], "request_mutations": [{ "op": "set", "path": ["resource"], "value": "Projects/zouroboros-software-factory/scripts/authority-envelope.ts" }] },
+    { "name": "wildcard-bare-prefix-denied", "mode": "evaluate", "expect": "DENY", "expected_reasons": ["resource_not_listed"], "envelope_mutations": [], "request_mutations": [{ "op": "set", "path": ["resource"], "value": "Projects/zouroboros-software-factory/fixtures/authority-envelope" }] },
+    { "name": "argument-enum-violation", "mode": "evaluate", "expect": "DENY", "expected_reasons": ["argument_constraint_violation"], "envelope_mutations": [], "request_mutations": [{ "op": "set", "path": ["arguments", "mode"], "value": "write" }] },
+    { "name": "argument-missing", "mode": "evaluate", "expect": "DENY", "expected_reasons": ["argument_constraint_violation"], "envelope_mutations": [], "request_mutations": [{ "op": "remove", "path": ["arguments", "mode"] }] },
+    { "name": "credential-class-not-granted", "mode": "evaluate", "expect": "DENY", "expected_reasons": ["credential_class_not_granted"], "envelope_mutations": [], "request_mutations": [{ "op": "set", "path": ["credential_class"], "value": "prod-secrets" }] },
+    { "name": "window-not-started", "mode": "evaluate", "expect": "DENY", "expected_reasons": ["validity_window_not_started"], "envelope_mutations": [], "request_mutations": [{ "op": "set", "path": ["ts"], "value": "2025-12-31T23:59:59Z" }] },
+    { "name": "window-expired", "mode": "evaluate", "expect": "DENY", "expected_reasons": ["validity_window_expired"], "envelope_mutations": [], "request_mutations": [{ "op": "set", "path": ["ts"], "value": "2027-01-01T00:00:00Z" }] },
+    { "name": "environment-mismatch", "mode": "evaluate", "expect": "DENY", "expected_reasons": ["environment_mismatch"], "envelope_mutations": [], "request_mutations": [{ "op": "set", "path": ["environment", "runtime_root"], "value": "other-root" }] },
+    { "name": "missing-evidence", "mode": "evaluate", "expect": "DENY", "expected_reasons": ["missing_enforcement_evidence"], "envelope_mutations": [], "request_mutations": [{ "op": "set", "path": ["enforcement_evidence"], "value": null }] },
+    { "name": "unverifiable-evidence-payload", "mode": "evaluate", "expect": "DENY", "expected_reasons": ["unverifiable_enforcement_evidence"], "envelope_mutations": [], "request_mutations": [{ "op": "set", "path": ["enforcement_evidence", "payload"], "value": "tampered-evidence" }] },
+    { "name": "unverifiable-evidence-ref", "mode": "evaluate", "expect": "DENY", "expected_reasons": ["unverifiable_enforcement_evidence"], "envelope_mutations": [], "request_mutations": [{ "op": "set", "path": ["enforcement_evidence", "evidence_ref"], "value": "fixtures/authority-envelope/other-evidence" }] },
+    { "name": "revoked-grant-denied", "mode": "evaluate", "expect": "DENY", "expected_reasons": ["terminal_grant_revoked"], "envelope_mutations": [{ "op": "set", "path": ["capabilities", 0, "revoked_at"], "value": "2026-05-01T00:00:00Z" }], "request_mutations": [] },
+    { "name": "terminalized-terminal-lifetime-denied", "mode": "evaluate", "expect": "DENY", "expected_reasons": ["terminal_grant_revoked"], "envelope_mutations": [{ "op": "set", "path": ["approval_binding", "lifetime", "kind"], "value": "terminal" }], "request_mutations": [], "context": { "receipt_terminalized": true, "terminal_outcome": "success" } },
+    { "name": "malformed-envelope-missing-principal", "mode": "evaluate", "expect": "DENY", "expected_reasons": ["malformed_envelope"], "envelope_mutations": [{ "op": "remove", "path": ["principal"] }], "request_mutations": [] },
+    { "name": "malformed-envelope-secretlike-credential-class", "mode": "evaluate", "expect": "DENY", "expected_reasons": ["malformed_envelope"], "envelope_mutations": [{ "op": "set", "path": ["capabilities", 0, "credential_classes", 0], "value": "SK-LIVE-abcDEF" }], "request_mutations": [] },
+    { "name": "malformed-request-extra-field", "mode": "evaluate", "expect": "DENY", "expected_reasons": ["malformed_request"], "envelope_mutations": [], "request_mutations": [{ "op": "set", "path": ["unexpected"], "value": true }] },
+    { "name": "delegation-subset-permit", "mode": "delegate", "expect": "PERMIT", "expected_dimensions": [], "child_mutations": [] },
+    { "name": "delegation-excess-capability", "mode": "delegate", "expect": "DENY", "expected_dimensions": ["capability"], "child_mutations": [{ "op": "set", "path": ["capabilities", 1], "value": { "capability": "factory.deploy", "resources": ["Projects/zouroboros-software-factory/*"], "argument_constraints": {}, "credential_classes": [], "revoked_at": null } }] },
+    { "name": "delegation-excess-resource", "mode": "delegate", "expect": "DENY", "expected_dimensions": ["resource"], "child_mutations": [{ "op": "set", "path": ["capabilities", 0, "resources", 0], "value": "Projects/zouroboros-software-factory/*" }] },
+    { "name": "delegation-argument-loosened", "mode": "delegate", "expect": "DENY", "expected_dimensions": ["argument"], "child_mutations": [{ "op": "remove", "path": ["capabilities", 0, "argument_constraints", "mode"] }] },
+    { "name": "delegation-excess-credential-class", "mode": "delegate", "expect": "DENY", "expected_dimensions": ["credential_class"], "child_mutations": [{ "op": "set", "path": ["capabilities", 0, "credential_classes", 1], "value": "prod-secrets" }] },
+    { "name": "delegation-excess-lifetime", "mode": "delegate", "expect": "DENY", "expected_dimensions": ["lifetime"], "child_mutations": [{ "op": "set", "path": ["approval_binding", "lifetime", "kind"], "value": "session" }] },
+    { "name": "delegation-excess-validity", "mode": "delegate", "expect": "DENY", "expected_dimensions": ["validity"], "child_mutations": [{ "op": "set", "path": ["validity", "expires_at"], "value": "2027-06-30T00:00:00Z" }] },
+    { "name": "delegation-excess-rung", "mode": "delegate", "expect": "DENY", "expected_dimensions": ["rung"], "child_mutations": [{ "op": "set", "path": ["global_rung_cap"], "value": "production" }] },
+    { "name": "delegation-broken-lineage", "mode": "delegate", "expect": "DENY", "expected_dimensions": ["lineage"], "child_mutations": [{ "op": "set", "path": ["delegation", "parent_envelope_ref"], "value": "ae-01J00000000000000000000009" }] },
+    { "name": "delegation-bad-depth", "mode": "delegate", "expect": "DENY", "expected_dimensions": ["depth"], "child_mutations": [{ "op": "set", "path": ["delegation", "depth"], "value": 5 }] },
+    { "name": "compose-cap-lowers", "mode": "compose", "global": "staging", "cap": "open-pr", "expected": "open-pr" },
+    { "name": "compose-global-lower-than-cap", "mode": "compose", "global": "read-only", "cap": "production", "expected": "read-only" },
+    { "name": "compose-equal", "mode": "compose", "global": "open-pr", "cap": "open-pr", "expected": "open-pr" },
+    { "name": "compose-unknown-fails-closed", "mode": "compose", "global": "root", "cap": "production", "expected": "read-only" },
+    { "name": "embedding-block-valid", "mode": "embedding-block", "valid": true, "mutations": [] },
+    { "name": "embedding-block-bad-hash", "mode": "embedding-block", "valid": false, "mutations": [{ "op": "set", "path": ["envelope_sha256"], "value": "not-a-hash" }] },
+    { "name": "embedding-block-extra-field", "mode": "embedding-block", "valid": false, "mutations": [{ "op": "set", "path": ["unexpected"], "value": true }] },
+    { "name": "embedding-block-negative-reason-count", "mode": "embedding-block", "valid": false, "mutations": [{ "op": "set", "path": ["evaluation_summary", "reason_count"], "value": -1 }] },
+    { "name": "embedding-events-valid", "mode": "embedding-events", "valid": true, "mutations": [] },
+    { "name": "embedding-events-bad-order", "mode": "embedding-events", "valid": false, "mutations": [{ "op": "set", "path": [0, "sequence"], "value": 2 }] },
+    { "name": "embedding-events-decision-with-reason", "mode": "embedding-events", "valid": false, "mutations": [{ "op": "set", "path": [1, "reason"], "value": "resource_not_listed" }] },
+    { "name": "embedding-events-violation-null-reason", "mode": "embedding-events", "valid": false, "mutations": [{ "op": "set", "path": [0, "reason"], "value": null }] }
+  ]
+}

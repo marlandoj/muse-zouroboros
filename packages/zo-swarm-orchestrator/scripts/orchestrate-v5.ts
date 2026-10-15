@@ -115,10 +115,12 @@ const HISTORY_JSON = join(SWARM_DIR, "executor-history.json");
 const CIRCUIT_STATE_FILE = join(SWARM_DIR, "circuit-breaker-state.json");
 const MEMORY_DB = getMemoryDbPath();
 const REGISTRY = resolveExecutorRegistryPath(undefined, WORKSPACE);
+const PACKAGE_PERSONA_REGISTRY = join(WORKSPACE, "packages", "zo-swarm-orchestrator", "assets", "persona-registry.json");
 const MONOREPO_PERSONA_REGISTRY = join(WORKSPACE, "packages", "swarm", "assets", "persona-registry.json");
 const LEGACY_PERSONA_REGISTRY = join(WORKSPACE, "Skills", "zo-swarm-orchestrator", "assets", "persona-registry.json");
 const PERSONA_REGISTRY = process.env.SWARM_PERSONA_REGISTRY
-  ?? (existsSync(MONOREPO_PERSONA_REGISTRY) ? MONOREPO_PERSONA_REGISTRY : LEGACY_PERSONA_REGISTRY);
+  ?? (existsSync(PACKAGE_PERSONA_REGISTRY) ? PACKAGE_PERSONA_REGISTRY
+    : existsSync(MONOREPO_PERSONA_REGISTRY) ? MONOREPO_PERSONA_REGISTRY : LEGACY_PERSONA_REGISTRY);
 const AGENCY_PERSONAS = join(WORKSPACE, "IDENTITY", "agency-agents-personas.json");
 const LOCK_DIR = "/dev/shm";
 
@@ -2921,6 +2923,7 @@ function doctorCmd(): boolean {
     console.log("  ❌ No local executors are registered");
     healthy = false;
   }
+  let healthyExecutors = 0;
   for (const entry of localExecutors) {
     const id = typeof entry.id === "string" && entry.id.length > 0 ? entry.id : "<missing-id>";
     const name = typeof entry.name === "string" && entry.name.length > 0 ? entry.name : id;
@@ -2941,8 +2944,14 @@ function doctorCmd(): boolean {
       : nativeTransportPath !== null;
     const executorOk = id !== "<missing-id>" && transportOk;
     const transportDetail = bridgePath ?? nativeTransportPath ?? (transport ? `${transport} transport` : "");
-    console.log(`  ${executorOk ? "✅" : "❌"} ${id}: ${name}${transportDetail ? ` (${transportDetail})` : ""}`);
-    if (!executorOk) healthy = false;
+    const mark = executorOk ? "✅" : "⚠️";
+    const note = executorOk ? "" : " (not installed — skipped by the fallback chain)";
+    console.log(`  ${mark} ${id}: ${name}${transportDetail ? ` (${transportDetail})` : ""}${note}`);
+    if (executorOk) healthyExecutors++;
+  }
+  if (healthyExecutors === 0) {
+    console.log("  ❌ No healthy executors — the swarm cannot run");
+    healthy = false;
   }
 
   const agencyConfigured = existsSync(AGENCY_PERSONAS);

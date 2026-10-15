@@ -13,13 +13,32 @@
  */
 
 import { readFileSync, accessSync, constants, existsSync } from "fs";
-import { join, resolve } from "path";
+import { dirname, join, resolve } from "path";
 import { getWorkspaceRoot } from "zouroboros-core";
 import { resolveExecutorRegistryPath } from "../registry/loader";
 import type { ExecutorRegistry, ExecutorEntry } from "./types/executor";
 
-const WORKSPACE = process.env.SWARM_WORKSPACE || process.env.ZOUROBOROS_WORKSPACE_ROOT || getWorkspaceRoot();
 const REGISTRY_PATH = resolveExecutorRegistryPath();
+
+function inferWorkspaceRootFromRegistry(): string | null {
+  // Bridge paths in the registry are repo-root-relative
+  // (packages/zo-swarm-orchestrator/...). When the caller hasn't pinned a
+  // workspace root, walk up from the registry file to the directory that
+  // contains the orchestrator package.
+  let dir = dirname(REGISTRY_PATH);
+  for (let i = 0; i < 8; i++) {
+    if (existsSync(join(dir, "packages", "zo-swarm-orchestrator", "package.json"))) return dir;
+    const parent = dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return null;
+}
+
+const WORKSPACE = process.env.SWARM_WORKSPACE
+  || process.env.ZOUROBOROS_WORKSPACE_ROOT
+  || inferWorkspaceRootFromRegistry()
+  || getWorkspaceRoot();
 
 /** ACP adapter binary per executor id (gemini uses native --acp flag) */
 const ACP_ADAPTER_BINS: Record<string, string> = {

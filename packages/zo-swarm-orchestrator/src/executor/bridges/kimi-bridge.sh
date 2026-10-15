@@ -5,7 +5,7 @@ set -euo pipefail
 source "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/bridge-env.sh"
 
 if ! KIMI_BIN="$(resolve_harness_bin KIMI_BIN kimi)"; then
-  echo "ERROR: kimi not found (checked KIMI_BIN, ~/workspace/.local/bin, ~/.local/bin, PATH)" >&2
+  echo "ERROR: kimi not found (checked KIMI_BIN, PATH, ~/workspace/.local/bin, ~/.local/bin, /usr/local/bin)" >&2
   exit 1
 fi
 

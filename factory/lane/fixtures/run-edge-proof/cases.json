@@ -1,0 +1,29 @@
+{
+  "contract_id": "zouroboros-edge-proof-record/v1",
+  "cases": [
+    { "id": "github-user-visible-success", "expect": "confirmed" },
+    { "id": "linear-durable-success", "expect": "confirmed" },
+    { "id": "workspace-artifact-success", "expect": "confirmed" },
+    { "id": "unsupported-email-readback", "expect": "unavailable" },
+    { "id": "unsupported-service-readback", "expect": "unavailable" },
+    { "id": "unsupported-ui-readback", "expect": "unavailable" },
+    { "id": "transport-success-missing-readback", "expect": "unavailable" },
+    { "id": "operation-mismatch", "expect": "unavailable" },
+    { "id": "actor-mismatch", "expect": "unavailable" },
+    { "id": "target-mismatch", "expect": "unavailable" },
+    { "id": "result-mismatch", "expect": "unavailable" },
+    { "id": "stale-provider-event", "expect": "unavailable" },
+    { "id": "replayed-proof-id", "expect": "rejected" },
+    { "id": "missing-read-authority", "expect": "unavailable" },
+    { "id": "probe-timeout", "expect": "unavailable" },
+    { "id": "post-hoc-not-applicable", "expect": "rejected" },
+    { "id": "secret-redaction", "expect": "rejected" },
+    { "id": "tampered-record-hash", "expect": "rejected" },
+    { "id": "late-confirmation", "expect": "confirmed" },
+    { "id": "out-of-order-observation", "expect": "rejected" },
+    { "id": "restart-replay-identity", "expect": "confirmed" },
+    { "id": "multi-process-convergence", "expect": "confirmed" },
+    { "id": "v1-v2-backup-migration-restore", "expect": "confirmed" },
+    { "id": "existing-ledger-immutability", "expect": "confirmed" }
+  ]
+}

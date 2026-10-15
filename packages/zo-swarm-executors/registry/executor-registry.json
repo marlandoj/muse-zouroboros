@@ -7,7 +7,7 @@
       "name": "Claude Code",
       "executor": "local",
       "transport": "acp",
-      "bridge": "packages/swarm/src/executor/bridges/claude-code-bridge.sh",
+      "bridge": "packages/zo-swarm-orchestrator/src/executor/bridges/claude-code-bridge.sh",
       "description": "Claude Code CLI in one-shot mode \u2014 full codebase context, file editing, terminal access",
       "expertise": [
         "code-generation",
@@ -52,6 +52,12 @@
         "modelSelection": {
           "method": "env",
           "envVar": "ANTHROPIC_MODEL"
+        },
+        "wayfinder": {
+          "enabled": true,
+          "mode": "shadow",
+          "harness": "factory",
+          "timeoutMs": 15000
         }
       },
       "sdk": {
@@ -61,7 +67,7 @@
         "runtimeVersion": "2.1.220",
         "language": "typescript",
         "sourceType": "official-sdk",
-        "reference": "packages/swarm/docs/executors/identities/claude-code.md",
+        "reference": "packages/zo-swarm-orchestrator/docs/executors/identities/claude-code.md",
         "surfaces": [
           "query-stream",
           "sessions",
@@ -112,6 +118,11 @@
         "heavy": "claude-fable-5-1",
         "mid": "claude-opus-5",
         "light": "claude-haiku-4-5-20251001"
+      },
+      "transportFallback": {
+        "envVar": "CLAUDE_CODE_ACP_ENABLED",
+        "equals": "0",
+        "transport": "bridge"
       }
     },
     {
@@ -119,7 +130,7 @@
       "name": "Hermes Agent",
       "executor": "local",
       "transport": "acp",
-      "bridge": "packages/swarm/src/executor/bridges/hermes-bridge.sh",
+      "bridge": "packages/zo-swarm-orchestrator/src/executor/bridges/hermes-bridge.sh",
       "description": "Hermes AI agent with tool-calling, web search, and multi-modal capabilities",
       "expertise": [
         "web-research",
@@ -171,8 +182,9 @@
         "description": "Verify Hermes native ACP dependencies and adapter imports"
       },
       "acp": {
-        "adapterBin": "hermes",
+        "adapterBin": "bash",
         "adapterArgs": [
+          "packages/zo-swarm-orchestrator/src/executor/bridges/hermes-acp-sync.sh",
           "acp",
           "--accept-hooks"
         ],
@@ -191,7 +203,13 @@
           "category": "model",
           "providerSeparator": ":"
         },
-        "endpointClass": "hermes-provider"
+        "endpointClass": "hermes-provider",
+        "wayfinder": {
+          "enabled": true,
+          "mode": "shadow",
+          "harness": "factory",
+          "timeoutMs": 15000
+        }
       },
       "transportFallback": {
         "envVar": "HERMES_ACP_ENABLED",
@@ -206,7 +224,7 @@
         "sourceRevision": "live-git",
         "language": "python",
         "sourceType": "runtime-source",
-        "reference": "packages/swarm/docs/executors/identities/hermes-agent.md",
+        "reference": "packages/zo-swarm-orchestrator/docs/executors/identities/hermes-agent.md",
         "surfaces": [
           "native-acp",
           "agent-loop",
@@ -252,7 +270,7 @@
       "name": "Gemini CLI",
       "executor": "local",
       "transport": "acp",
-      "bridge": "packages/swarm/src/executor/bridges/gemini-bridge.sh",
+      "bridge": "packages/zo-swarm-orchestrator/src/executor/bridges/gemini-bridge.sh",
       "description": "Google Gemini CLI with persistent daemon \u2014 large-context reasoning, multimodal analysis, code generation. Daemon eliminates ~10s Node.js startup overhead per call.",
       "expertise": [
         "code-generation",
@@ -328,6 +346,12 @@
         "modelSelection": {
           "method": "env",
           "envVar": "GEMINI_MODEL"
+        },
+        "wayfinder": {
+          "enabled": true,
+          "mode": "shadow",
+          "harness": "factory",
+          "timeoutMs": 15000
         }
       },
       "sdk": {
@@ -337,7 +361,7 @@
         "runtimeVersion": "0.50.0",
         "language": "typescript",
         "sourceType": "official-runtime-core",
-        "reference": "packages/swarm/docs/executors/identities/gemini-cli.md",
+        "reference": "packages/zo-swarm-orchestrator/docs/executors/identities/gemini-cli.md",
         "surfaces": [
           "agent-session",
           "content-generator",
@@ -392,7 +416,7 @@
       "name": "Codex CLI",
       "executor": "local",
       "transport": "acp",
-      "bridge": "packages/swarm/src/executor/bridges/codex-bridge.sh",
+      "bridge": "packages/zo-swarm-orchestrator/src/executor/bridges/codex-bridge.sh",
       "description": "OpenAI Codex CLI (Rust) \u2014 fastest local executor (~3s per call). Code generation, shell commands, file editing with full sandbox support.",
       "expertise": [
         "code-generation",
@@ -433,10 +457,17 @@
         "description": "Verify Codex CLI is installed"
       },
       "acp": {
-        "adapterBin": "codex-acp",
+        "adapterBin": "codex-acp-swarm",
         "modelSelection": {
-          "method": "env",
-          "envVar": "CODEX_MODEL"
+          "method": "session-config",
+          "configId": "model",
+          "category": "model"
+        },
+        "wayfinder": {
+          "enabled": true,
+          "mode": "shadow",
+          "harness": "factory",
+          "timeoutMs": 15000
         }
       },
       "sdk": {
@@ -446,7 +477,7 @@
         "runtimeVersion": "0.144.0",
         "language": "typescript",
         "sourceType": "official-sdk",
-        "reference": "packages/swarm/docs/executors/identities/codex.md",
+        "reference": "packages/zo-swarm-orchestrator/docs/executors/identities/codex.md",
         "surfaces": [
           "threads",
           "streaming-events",
@@ -489,6 +520,11 @@
           "swarm-heavy": "gpt-6-astra",
           "swarm-failover": "gpt-5.6-luna"
         }
+      },
+      "transportFallback": {
+        "envVar": "CODEX_ACP_ENABLED",
+        "equals": "0",
+        "transport": "bridge"
       }
     },
     {
@@ -601,6 +637,12 @@
           "includeShared": true,
           "includeZo": true,
           "includeMemoryBriefing": true
+        },
+        "wayfinder": {
+          "enabled": true,
+          "mode": "shadow",
+          "harness": "factory",
+          "timeoutMs": 15000
         }
       },
       "modelRouter": {
@@ -632,7 +674,7 @@
         "runtimeVersion": "1.18.4",
         "language": "typescript",
         "sourceType": "official-sdk",
-        "reference": "packages/swarm/docs/executors/identities/opencode.md",
+        "reference": "packages/zo-swarm-orchestrator/docs/executors/identities/opencode.md",
         "surfaces": [
           "client-server",
           "sessions",
@@ -664,13 +706,18 @@
             "meta-llama/"
           ]
         }
-      ]
+      ],
+      "transportFallback": {
+        "envVar": "OPENCODE_ACP_ENABLED",
+        "equals": "0",
+        "transport": "bridge"
+      }
     },
     {
       "id": "kimi",
       "name": "Kimi Code CLI",
       "executor": "local",
-      "bridge": "packages/swarm/src/executor/bridges/kimi-bridge.sh",
+      "bridge": "packages/zo-swarm-orchestrator/src/executor/bridges/kimi-bridge.sh",
       "description": "Moonshot AI Kimi Code CLI with native ACP, large-context coding, multimodal input, MCP forwarding, and a one-shot bridge fallback",
       "expertise": [
         "code-generation",
@@ -711,7 +758,7 @@
       "acp": {
         "adapterBin": "bash",
         "adapterArgs": [
-          "packages/swarm/src/executor/bridges/kimi-bridge.sh",
+          "packages/zo-swarm-orchestrator/src/executor/bridges/kimi-bridge.sh",
           "--acp"
         ],
         "mcpConfig": {
@@ -725,7 +772,13 @@
           "configId": "model",
           "category": "model"
         },
-        "endpointClass": "kimi-compatible"
+        "endpointClass": "kimi-compatible",
+        "wayfinder": {
+          "enabled": true,
+          "mode": "shadow",
+          "harness": "factory",
+          "timeoutMs": 15000
+        }
       },
       "modelRouter": {
         "defaultModel": "kimi-k3",
@@ -758,7 +811,7 @@
         "runtimeVersion": "0.30.0",
         "language": "python",
         "sourceType": "official-sdk",
-        "reference": "packages/swarm/docs/executors/identities/kimi.md",
+        "reference": "packages/zo-swarm-orchestrator/docs/executors/identities/kimi.md",
         "surfaces": [
           "async-generation",
           "streaming",
@@ -793,8 +846,8 @@
       "id": "pi",
       "name": "Pi Coding Agent",
       "executor": "local",
-      "bridge": "packages/swarm/src/executor/bridges/pi-bridge.sh",
-      "description": "Model-neutral Pi coding agent in isolated noninteractive bridge mode with shared memory MCPs, authenticated Zo tools, memory briefings, and task-scoped model selection",
+      "bridge": "packages/zo-swarm-orchestrator/src/executor/bridges/pi-bridge.sh",
+      "description": "Model-neutral Pi coding agent in isolated noninteractive bridge mode with shared memory MCPs, workspace tools, memory briefings, and task-scoped model selection",
       "expertise": [
         "code-generation",
         "code-review",
@@ -814,7 +867,7 @@
         "Focused code review and debugging",
         "Ephemeral tasks that should not persist a session",
         "Cross-provider coding tasks",
-        "Tasks that need workspace memory or authenticated Zo tools"
+        "Tasks that need workspace memory or workspace MCP tools"
       ],
       "config": {
         "defaultTimeout": 600,
@@ -864,7 +917,7 @@
         "runtimeVersion": "0.73.1",
         "language": "typescript",
         "sourceType": "runtime-package",
-        "reference": "packages/swarm/docs/executors/identities/pi.md",
+        "reference": "packages/zo-swarm-orchestrator/docs/executors/identities/pi.md",
         "surfaces": [
           "agent-sessions",
           "model-runtime",

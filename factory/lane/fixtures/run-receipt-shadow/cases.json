@@ -1,0 +1,21 @@
+{
+  "contract_id": "zouroboros-run-receipt-shadow/v1",
+  "cases": [
+    { "id": "missing-mode-off", "expected": "off" },
+    { "id": "explicit-mode-off", "expected": "off" },
+    { "id": "invalid-mode", "expected": "error" },
+    { "id": "unregistered-producer", "expected": "error" },
+    { "id": "scheduled-success", "expected": "recorded" },
+    { "id": "factory-dangling-completion", "expected": "dangling" },
+    { "id": "external-retry-nonterminal", "expected": "nonterminal" },
+    { "id": "external-requeue-success", "expected": "recorded" },
+    { "id": "restart-resume", "expected": "recorded" },
+    { "id": "conflicting-replay", "expected": "error" },
+    { "id": "readback-confirmed", "expected": "supplemented" },
+    { "id": "readback-unavailable", "expected": "unavailable" },
+    { "id": "database-ceiling", "expected": "held" },
+    { "id": "bundle-ceiling", "expected": "held" },
+    { "id": "writer-collision", "expected": "error" },
+    { "id": "redaction", "expected": "redacted" }
+  ]
+}

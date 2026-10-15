@@ -1,6 +1,5 @@
 import { describe, expect, test } from "bun:test";
 import {
-  createZoMcpListPersonasCaller,
   extractPersonaText,
   hashSnapshot,
   normalizeSnapshot,
@@ -8,7 +7,6 @@ import {
   parsePythonReprPersona,
   resolveAgainstSnapshot,
   resolvePersonas,
-  resolveZoMcpAuthorization,
   type PersonaAssociationRole,
   type ZoPersonaDirectoryEntry,
 } from "./persona-directory";
@@ -410,76 +408,5 @@ describe("resolvePersonas", () => {
     expect(result.ok).toBe(true);
     expect(result.resolved).toHaveLength(1);
     expect(result.omitted).toHaveLength(1);
-  });
-});
-
-// ── Live caller wiring tests (no actual network call) ───────────────────────
-
-describe("createZoMcpListPersonasCaller", () => {
-  test("fails locally without authorization instead of sending an anonymous Zo request", async () => {
-    let calls = 0;
-    const caller = createZoMcpListPersonasCaller({ authorization: " ", fetch_impl: async () => {
-      calls++; return new Response("{}");
-    }});
-    await expect(caller()).rejects.toThrow("Local persona files are not Zo directory identities");
-    expect(calls).toBe(0);
-  });
-  test("prefers the host identity token over a configured API key", () => {
-    expect(resolveZoMcpAuthorization({}, {
-      ZO_CLIENT_IDENTITY_TOKEN: "valid-host-token",
-      ZO_API_KEY: "stale-api-key",
-    })).toBe("valid-host-token");
-  });
-
-  test("falls back to the API key when no host identity token exists", () => {
-    expect(resolveZoMcpAuthorization({}, {
-      ZO_API_KEY: "access-token",
-    })).toBe("Bearer access-token");
-  });
-
-  test("returns a callable function", () => {
-    const caller = createZoMcpListPersonasCaller({ endpoint: "http://localhost:1/mcp", apiKey: "x" });
-    expect(typeof caller).toBe("function");
-  });
-
-  test("uses Bearer authentication for a Zo API key", async () => {
-    let authorization: string | null = null;
-    const caller = createZoMcpListPersonasCaller({
-      endpoint: "https://example.invalid/mcp",
-      apiKey: "access-token",
-      fetch_impl: async (_input, init) => {
-        authorization = new Headers(init?.headers).get("authorization");
-        return new Response(JSON.stringify(makeMcpResponse([ALARIC_REPR])), { status: 200 });
-      },
-    });
-    await caller();
-    expect(String(authorization)).toBe("Bearer access-token");
-  });
-
-  test("passes a Zo client identity authorization value without rewriting it", async () => {
-    let authorization: string | null = null;
-    const caller = createZoMcpListPersonasCaller({
-      endpoint: "https://example.invalid/mcp",
-      authorization: "client-identity-token",
-      fetch_impl: async (_input, init) => {
-        authorization = new Headers(init?.headers).get("authorization");
-        return new Response(JSON.stringify(makeMcpResponse([ALARIC_REPR])), { status: 200 });
-      },
-    });
-    await caller();
-    expect(String(authorization)).toBe("client-identity-token");
-  });
-
-  test("turns a JSON-RPC error into a directory-unavailable failure", async () => {
-    const caller = createZoMcpListPersonasCaller({
-      endpoint: "https://example.invalid/mcp",
-      authorization: "client-identity-token",
-      fetch_impl: async () => new Response(JSON.stringify({
-        jsonrpc: "2.0",
-        id: 1,
-        error: { code: -32001, message: "Authentication failed" },
-      }), { status: 200 }),
-    });
-    await expect(caller()).rejects.toThrow("MCP -32001: Authentication failed");
   });
 });

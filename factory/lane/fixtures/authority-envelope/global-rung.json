@@ -1,0 +1,4 @@
+{
+  "ladder": ["read-only", "branch-write", "open-pr", "staging", "production"],
+  "current": "open-pr"
+}

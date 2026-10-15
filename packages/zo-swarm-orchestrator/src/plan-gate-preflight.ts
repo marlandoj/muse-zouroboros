@@ -11,8 +11,8 @@ import {
   type PlanArtifact,
   type PlanGatePreflightResult,
   type PolicyMode,
-} from 'zouroboros-workflow/plan-gate';
-import type { CanonicalizeFormat } from 'zouroboros-workflow/plan-gate';
+} from './plan-gate/index.js';
+import type { CanonicalizeFormat } from './plan-gate/index.js';
 import type { SwarmPlanGateConfig } from './types.js';
 
 export interface SwarmPlanGateDecision {

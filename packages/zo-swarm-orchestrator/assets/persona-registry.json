@@ -185,6 +185,90 @@
       "skills": []
     },
     {
+      "id": "gamedev-all-out-game-director",
+      "name": "GameDev · All Out Game Director",
+      "expertise": [
+        "All Out game direction",
+        "gameplay vision",
+        "production constraints",
+        "release coordination"
+      ],
+      "best_for": [
+        "All Out project direction",
+        "scope decisions",
+        "gameplay coherence",
+        "cross-discipline review"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev · All Out Game Director"
+      }
+    },
+    {
+      "id": "gamedev-all-out-csl-engineer",
+      "name": "GameDev · All Out CSL Engineer",
+      "expertise": [
+        "CSL engineering",
+        "All Out runtime systems",
+        "gameplay scripting",
+        "platform integration"
+      ],
+      "best_for": [
+        "All Out CSL implementation",
+        "runtime debugging",
+        "platform APIs",
+        "gameplay systems"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev · All Out CSL Engineer"
+      }
+    },
+    {
+      "id": "gamedev-all-out-technical-art-ux",
+      "name": "GameDev · All Out Technical Art & UX",
+      "expertise": [
+        "All Out technical art",
+        "game UX",
+        "asset pipelines",
+        "platform performance"
+      ],
+      "best_for": [
+        "All Out visual systems",
+        "interaction design",
+        "asset optimization",
+        "device UX"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev · All Out Technical Art & UX"
+      }
+    },
+    {
+      "id": "gamedev-all-out-qa-release",
+      "name": "GameDev · All Out QA & Release",
+      "expertise": [
+        "All Out QA",
+        "release validation",
+        "compatibility testing",
+        "defect triage"
+      ],
+      "best_for": [
+        "All Out release gates",
+        "regression testing",
+        "device validation",
+        "launch readiness"
+      ],
+      "source": "zo-persona-directory",
+      "selector": {
+        "type": "exact-name",
+        "name": "GameDev · All Out QA & Release"
+      }
+    },
+    {
       "id": "gamedev-game-audio-designer",
       "name": "GameDev · Game Audio Designer",
       "expertise": [

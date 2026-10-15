@@ -58,9 +58,13 @@ export function replayPathSegment(value: string): string {
 
 export type { AdapterSpawnSpec } from './agent-containment.js';
 
-interface ExecutorResourceCgroup {
-  memoryDir: string;
-  pidsDir: string;
+export interface ExecutorResourceCgroup {
+  mode: 'cgroup-v1' | 'cgroup-v2' | 'process-tree';
+  memoryDir: string | null;
+  pidsDir: string | null;
+  memoryLimitMib?: number;
+  processLimit?: number;
+  degradedReason?: string;
   killAll(signal: NodeJS.Signals): void;
   cleanup(): boolean;
 }
@@ -94,7 +98,13 @@ function cgroupTaskPids(dir: string): number[] {
   }
 }
 
-function createExecutorResourceCgroup(env: Record<string, string>): ExecutorResourceCgroup | null {
+export function createExecutorResourceCgroup(
+  env: Record<string, string>,
+  options: {
+    cgroupRoot?: string;
+    logger?: Pick<Console, 'warn'>;
+  } = {},
+): ExecutorResourceCgroup | null {
   if (env.SWARM_EXEC_RESOURCE_GUARD_REQUIRED !== '1') return null;
   const memoryLimitMib = guardedInteger(
     env.SWARM_EXEC_MEMORY_LIMIT_MIB,
@@ -104,8 +114,84 @@ function createExecutorResourceCgroup(env: Record<string, string>): ExecutorReso
   );
   const processLimit = guardedInteger(env.SWARM_EXEC_PROCESS_LIMIT, 'SWARM_EXEC_PROCESS_LIMIT', 16, 512);
   const token = `zouroboros-${process.pid}-${randomUUID()}`;
-  const memoryDir = join('/sys/fs/cgroup/memory', token);
-  const pidsDir = join('/sys/fs/cgroup/pids', token);
+  const cgroupRoot = options.cgroupRoot ?? '/sys/fs/cgroup';
+  const logger = options.logger ?? console;
+  const degrade = (reason: string): ExecutorResourceCgroup => {
+    logger.warn(
+      `[ACP resource guard] kernel cgroups unavailable (${reason}); ` +
+      `falling back to process-tree monitoring for the ${memoryLimitMib} MiB / ${processLimit} process limits. ` +
+      'This degradation is explicit: no kernel cgroup will be created.',
+    );
+    return {
+      mode: 'process-tree',
+      memoryDir: null,
+      pidsDir: null,
+      memoryLimitMib,
+      processLimit,
+      degradedReason: reason,
+      killAll() {},
+      cleanup() {
+        return true;
+      },
+    };
+  };
+
+  const controllersPath = join(cgroupRoot, 'cgroup.controllers');
+  if (existsSync(controllersPath)) {
+    const controllers = readFileSync(controllersPath, 'utf8').trim().split(/\s+/).filter(Boolean);
+    const missing = ['memory', 'pids'].filter(controller => !controllers.includes(controller));
+    if (missing.length > 0) {
+      return degrade(`cgroup v2 controllers not delegated: ${missing.join(', ')}`);
+    }
+
+    const unifiedDir = join(cgroupRoot, token);
+    let created = false;
+    try {
+      mkdirSync(unifiedDir, { mode: 0o700 });
+      created = true;
+      if (!existsSync(join(unifiedDir, 'memory.max')) || !existsSync(join(unifiedDir, 'pids.max'))) {
+        const subtreeControl = join(cgroupRoot, 'cgroup.subtree_control');
+        for (const controller of ['memory', 'pids']) {
+          try {
+            writeFileSync(subtreeControl, `+${controller}`);
+          } catch {}
+        }
+      }
+      writeFileSync(join(unifiedDir, 'memory.max'), String(memoryLimitMib * 1024 * 1024));
+      writeFileSync(join(unifiedDir, 'pids.max'), String(processLimit));
+    } catch (error) {
+      if (created) {
+        try { rmdirSync(unifiedDir); } catch {}
+      }
+      throw new Error(`failed to establish executor kernel cgroups: ${error instanceof Error ? error.message : String(error)}`);
+    }
+    return {
+      mode: 'cgroup-v2',
+      memoryDir: unifiedDir,
+      pidsDir: unifiedDir,
+      memoryLimitMib,
+      processLimit,
+      killAll(signal) {
+        for (const pid of cgroupTaskPids(unifiedDir)) {
+          try { process.kill(pid, signal); } catch {}
+        }
+      },
+      cleanup() {
+        try {
+          rmdirSync(unifiedDir);
+          return true;
+        } catch (error) {
+          return (error as NodeJS.ErrnoException).code === 'ENOENT';
+        }
+      },
+    };
+  }
+
+  const memoryDir = join(cgroupRoot, 'memory', token);
+  const pidsDir = join(cgroupRoot, 'pids', token);
+  if (!existsSync(join(cgroupRoot, 'memory')) || !existsSync(join(cgroupRoot, 'pids'))) {
+    return degrade('neither a cgroup v2 unified hierarchy nor cgroup v1 memory/pids hierarchies are available');
+  }
   let memoryCreated = false;
   let pidsCreated = false;
   try {
@@ -125,8 +211,11 @@ function createExecutorResourceCgroup(env: Record<string, string>): ExecutorReso
     throw new Error(`failed to establish executor kernel cgroups: ${error instanceof Error ? error.message : String(error)}`);
   }
   return {
+    mode: 'cgroup-v1',
     memoryDir,
     pidsDir,
+    memoryLimitMib,
+    processLimit,
     killAll(signal) {
       const pids = new Set([...cgroupTaskPids(memoryDir), ...cgroupTaskPids(pidsDir)]);
       for (const pid of pids) {
@@ -146,11 +235,30 @@ function createExecutorResourceCgroup(env: Record<string, string>): ExecutorReso
     },
   };
 }
-
 export function buildCgroupGuardedAdapterSpawn(
   spawnSpec: AdapterSpawnSpec,
   cgroup: Pick<ExecutorResourceCgroup, 'memoryDir' | 'pidsDir'>,
 ): AdapterSpawnSpec {
+  if (!cgroup.memoryDir || !cgroup.pidsDir) return spawnSpec;
+  if (cgroup.memoryDir === cgroup.pidsDir) {
+    const launcher = [
+      'printf "%s\\n" "$$" > "$1" || exit 125',
+      'shift',
+      'exec "$@"',
+    ].join('\n');
+    return {
+      ...spawnSpec,
+      command: '/bin/sh',
+      args: [
+        '-c',
+        launcher,
+        'zouroboros-resource-launcher',
+        join(cgroup.memoryDir, 'cgroup.procs'),
+        spawnSpec.command,
+        ...spawnSpec.args,
+      ],
+    };
+  }
   const launcher = [
     'printf "%s\\n" "$$" > "$1" || exit 125',
     'printf "%s\\n" "$$" > "$2" || exit 125',
@@ -262,14 +370,19 @@ export function processTreeUsage(
 
 export function readExecutorResourceUsage(
   rootPid: number,
-  cgroup: Pick<ExecutorResourceCgroup, 'memoryDir' | 'pidsDir'> | null,
+  cgroup: {
+    memoryDir: string | null;
+    pidsDir: string | null;
+    mode?: ExecutorResourceCgroup['mode'];
+  } | null,
   readText: (path: string) => string = path => readFileSync(path, 'utf8'),
 ): ExecutorResourceUsage {
-  if (cgroup) {
+  if (cgroup?.memoryDir && cgroup?.pidsDir) {
     try {
+      const unified = cgroup.mode === 'cgroup-v2' || cgroup.memoryDir === cgroup.pidsDir;
       return {
         memory_bytes: parseNonNegativeInteger(
-          readText(join(cgroup.memoryDir, 'memory.usage_in_bytes')),
+          readText(join(cgroup.memoryDir, unified ? 'memory.current' : 'memory.usage_in_bytes')),
           'cgroup memory usage',
         ),
         process_count: parseNonNegativeInteger(
@@ -912,6 +1025,7 @@ function wayfinderRankSetup(
   // off it, so a task that dies before the child finishes is still resolvable.
   const invocationId = randomUUID();
   const script = wayfinderRankScript({
+    python: wayfinderPython(env),
     entrypoint,
     harness,
     stateHome,
@@ -1034,6 +1148,14 @@ export async function resolveWayfinderLivePick(
  * not waited on, which is how deadlocks get in. argv costs one shell argument and
  * removes the entire class of pipe-lifetime failure.
  */
+/**
+ * Interpreter for the Wayfinder engine. The engine needs flashrank, which hosts
+ * usually install in a dedicated venv rather than the system python3.
+ */
+export function wayfinderPython(env: Record<string, string | undefined>): string {
+  return (env.WAYFINDER_PYTHON ?? '').trim() || 'python3';
+}
+
 export function wayfinderRankScript(options: {
   entrypoint: string;
   harness: string;
@@ -1043,8 +1165,10 @@ export function wayfinderRankScript(options: {
   timeoutMs: number;
   invocationId: string;
   event: { prompt: string; session_id: string; cwd: string };
+  python?: string;
 }): string {
   const { entrypoint, harness, stateHome, roots, cwd, timeoutMs, invocationId, event } = options;
+  const python = options.python?.trim() && options.python.trim() !== 'python3' ? shellQuote(options.python.trim()) : 'python3';
   const seconds = Math.max(1, Math.ceil(timeoutMs / 1000));
   return [
     'set -u',
@@ -1053,9 +1177,9 @@ export function wayfinderRankScript(options: {
     `cd ${shellQuote(cwd)} || exit 0`,
     `EVENT=${shellQuote(JSON.stringify({ ...event, invocation_id: invocationId }))}`,
     'if command -v timeout >/dev/null 2>&1; then',
-    `  timeout ${seconds} python3 ${shellQuote(entrypoint)} log --harness ${shellQuote(harness)} --event-json "$EVENT" --invocation-id ${shellQuote(invocationId)}`,
+    `  timeout ${seconds} ${python} ${shellQuote(entrypoint)} log --harness ${shellQuote(harness)} --event-json "$EVENT" --invocation-id ${shellQuote(invocationId)}`,
     'else',
-    `  python3 ${shellQuote(entrypoint)} log --harness ${shellQuote(harness)} --event-json "$EVENT" --invocation-id ${shellQuote(invocationId)}`,
+    `  ${python} ${shellQuote(entrypoint)} log --harness ${shellQuote(harness)} --event-json "$EVENT" --invocation-id ${shellQuote(invocationId)}`,
     'fi',
     'exit 0',
   ].join('\n');

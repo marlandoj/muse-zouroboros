@@ -1,0 +1,8 @@
+scenario_id: provider-failure
+description: Provider transport and rate-limit failures rotate or fail with an attached trail.
+seed: 103
+steps:
+  - name: provider-rotation
+    run: bun {scripts_dir}/model-chain.selftest.ts
+    timeout_ms: 30000
+    expect: { exit_code: 0 }

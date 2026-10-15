@@ -286,7 +286,7 @@ export async function executeBounded(
       drain(child.stdout as ReadableStream<Uint8Array>, stdoutSink, hardLimit, onLimit),
       drain(child.stderr as ReadableStream<Uint8Array>, stderrSink, hardLimit, onLimit),
     ]);
-    const signal = child.signalCode ?? null;
+    const signal = child.signalCode == null ? null : String(child.signalCode);
     const exit = signal === null ? exitCode : null;
     let failure: ExecutionFailureCode | null = null;
     let message: string | null = null;

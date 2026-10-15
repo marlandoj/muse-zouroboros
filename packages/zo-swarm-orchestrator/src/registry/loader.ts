@@ -10,7 +10,7 @@ import { fileURLToPath } from 'url';
 import { getWorkspaceRoot } from 'zouroboros-core';
 import type { ExecutorRegistryEntry } from '../types.js';
 
-export const EXECUTOR_REGISTRY_RELATIVE = 'packages/swarm/src/executor/registry/executor-registry.json';
+export const EXECUTOR_REGISTRY_RELATIVE = 'packages/zo-swarm-orchestrator/src/executor/registry/executor-registry.json';
 
 /** One precedence policy for the factory, CC runtime, doctor, and registry tools. */
 export function resolveExecutorRegistryPath(

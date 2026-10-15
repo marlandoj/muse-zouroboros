@@ -1,0 +1,155 @@
+{
+  "fixture_version": 1,
+  "base": "valid-success.json",
+  "cases": [
+    {
+      "name": "success",
+      "valid": true,
+      "mode": "receipt",
+      "mutations": []
+    },
+    {
+      "name": "failure",
+      "valid": true,
+      "mode": "receipt",
+      "mutations": [
+        { "op": "set", "path": ["events", 5, "kind"], "value": "operation.failed" },
+        { "op": "set", "path": ["attempts", 0, "status"], "value": "failure" },
+        { "op": "set", "path": ["attempts", 0, "error"], "value": "fixture failure" },
+        { "op": "set", "path": ["terminal", "outcome"], "value": "failure" }
+      ]
+    },
+    {
+      "name": "partial-timeout",
+      "valid": true,
+      "mode": "receipt",
+      "mutations": [
+        { "op": "set", "path": ["attempts", 0, "status"], "value": "timeout" },
+        { "op": "set", "path": ["attempts", 0, "error"], "value": "bounded timeout" },
+        { "op": "set", "path": ["terminal", "outcome"], "value": "partial" }
+      ]
+    },
+    {
+      "name": "cancelled",
+      "valid": true,
+      "mode": "receipt",
+      "mutations": [
+        { "op": "set", "path": ["events", 5, "kind"], "value": "operation.failed" },
+        { "op": "set", "path": ["attempts", 0, "status"], "value": "cancelled" },
+        { "op": "set", "path": ["attempts", 0, "error"], "value": "operator cancelled" },
+        { "op": "set", "path": ["terminal", "outcome"], "value": "cancelled" }
+      ]
+    },
+    {
+      "name": "expired-authority-failure",
+      "valid": true,
+      "mode": "receipt",
+      "mutations": [
+        { "op": "set", "path": ["events", 5, "kind"], "value": "operation.failed" },
+        { "op": "set", "path": ["attempts", 0, "status"], "value": "failure" },
+        { "op": "set", "path": ["attempts", 0, "error"], "value": "authority expired before attempt" },
+        { "op": "set", "path": ["attempts", 0, "side_effects"], "value": [] },
+        { "op": "set", "path": ["terminal", "outcome"], "value": "failure" }
+      ]
+    },
+    {
+      "name": "autonomy-shadow",
+      "valid": true,
+      "mode": "receipt",
+      "mutations": [
+        { "op": "set", "path": ["trigger", "kind"], "value": "agent" },
+        { "op": "set", "path": ["authority", "envelope_kind"], "value": "autonomy_policy" },
+        { "op": "set", "path": ["authority", "autonomy_tier"], "value": "T0" },
+        { "op": "set", "path": ["attempts", 0, "side_effects"], "value": [] }
+      ]
+    },
+    {
+      "name": "consensus-evaluation",
+      "valid": true,
+      "mode": "receipt",
+      "mutations": [
+        { "op": "set", "path": ["trigger", "kind"], "value": "consensus" },
+        { "op": "set", "path": ["authority", "envelope_kind"], "value": "consensus_quorum" },
+        { "op": "set", "path": ["attempts", 0, "side_effects"], "value": [] }
+      ]
+    },
+    {
+      "name": "contradictory-ledger",
+      "valid": false,
+      "mode": "receipt",
+      "expected_error": "edge_proof_mismatch",
+      "mutations": [
+        { "op": "set", "path": ["terminal", "ledger_entries", 0, "chain_verified"], "value": false },
+        { "op": "set", "path": ["verification", "edge_proof", "chain_ok"], "value": true }
+      ]
+    },
+    {
+      "name": "redacted-secrets",
+      "valid": true,
+      "mode": "redaction",
+      "mutations": [
+        { "op": "set", "path": ["versions", "tool_versions", "api_token"], "value": "fixture-secret-value" }
+      ],
+      "redact_paths": ["/versions/tool_versions/api_token"]
+    },
+    {
+      "name": "duplicate-idempotency-conflict",
+      "valid": false,
+      "mode": "receipt_set",
+      "expected_error": "idempotency_conflict",
+      "mutations": []
+    },
+    {
+      "name": "cursor-resume",
+      "valid": true,
+      "mode": "cursor",
+      "cursor": "rrc:op-01J00000000000000000000001:4",
+      "expected_sequences": [5, 6, 7],
+      "mutations": []
+    },
+    {
+      "name": "missing-edge-proof",
+      "valid": false,
+      "mode": "receipt",
+      "expected_error": "edge_proof_mismatch",
+      "mutations": [
+        { "op": "set", "path": ["verification", "edge_proof", "anchor_ok"], "value": false }
+      ]
+    },
+    {
+      "name": "restart-rebuild",
+      "valid": true,
+      "mode": "reconstruction",
+      "mutations": []
+    },
+    {
+      "name": "conflicting-writer",
+      "valid": false,
+      "mode": "receipt",
+      "expected_error": "conflicting_event",
+      "mutations": [
+        { "op": "set", "path": ["events", 3, "source_event_id"], "value": "flight:zou-1051:3" }
+      ]
+    },
+    {
+      "name": "missing-transition",
+      "valid": false,
+      "mode": "receipt",
+      "expected_error": "missing_transition",
+      "mutations": [
+        { "op": "set", "path": ["events", 1, "kind"], "value": "tool.called" },
+        { "op": "set", "path": ["events", 1, "tool_call_id"], "value": "tool-0" }
+      ]
+    },
+    {
+      "name": "dangling-tool-call",
+      "valid": false,
+      "mode": "receipt",
+      "expected_error": "dangling_tool_call",
+      "mutations": [
+        { "op": "set", "path": ["events", 3, "kind"], "value": "attempt.completed" },
+        { "op": "set", "path": ["events", 3, "tool_result_for"], "value": null }
+      ]
+    }
+  ]
+}

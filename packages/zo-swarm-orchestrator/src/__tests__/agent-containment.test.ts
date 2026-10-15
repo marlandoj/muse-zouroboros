@@ -36,7 +36,21 @@ describe('agent filesystem containment', () => {
   test('external containment cannot bypass profile selection', () => {
     expect(() => prepareFilesystemContainedSpawn({ command: '/bin/true', args: [] }, '/home/.z/factory/.factory-worktrees/job', env('/home/.z/factory/.factory-worktrees'))).toThrow('pinned Factory profile');
   });
-  const containmentAvailable = existsSync('/usr/bin/bwrap') && existsSync('/usr/bin/setpriv');
+function bwrapFunctional(): boolean {
+  // Binary presence isn't enough: some sandboxes ship bwrap but deny uid-map
+  // setup. Probe the actual capability once; skip the containment tests when
+  // the environment can't provide it.
+  try {
+    const probe = spawnSync('/usr/bin/bwrap',
+      ['--unshare-user', '--uid', '0', '--gid', '0', '--', '/bin/true'],
+      { encoding: 'utf8', timeout: 10_000 });
+    return probe.status === 0;
+  } catch {
+    return false;
+  }
+}
+
+const containmentAvailable = bwrapFunctional();
   test.skipIf(!containmentAvailable)('binds only assigned linked Git metadata read-only', () => {
     const item = fixture();
     const repo = join(item.root, 'repo');

@@ -1,0 +1,209 @@
+{
+  "schemaVersion": 1,
+  "manifestId": "zou-1057-reviewed-synthetic-cohort-v1",
+  "classification": "synthetic_only",
+  "reviewBinding": "exact seed hash operator approval",
+  "replicateSeeds": [1057001, 1057002, 1057003],
+  "contracts": [
+    {
+      "id": "user-approval-allow",
+      "actorKind": "user",
+      "interaction": "approval",
+      "initialState": "awaiting_approval",
+      "fault": "none",
+      "recovery": "commit_once",
+      "approval": "required_allow",
+      "expectedTerminal": "completed"
+    },
+    {
+      "id": "user-approval-deny",
+      "actorKind": "user",
+      "interaction": "approval",
+      "initialState": "awaiting_approval",
+      "fault": "none",
+      "recovery": "stop_without_commit",
+      "approval": "required_deny",
+      "expectedTerminal": "cancelled"
+    },
+    {
+      "id": "user-cancel-before-commit",
+      "actorKind": "user",
+      "interaction": "cancellation",
+      "initialState": "prepared",
+      "fault": "cancel_before_commit",
+      "recovery": "stop_without_commit",
+      "approval": "not_applicable",
+      "expectedTerminal": "cancelled"
+    },
+    {
+      "id": "user-delayed-response",
+      "actorKind": "user",
+      "interaction": "message",
+      "initialState": "waiting",
+      "fault": "deterministic_delay",
+      "recovery": "resume_after_delay",
+      "approval": "not_applicable",
+      "expectedTerminal": "completed"
+    },
+    {
+      "id": "user-duplicate-submit",
+      "actorKind": "user",
+      "interaction": "message",
+      "initialState": "accepted_once",
+      "fault": "duplicate_request",
+      "recovery": "idempotent_replay",
+      "approval": "not_applicable",
+      "expectedTerminal": "completed"
+    },
+    {
+      "id": "tool-success",
+      "actorKind": "tool",
+      "interaction": "invoke",
+      "initialState": "ready",
+      "fault": "none",
+      "recovery": "commit_once",
+      "approval": "not_applicable",
+      "expectedTerminal": "completed"
+    },
+    {
+      "id": "tool-transient-retry",
+      "actorKind": "tool",
+      "interaction": "invoke",
+      "initialState": "ready",
+      "fault": "transient_failure",
+      "recovery": "bounded_retry_success",
+      "approval": "not_applicable",
+      "expectedTerminal": "completed"
+    },
+    {
+      "id": "tool-permanent-failure",
+      "actorKind": "tool",
+      "interaction": "invoke",
+      "initialState": "ready",
+      "fault": "permanent_failure",
+      "recovery": "fail_closed",
+      "approval": "not_applicable",
+      "expectedTerminal": "failed"
+    },
+    {
+      "id": "tool-timeout",
+      "actorKind": "tool",
+      "interaction": "invoke",
+      "initialState": "ready",
+      "fault": "timeout",
+      "recovery": "bounded_timeout",
+      "approval": "not_applicable",
+      "expectedTerminal": "failed"
+    },
+    {
+      "id": "tool-cancel-during-run",
+      "actorKind": "tool",
+      "interaction": "invoke",
+      "initialState": "running",
+      "fault": "cancel_during_run",
+      "recovery": "compensate_and_stop",
+      "approval": "not_applicable",
+      "expectedTerminal": "cancelled"
+    },
+    {
+      "id": "api-success",
+      "actorKind": "api",
+      "interaction": "request",
+      "initialState": "available",
+      "fault": "none",
+      "recovery": "commit_once",
+      "approval": "not_applicable",
+      "expectedTerminal": "completed"
+    },
+    {
+      "id": "api-rate-limit-retry",
+      "actorKind": "api",
+      "interaction": "request",
+      "initialState": "available",
+      "fault": "rate_limited",
+      "recovery": "seeded_backoff_success",
+      "approval": "not_applicable",
+      "expectedTerminal": "completed"
+    },
+    {
+      "id": "api-server-error-retry",
+      "actorKind": "api",
+      "interaction": "request",
+      "initialState": "available",
+      "fault": "server_error",
+      "recovery": "bounded_retry_success",
+      "approval": "not_applicable",
+      "expectedTerminal": "completed"
+    },
+    {
+      "id": "api-malformed-response",
+      "actorKind": "api",
+      "interaction": "request",
+      "initialState": "available",
+      "fault": "malformed_response",
+      "recovery": "reject_response",
+      "approval": "not_applicable",
+      "expectedTerminal": "failed"
+    },
+    {
+      "id": "api-partial-response",
+      "actorKind": "api",
+      "interaction": "request",
+      "initialState": "available",
+      "fault": "partial_response",
+      "recovery": "detect_and_compensate",
+      "approval": "not_applicable",
+      "expectedTerminal": "failed"
+    },
+    {
+      "id": "system-state-mutation",
+      "actorKind": "system",
+      "interaction": "state_change",
+      "initialState": "version_1",
+      "fault": "none",
+      "recovery": "commit_version_2",
+      "approval": "not_applicable",
+      "expectedTerminal": "completed"
+    },
+    {
+      "id": "system-state-conflict",
+      "actorKind": "system",
+      "interaction": "state_change",
+      "initialState": "version_conflict",
+      "fault": "optimistic_conflict",
+      "recovery": "reload_then_retry",
+      "approval": "not_applicable",
+      "expectedTerminal": "completed"
+    },
+    {
+      "id": "system-partial-commit",
+      "actorKind": "system",
+      "interaction": "state_change",
+      "initialState": "prepared",
+      "fault": "partial_commit",
+      "recovery": "compensate_to_baseline",
+      "approval": "not_applicable",
+      "expectedTerminal": "failed"
+    },
+    {
+      "id": "system-approval-bypass",
+      "actorKind": "system",
+      "interaction": "state_change",
+      "initialState": "awaiting_approval",
+      "fault": "approval_bypass_attempt",
+      "recovery": "deny_and_preserve_state",
+      "approval": "required_deny",
+      "expectedTerminal": "failed"
+    },
+    {
+      "id": "system-interrupted-resume-cleanup",
+      "actorKind": "system",
+      "interaction": "recovery",
+      "initialState": "interrupted",
+      "fault": "restart_during_operation",
+      "recovery": "resume_once_then_cleanup",
+      "approval": "not_applicable",
+      "expectedTerminal": "completed"
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "fixture_version": 1,
+  "cases": [
+    { "name": "same-key-same-input", "expected": "same_operation" },
+    { "name": "same-key-different-input", "expected": "idempotency_conflict" },
+    { "name": "authority-missing", "expected": "held_no_dispatch" },
+    { "name": "authority-expired", "expected": "held_no_dispatch" },
+    { "name": "authority-scope-mismatch", "expected": "held_no_dispatch" },
+    { "name": "ambiguous-probe-committed", "expected": "probe_before_retry" },
+    { "name": "ambiguous-probe-unknown", "expected": "held" },
+    { "name": "compensate-reverse-order", "expected": "compensated" },
+    { "name": "residual-commit", "expected": "partial" },
+    { "name": "retry-budget", "expected": "failure" },
+    { "name": "deadline", "expected": "timeout" },
+    { "name": "unknown-schema", "expected": "fail_closed" },
+    { "name": "checksum-drift", "expected": "fail_closed" },
+    { "name": "v9fs-same-mount", "expected": "qualified" },
+    { "name": "jsonl-byte-immutability", "expected": "unchanged" },
+    { "name": "resource-ceilings", "expected": "bounded" }
+  ]
+}

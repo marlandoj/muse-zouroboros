@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { Database } from 'bun:sqlite';
 import { loadRegistry, resolveExecutorRegistryPath } from '../registry/loader';
-import { canonicalRegistry, generatedRegistry, orchestratorCopies, runtimeCopies, syncRuntimeCopies } from '../../scripts/sync-runtime-copies';
+import { canonicalRegistry, generatedRegistry, runtimeCopies, syncRuntimeCopies } from '../../scripts/sync-runtime-copies';
 
 const root = resolve(import.meta.dir, '../../../..');
 const roots: string[] = [];
@@ -51,24 +51,21 @@ describe('registry authority', () => {
     expect(loaded.executors.find(entry => entry.id === 'pi')?.bestFor.length).toBeGreaterThan(0);
   });
 
-  test('detects regenerated registry and runtime drift, including missing private submodules', () => {
+  test('detects regenerated registry and runtime drift', () => {
     expect(syncRuntimeCopies(root)).toEqual([]);
     const fixture = tempRoot();
     for (const copy of runtimeCopies) write(join(fixture, copy.path), 'stale');
     write(join(fixture, canonicalRegistry), '{"executors":[]}\n');
-    expect(syncRuntimeCopies(fixture, false, true)).toContain('Uninitialized submodule: Skills/zo-swarm-executors');
-    write(join(fixture, 'Skills/zo-swarm-executors/.git'), 'fixture');
-    write(join(fixture, 'Skills/zo-swarm-orchestrator/.git'), 'fixture');
-    write(join(fixture, generatedRegistry), 'stale');
-    syncRuntimeCopies(fixture, true, true);
-    expect(syncRuntimeCopies(fixture, false, true)).toEqual([]);
+    expect(syncRuntimeCopies(fixture)).toContain(`Runtime copy drift: ${runtimeCopies[0].path}`);
+    syncRuntimeCopies(fixture, true);
+    expect(syncRuntimeCopies(fixture)).toEqual([]);
     write(join(fixture, generatedRegistry), '{"executors":[{"id":"drift"}]}');
-    expect(syncRuntimeCopies(fixture, false, true)).toEqual([`Runtime copy drift: ${generatedRegistry}`]);
+    expect(syncRuntimeCopies(fixture)).toEqual([`Runtime copy drift: ${generatedRegistry}`]);
   });
 });
 
-const entrypoints = ['packages/swarm/scripts/orchestrate-v5.ts',
-  ...[...runtimeCopies, ...orchestratorCopies.filter(copy => existsSync(join(root, copy.path)))].filter(copy => copy.target === 'orchestrate-v5.ts').map(copy => copy.path)];
+const entrypoints = ['packages/zo-swarm-orchestrator/scripts/orchestrate-v5.ts',
+  ...runtimeCopies.filter(copy => copy.target === 'orchestrate-v5.ts').map(copy => copy.path)];
 const cases = [
   { name: 'valid', output: 'Fixture completed.', stderr: '', success: true },
   { name: 'empty', output: ' \n ', stderr: '', success: false },
@@ -102,9 +99,9 @@ for (const entrypoint of entrypoints) {
       }
     }
     write(join(workspace, canonicalRegistry), JSON.stringify({ executors }));
-    // A conflicting Skills copy makes precedence regressions visible.
+    // A conflicting generated-registry copy makes precedence regressions visible.
     write(join(workspace, generatedRegistry), JSON.stringify({ executors: [] }));
-    write(join(workspace, 'packages/swarm/assets/persona-registry.json'), '{"personas":[]}');
+    write(join(workspace, 'packages/zo-swarm-orchestrator/assets/persona-registry.json'), '{"personas":[]}');
     const campaign = join(workspace, 'tasks.json');
     write(campaign, JSON.stringify(tasks));
     const proc = Bun.spawn([process.execPath, join(root, entrypoint), campaign,

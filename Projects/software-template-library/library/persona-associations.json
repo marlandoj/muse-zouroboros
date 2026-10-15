@@ -1,0 +1,1200 @@
+{
+  "schemaVersion": 1,
+  "associationVersion": "1.2.0",
+  "catalogVersion": "1.0.0",
+  "status": "validated",
+  "owner": "Zouroboros Software Factory",
+  "hashContract": {
+    "version": "1.0.0",
+    "algorithm": "sha256-canonical-json",
+    "registryInput": "The complete schema-valid registry object, excluding the separately generated index, serialized as recursively key-sorted canonical JSON.",
+    "associationInput": "associationVersion, catalogVersion, and one complete association object serialized as recursively key-sorted canonical JSON.",
+    "output": "lowercase-hex-64"
+  },
+  "dispatchContract": {
+    "version": "1.0.0",
+    "defaultAuthority": "advise-review-only",
+    "implementationAuthority": "A role that permits implement may implement only when an approved task explicitly sets authority=implement and supplies non-empty owned paths.",
+    "identityResolution": "Resolve personaSelector.name by exact case-sensitive name against one live Zo list_personas directory snapshot immediately before dispatch.",
+    "identityEvidence": "Record resolved UUID, exact current name, current scopes, association version and hash, and canonical directory snapshot hash.",
+    "uuidPolicy": "Mutable persona UUIDs are forbidden in this registry and are retained only in dispatch evidence.",
+    "routingIndependence": "Persona selection must not read or rewrite model policy, coding cascade, harness routing, or executor registry state.",
+    "requiredFailurePolicy": "Missing, duplicate, renamed, unavailable, or under-scoped required personas fail closed before task dispatch in enforce mode.",
+    "optionalFailurePolicy": "Every optional omission must retain a typed reason in task evidence.",
+    "outputTrust": "Persona outputs are untrusted task inputs or review evidence; deterministic tests and factory gates retain final authority.",
+    "modes": {
+      "off": "Perform no persona directory call, add no persona fields, and preserve existing serialized state.",
+      "shadow": "Resolve and retain would-invoke evidence without invoking personas or changing model, harness, executor, or task routing.",
+      "enforce": "Invoke only operator-authorized roles within task authority, owned paths, phase, scope, and invocation-cap limits."
+    }
+  },
+  "capabilityVocabulary": [
+    {
+      "id": "accessibility",
+      "description": "Accessibility analysis or implementation is explicitly in scope."
+    },
+    {
+      "id": "api-design",
+      "description": "API contract or backend design expertise is explicitly required."
+    },
+    {
+      "id": "automation",
+      "description": "Workflow or process automation is explicitly required."
+    },
+    {
+      "id": "data-engineering",
+      "description": "Data modeling, pipelines, or analytics engineering is explicitly required."
+    },
+    {
+      "id": "desktop",
+      "description": "A native or packaged desktop runtime is explicitly required."
+    },
+    {
+      "id": "developer-experience",
+      "description": "CLI, SDK, documentation, or developer workflow expertise is explicitly required."
+    },
+    {
+      "id": "engine-godot",
+      "description": "The project explicitly selects the Godot engine."
+    },
+    {
+      "id": "engine-threejs",
+      "description": "The project explicitly selects Three.js as its browser 3D runtime."
+    },
+    {
+      "id": "engine-unity",
+      "description": "The project explicitly selects the Unity engine."
+    },
+    {
+      "id": "engine-unreal",
+      "description": "The project explicitly selects Unreal Engine."
+    },
+    {
+      "id": "game-audio",
+      "description": "Game audio systems or sound design expertise is required."
+    },
+    {
+      "id": "game-design",
+      "description": "Game mechanics, systems, progression, or play-loop design is required."
+    },
+    {
+      "id": "infrastructure",
+      "description": "Infrastructure, delivery, reliability, or operations expertise is explicitly required."
+    },
+    {
+      "id": "integration",
+      "description": "A third-party or cross-system integration is explicitly required."
+    },
+    {
+      "id": "legacy-modernization",
+      "description": "An existing system requires compatibility-preserving change or modernization."
+    },
+    {
+      "id": "level-design",
+      "description": "Level, encounter, environment, or spatial progression design is required."
+    },
+    {
+      "id": "machine-learning",
+      "description": "Model, retrieval, evaluation, or AI-system expertise is explicitly required."
+    },
+    {
+      "id": "mobile",
+      "description": "A mobile platform or mobile-first runtime is explicitly required."
+    },
+    {
+      "id": "platform-all-out",
+      "description": "The project explicitly targets the All Out game platform."
+    },
+    {
+      "id": "platform-roblox",
+      "description": "The project explicitly targets Roblox."
+    },
+    {
+      "id": "security",
+      "description": "Security architecture or review is explicitly required."
+    },
+    {
+      "id": "simulation",
+      "description": "Simulation fidelity, systems modeling, or 3D runtime behavior is required."
+    },
+    {
+      "id": "technical-art",
+      "description": "Rendering, asset pipelines, shaders, or technical art expertise is required."
+    },
+    {
+      "id": "web-ui",
+      "description": "Browser user-interface engineering is explicitly required."
+    }
+  ],
+  "scopeVocabulary": [
+    {
+      "id": "files:read",
+      "description": "Read task-owned workspace evidence and source files.",
+      "phases": [
+        "advise",
+        "implement",
+        "review"
+      ]
+    },
+    {
+      "id": "files:write",
+      "description": "Edit or create files inside task-owned paths.",
+      "phases": [
+        "implement"
+      ]
+    }
+  ],
+  "selectorVocabulary": [
+    {
+      "dimension": "engine",
+      "values": [
+        "godot",
+        "threejs",
+        "unity",
+        "unreal"
+      ]
+    },
+    {
+      "dimension": "platform",
+      "values": [
+        "all-out",
+        "roblox"
+      ]
+    }
+  ],
+  "associations": [
+    {
+      "templateId": "web-app",
+      "templateVersion": "1.0.0",
+      "category": "Web applications",
+      "roles": [
+        {
+          "roleId": "frontend-developer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "Frontend Developer"
+          },
+          "required": true,
+          "phases": [
+            "advise",
+            "implement",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read",
+            "files:write"
+          ],
+          "invocationCap": 2,
+          "activation": null
+        },
+        {
+          "roleId": "accessibility-reviewer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "Accessibility Specialist"
+          },
+          "required": false,
+          "phases": [
+            "advise",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [
+              "accessibility"
+            ],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read"
+          ],
+          "invocationCap": 1,
+          "activation": null
+        },
+        {
+          "roleId": "mobile-experience-reviewer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "Mobile App Builder"
+          },
+          "required": false,
+          "phases": [
+            "advise",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [
+              "mobile"
+            ],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read"
+          ],
+          "invocationCap": 1,
+          "activation": null
+        }
+      ]
+    },
+    {
+      "templateId": "saas",
+      "templateVersion": "1.0.0",
+      "category": "SaaS products",
+      "roles": [
+        {
+          "roleId": "saas-architect",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "Backend Architect"
+          },
+          "required": true,
+          "phases": [
+            "advise",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read"
+          ],
+          "invocationCap": 2,
+          "activation": null
+        },
+        {
+          "roleId": "security-reviewer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "Security Engineer"
+          },
+          "required": false,
+          "phases": [
+            "advise",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [
+              "security"
+            ],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read"
+          ],
+          "invocationCap": 1,
+          "activation": null
+        }
+      ]
+    },
+    {
+      "templateId": "mobile-app",
+      "templateVersion": "1.0.0",
+      "category": "Mobile applications",
+      "roles": [
+        {
+          "roleId": "mobile-app-builder",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "Mobile App Builder"
+          },
+          "required": true,
+          "phases": [
+            "advise",
+            "implement",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read",
+            "files:write"
+          ],
+          "invocationCap": 2,
+          "activation": null
+        }
+      ]
+    },
+    {
+      "templateId": "desktop-app",
+      "templateVersion": "1.0.0",
+      "category": "Desktop applications",
+      "roles": [
+        {
+          "roleId": "desktop-app-builder",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "Senior Developer"
+          },
+          "required": true,
+          "phases": [
+            "advise",
+            "implement",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read",
+            "files:write"
+          ],
+          "invocationCap": 2,
+          "activation": null
+        }
+      ]
+    },
+    {
+      "templateId": "game",
+      "templateVersion": "1.0.0",
+      "category": "Games",
+      "roles": [
+        {
+          "roleId": "game-designer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "GameDev · Game Designer"
+          },
+          "required": true,
+          "phases": [
+            "advise",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read"
+          ],
+          "invocationCap": 2,
+          "activation": null
+        },
+        {
+          "roleId": "level-designer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "GameDev · Level Designer"
+          },
+          "required": true,
+          "phases": [
+            "advise",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read"
+          ],
+          "invocationCap": 2,
+          "activation": null
+        },
+        {
+          "roleId": "technical-artist",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "GameDev · Technical Artist"
+          },
+          "required": true,
+          "phases": [
+            "advise",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read"
+          ],
+          "invocationCap": 2,
+          "activation": null
+        },
+        {
+          "roleId": "game-audio-designer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "GameDev · Game Audio Designer"
+          },
+          "required": true,
+          "phases": [
+            "advise",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read"
+          ],
+          "invocationCap": 2,
+          "activation": null
+        },
+        {
+          "roleId": "unity-developer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "GameDev · Unity Architect"
+          },
+          "required": false,
+          "phases": [
+            "advise",
+            "implement",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [
+              "engine-unity"
+            ],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read",
+            "files:write"
+          ],
+          "invocationCap": 2,
+          "activation": {
+            "allOf": [
+              {
+                "dimension": "engine",
+                "operator": "equals",
+                "value": "unity",
+                "capability": "engine-unity"
+              }
+            ],
+            "requiresRoles": [
+              "game-designer"
+            ]
+          }
+        },
+        {
+          "roleId": "unreal-developer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "GameDev · Unreal Systems Engineer"
+          },
+          "required": false,
+          "phases": [
+            "advise",
+            "implement",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [
+              "engine-unreal"
+            ],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read",
+            "files:write"
+          ],
+          "invocationCap": 2,
+          "activation": {
+            "allOf": [
+              {
+                "dimension": "engine",
+                "operator": "equals",
+                "value": "unreal",
+                "capability": "engine-unreal"
+              }
+            ],
+            "requiresRoles": [
+              "game-designer"
+            ]
+          }
+        },
+        {
+          "roleId": "godot-developer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "GameDev · Godot Gameplay Scripter"
+          },
+          "required": false,
+          "phases": [
+            "advise",
+            "implement",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [
+              "engine-godot"
+            ],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read",
+            "files:write"
+          ],
+          "invocationCap": 2,
+          "activation": {
+            "allOf": [
+              {
+                "dimension": "engine",
+                "operator": "equals",
+                "value": "godot",
+                "capability": "engine-godot"
+              }
+            ],
+            "requiresRoles": [
+              "game-designer"
+            ]
+          }
+        },
+        {
+          "roleId": "threejs-designer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "GameDev · Three.js Designer"
+          },
+          "required": false,
+          "phases": [
+            "advise",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [
+              "engine-threejs"
+            ],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read"
+          ],
+          "invocationCap": 2,
+          "activation": {
+            "allOf": [
+              {
+                "dimension": "engine",
+                "operator": "equals",
+                "value": "threejs",
+                "capability": "engine-threejs"
+              }
+            ],
+            "requiresRoles": [
+              "game-designer"
+            ]
+          }
+        },
+        {
+          "roleId": "threejs-engineer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "GameDev · Three.js Engineer"
+          },
+          "required": false,
+          "phases": [
+            "advise",
+            "implement",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [
+              "engine-threejs"
+            ],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read",
+            "files:write"
+          ],
+          "invocationCap": 2,
+          "activation": {
+            "allOf": [
+              {
+                "dimension": "engine",
+                "operator": "equals",
+                "value": "threejs",
+                "capability": "engine-threejs"
+              }
+            ],
+            "requiresRoles": [
+              "game-designer"
+            ]
+          }
+        },
+        {
+          "roleId": "threejs-artist",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "GameDev · Three.js Artist"
+          },
+          "required": false,
+          "phases": [
+            "advise",
+            "implement",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [
+              "engine-threejs"
+            ],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read",
+            "files:write"
+          ],
+          "invocationCap": 2,
+          "activation": {
+            "allOf": [
+              {
+                "dimension": "engine",
+                "operator": "equals",
+                "value": "threejs",
+                "capability": "engine-threejs"
+              }
+            ],
+            "requiresRoles": [
+              "game-designer"
+            ]
+          }
+        },
+        {
+          "roleId": "threejs-architect",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "GameDev · Three.js Architect"
+          },
+          "required": false,
+          "phases": [
+            "advise",
+            "implement",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [
+              "engine-threejs"
+            ],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read",
+            "files:write"
+          ],
+          "invocationCap": 2,
+          "activation": {
+            "allOf": [
+              {
+                "dimension": "engine",
+                "operator": "equals",
+                "value": "threejs",
+                "capability": "engine-threejs"
+              }
+            ],
+            "requiresRoles": [
+              "game-designer"
+            ]
+          }
+        },
+        {
+          "roleId": "roblox-developer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "GameDev · Roblox Systems Scripter"
+          },
+          "required": false,
+          "phases": [
+            "advise",
+            "implement",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [
+              "platform-roblox"
+            ],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read",
+            "files:write"
+          ],
+          "invocationCap": 2,
+          "activation": {
+            "allOf": [
+              {
+                "dimension": "platform",
+                "operator": "equals",
+                "value": "roblox",
+                "capability": "platform-roblox"
+              }
+            ],
+            "requiresRoles": [
+              "game-designer"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "templateId": "simulation-3d",
+      "templateVersion": "1.0.0",
+      "category": "3D and simulations",
+      "roles": [
+        {
+          "roleId": "simulation-designer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "GameDev · Game Designer"
+          },
+          "required": true,
+          "phases": [
+            "advise",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read"
+          ],
+          "invocationCap": 2,
+          "activation": null
+        },
+        {
+          "roleId": "technical-artist",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "GameDev · Technical Artist"
+          },
+          "required": false,
+          "phases": [
+            "advise",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [
+              "technical-art"
+            ],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read"
+          ],
+          "invocationCap": 1,
+          "activation": null
+        }
+      ]
+    },
+    {
+      "templateId": "api-backend",
+      "templateVersion": "1.0.0",
+      "category": "APIs and backends",
+      "roles": [
+        {
+          "roleId": "backend-developer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "Backend Architect"
+          },
+          "required": true,
+          "phases": [
+            "advise",
+            "implement",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read",
+            "files:write"
+          ],
+          "invocationCap": 2,
+          "activation": null
+        },
+        {
+          "roleId": "security-reviewer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "Security Engineer"
+          },
+          "required": false,
+          "phases": [
+            "advise",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [
+              "security"
+            ],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read"
+          ],
+          "invocationCap": 1,
+          "activation": null
+        }
+      ]
+    },
+    {
+      "templateId": "ai-application",
+      "templateVersion": "1.0.0",
+      "category": "AI applications",
+      "roles": [
+        {
+          "roleId": "ai-engineer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "AI Engineer"
+          },
+          "required": true,
+          "phases": [
+            "advise",
+            "implement",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read",
+            "files:write"
+          ],
+          "invocationCap": 2,
+          "activation": null
+        },
+        {
+          "roleId": "security-reviewer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "Security Engineer"
+          },
+          "required": false,
+          "phases": [
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [
+              "security"
+            ],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read"
+          ],
+          "invocationCap": 1,
+          "activation": null
+        }
+      ]
+    },
+    {
+      "templateId": "data-product",
+      "templateVersion": "1.0.0",
+      "category": "Data products",
+      "roles": [
+        {
+          "roleId": "data-engineer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "Backend Architect"
+          },
+          "required": true,
+          "phases": [
+            "advise",
+            "implement",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read",
+            "files:write"
+          ],
+          "invocationCap": 2,
+          "activation": null
+        },
+        {
+          "roleId": "data-reviewer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "Data Analytics Reporter"
+          },
+          "required": false,
+          "phases": [
+            "advise",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [
+              "data-engineering"
+            ],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read"
+          ],
+          "invocationCap": 1,
+          "activation": null
+        }
+      ]
+    },
+    {
+      "templateId": "automation",
+      "templateVersion": "1.0.0",
+      "category": "Automation",
+      "roles": [
+        {
+          "roleId": "automation-engineer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "Workflow Optimizer"
+          },
+          "required": true,
+          "phases": [
+            "advise",
+            "implement",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read",
+            "files:write"
+          ],
+          "invocationCap": 2,
+          "activation": null
+        }
+      ]
+    },
+    {
+      "templateId": "integration",
+      "templateVersion": "1.0.0",
+      "category": "Integrations",
+      "roles": [
+        {
+          "roleId": "integration-engineer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "N8N Workflow Engineer"
+          },
+          "required": true,
+          "phases": [
+            "advise",
+            "implement",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read",
+            "files:write"
+          ],
+          "invocationCap": 2,
+          "activation": null
+        },
+        {
+          "roleId": "security-reviewer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "Security Engineer"
+          },
+          "required": false,
+          "phases": [
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [
+              "security"
+            ],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read"
+          ],
+          "invocationCap": 1,
+          "activation": null
+        }
+      ]
+    },
+    {
+      "templateId": "developer-tool",
+      "templateVersion": "1.0.0",
+      "category": "Developer tools",
+      "roles": [
+        {
+          "roleId": "developer-experience-engineer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "Senior Developer"
+          },
+          "required": true,
+          "phases": [
+            "advise",
+            "implement",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read",
+            "files:write"
+          ],
+          "invocationCap": 2,
+          "activation": null
+        }
+      ]
+    },
+    {
+      "templateId": "infrastructure",
+      "templateVersion": "1.0.0",
+      "category": "Infrastructure",
+      "roles": [
+        {
+          "roleId": "devops-engineer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "DevOps Automator"
+          },
+          "required": true,
+          "phases": [
+            "advise",
+            "implement",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read",
+            "files:write"
+          ],
+          "invocationCap": 2,
+          "activation": null
+        },
+        {
+          "roleId": "security-reviewer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "Security Engineer"
+          },
+          "required": false,
+          "phases": [
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [
+              "security"
+            ],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read"
+          ],
+          "invocationCap": 1,
+          "activation": null
+        }
+      ]
+    },
+    {
+      "templateId": "existing-system-change",
+      "templateVersion": "1.0.0",
+      "category": "Existing-system changes",
+      "roles": [
+        {
+          "roleId": "software-architect",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "Backend Architect"
+          },
+          "required": true,
+          "phases": [
+            "advise",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read"
+          ],
+          "invocationCap": 2,
+          "activation": null
+        },
+        {
+          "roleId": "legacy-modernization-engineer",
+          "personaSelector": {
+            "type": "exact-name",
+            "name": "Senior Developer"
+          },
+          "required": false,
+          "phases": [
+            "advise",
+            "implement",
+            "review"
+          ],
+          "capabilitySelector": {
+            "allOf": [
+              "legacy-modernization"
+            ],
+            "anyOf": [],
+            "noneOf": []
+          },
+          "requiredScopes": [
+            "files:read",
+            "files:write"
+          ],
+          "invocationCap": 2,
+          "activation": null
+        }
+      ]
+    }
+  ]
+}

@@ -3,7 +3,6 @@ import { createHash } from "node:crypto";
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, renameSync, unlinkSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import {
-  createZoMcpListPersonasCaller,
   resolvePersonas,
   type PersonaResolutionResult,
   type ResolvedPersona,
@@ -338,16 +337,14 @@ function requiresSwarmRegistration(personaName: string): boolean {
   return REGISTERED_PERSONA_PREFIXES.some((prefix) => personaName.startsWith(prefix));
 }
 
-function nativePersonaDeployment(): boolean {
-  return process.env.ZOUROBOROS_NATIVE_VPS === "1" || existsSync("/etc/zouroboros/model-routing.json");
-}
-
 /** The independent VPS must supply a native directory and invocation adapter. */
 export function defaultPersonaDirectoryCaller(): () => Promise<unknown> {
-  if (nativePersonaDeployment()) return async () => {
-    throw new Error("Native VPS Diversity of Thought requires a qualified native persona directory adapter; Zo MCP is disabled");
+  return async () => {
+    throw new Error(
+      "defaultPersonaDirectoryCaller needs an explicit persona directory: the Zo persona directory " +
+      "was removed (Zo Computer retired 2026-10-03).",
+    );
   };
-  return createZoMcpListPersonasCaller();
 }
 
 export async function invokeZoPersona(request: PersonaCallRequest): Promise<PersonaCallResult> {

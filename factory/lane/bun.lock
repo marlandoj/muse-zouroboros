@@ -1,0 +1,50 @@
+{
+  "lockfileVersion": 2,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "zouroboros-factory",
+      "dependencies": {
+        "zouroboros-core": "2.2.0",
+        "zouroboros-selfheal": "2.1.1",
+        "zouroboros-swarm": "5.1.1",
+        "zouroboros-workflow": "2.1.1",
+      },
+      "devDependencies": {
+        "@types/bun": "latest",
+        "typescript": "^5.9.0",
+      },
+    },
+  },
+  "packages": {
+    "@agentclientprotocol/sdk": ["@agentclientprotocol/sdk@0.25.0", "", { "peerDependencies": { "zod": "^3.25.0 || ^4.0.0" } }, "sha512-wU1VgXNtMvdVotX49txc3WJUDV+/QbLpsgjMvFhlRmp37osdLbI7L7y+iwAlQATwfjLxcv1r1p3ZxZBcXlGhcQ=="],
+
+    "@types/bun": ["@types/bun@1.4.3", "", { "dependencies": { "bun-types": "1.4.3" } }, "sha512-N67Pqy8JXbAY/j0tNraS3V5mubGvc6rrrNDmDCtZLlFzccbUJPDb0tvgUBC5q4m8ybkP93Jcn1QB+RYQ6PvBhw=="],
+
+    "@types/node": ["@types/node@26.6.5", "", { "dependencies": { "undici-types": "~8.9.0" } }, "sha512-uMzsv9stDdofIZBx4UGh4Z9ZgXnGC9seRDscilBcTHAeOFk67MZg/k9bWVfO+bk4qZmG+l52hRnLwUiH2LnJTg=="],
+
+    "bun-types": ["bun-types@1.4.3", "", { "dependencies": { "@types/node": "*", "undici-types": "*" } }, "sha512-tinRJNGOmUN+tEAsn2y2e942n9JHRHR42iUYzDH75NmhJqVBokGSQkkfSFdNWwsANIdrK6ACH9t01M452YyTwg=="],
+
+    "hono": ["hono@4.13.13", "", {}, "sha512-CQ46U0ZkAGmbT/4UxdzzGJpacP2IeKgY4a5/tOI9AABbpOMfK739wfDXmv1usCk+3RkKj1hQy4/fjhiwa2xlrA=="],
+
+    "typescript": ["typescript@5.9.3", "", { "bin": { "tsc": "bin/tsc", "tsserver": "bin/tsserver" } }, "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw=="],
+
+    "undici-types": ["undici-types@8.12.2", "", {}, "sha512-VoMeD2O0KdHhcn+oPqOrpivN+7aDOklVSwOLD7JNjbzV1CboAFek9IFOXnreoufTUtAsCsOK0iETiERPNR/fDA=="],
+
+    "yaml": ["yaml@2.9.1", "", { "bin": { "yaml": "bin.mjs" } }, "sha512-3NxN8+78OdzbT7C/WjGsyfPAtJaN3FNDsWxv7Y7mcDsT/oOmgW8BpyQQFFBnvZE3j9Y2Sdz1ULFLezL7Eb2yFw=="],
+
+    "zod": ["zod@3.25.76", "", {}, "sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ=="],
+
+    "zouroboros-core": ["zouroboros-core@2.2.0", "", { "dependencies": { "zod": "^3.22.4" } }, "sha512-7If9GCzdV9I65sFsZ6Zt4FaBB8sg4Z9CshXpEHukN65gdQirQQ+QiR6/lGq83zAzH7VUztedmdnIRM5NqCaJjQ=="],
+
+    "zouroboros-memory": ["zouroboros-memory@4.2.0", "", { "dependencies": { "zouroboros-core": "2.2.0" }, "bin": { "zouroboros-memory": "dist/cli.js", "zouroboros-memory-mcp": "dist/mcp-server.js", "zouroboros-memory-gate": "dist/gate-server.js" } }, "sha512-njNePOWuKlFHK0HlK3aHHIk3cf1AXlJNWlKqpOT/N4kqSGw69tDZrG025jsRdV2S3gpb9cDIuavmamiYxO3+eQ=="],
+
+    "zouroboros-selfheal": ["zouroboros-selfheal@2.1.1", "", { "dependencies": { "zouroboros-core": "2.2.0", "zouroboros-memory": "4.2.0" }, "bin": { "zouroboros-introspect": "dist/cli/introspect.js", "zouroboros-prescribe": "dist/cli/prescribe.js", "zouroboros-evolve": "dist/cli/evolve.js" } }, "sha512-ZBwWq7/wjpRnBhlcXQACjfyGC3lPBpKhwK9cO2uMciJDZoOKlceCXWQRL9ynkKEEu/uTejjw0BH5RyR3v+WplA=="],
+
+    "zouroboros-swarm": ["zouroboros-swarm@5.1.1", "", { "dependencies": { "@agentclientprotocol/sdk": "0.25.0", "hono": "^4.12.12", "yaml": "^2.9.0", "zouroboros-core": "2.2.0", "zouroboros-selfheal": "2.1.1" }, "bin": { "zouroboros-swarm": "dist/cli/index.js" } }, "sha512-mx992rMtaQjTdDGQYkh8MyCOonRYB4DtfYSLsIrgcUhls0ZlybS6pMt0SQrTp2U2R10Bz1s254LIMtl0ObpeSw=="],
+
+    "zouroboros-workflow": ["zouroboros-workflow@2.1.1", "", { "dependencies": { "zouroboros-core": "2.2.0" }, "bin": { "zouroboros-interview": "dist/cli/interview.js", "zouroboros-evaluate": "dist/cli/evaluate.js", "zouroboros-unstuck": "dist/cli/unstuck.js", "zouroboros-autoloop": "dist/cli/autoloop.js" } }, "sha512-wHQZBBAwdPLmODH5j33chrgeAIQbN7YSgTehm/r6msg6VkKTzgzcuZnxo4Mh42PzoqTAXww4tyQQIwluFQd50A=="],
+
+    "@types/node/undici-types": ["undici-types@8.9.0", "", {}, "sha512-KTDyRTYX8sWmKXAikPHHSyc63CRPETMctyjKFupcC6OBLXT3xsN0e9aF7m+mIXutFWpUXuedtowG7iLOzp0kQg=="],
+  }
+}

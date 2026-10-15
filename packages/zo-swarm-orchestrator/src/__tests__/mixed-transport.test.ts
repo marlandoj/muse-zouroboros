@@ -9,8 +9,17 @@
 
 import { describe, test, expect } from 'bun:test';
 
-// Skip binary-dependent health checks in CI (binaries not installed in GitHub Actions)
-const itZoOnly = process.env.CI ? test.skip : test;
+// Binary-dependent health checks: skip in CI (binaries not installed in GitHub Actions)
+// and skip when the adapter binary is not found on PATH (fresh user machines).
+// PATH probe via Bun.which — no process is spawned for the probe itself.
+function itBinaryOnly(
+  name: string,
+  binary: string,
+  fn: () => void | Promise<void>,
+): void {
+  if (process.env.CI || !Bun.which(binary)) test.skip(name, fn);
+  else test(name, fn);
+}
 import { createTransport } from '../transport/factory.js';
 import { BridgeTransport } from '../transport/bridge-transport.js';
 import { ACPTransport } from '../transport/acp-transport.js';
@@ -47,10 +56,10 @@ function cb() {
 }
 
 const EXECUTORS = [
-  { id: 'claude-code', bridge: 'Skills/zo-swarm-executors/bridges/claude-code-bridge.sh', transport: 'acp' as const },
-  { id: 'hermes',      bridge: 'Skills/zo-swarm-executors/bridges/hermes-bridge.sh',      transport: 'acp' as const },
-  { id: 'gemini',      bridge: 'Skills/zo-swarm-executors/bridges/gemini-bridge.sh',      transport: 'acp' as const },
-  { id: 'codex',       bridge: 'Skills/zo-swarm-executors/bridges/codex-bridge.sh',       transport: 'acp' as const },
+  { id: 'claude-code', bridge: 'packages/zo-swarm-executors/bridges/claude-code-bridge.sh', transport: 'acp' as const },
+  { id: 'hermes',      bridge: 'packages/zo-swarm-executors/bridges/hermes-bridge.sh',      transport: 'acp' as const },
+  { id: 'gemini',      bridge: 'packages/zo-swarm-executors/bridges/gemini-bridge.sh',      transport: 'acp' as const },
+  { id: 'codex',       bridge: 'packages/zo-swarm-executors/bridges/codex-bridge.sh',       transport: 'acp' as const },
   { id: 'opencode',    bridge: '',                                                              transport: 'acp' as const },
 ];
 
@@ -72,7 +81,7 @@ describe('Mixed-transport executor set', () => {
     try {
       process.env.HERMES_ACP_ENABLED = '0';
       const t = createTransport(
-        entry('hermes', 'Skills/zo-swarm-executors/bridges/hermes-bridge.sh', 'acp'),
+        entry('hermes', 'packages/zo-swarm-executors/bridges/hermes-bridge.sh', 'acp'),
         cb(),
       );
       expect(t).toBeInstanceOf(BridgeTransport);
@@ -110,9 +119,9 @@ describe('Mixed-transport executor set', () => {
     }
   });
 
-  itZoOnly('claude-code ACP health check finds binary', async () => {
+  itBinaryOnly('claude-code ACP health check finds binary', 'claude-agent-acp', async () => {
     const ccTransport = createTransport(
-      entry('claude-code', 'Skills/zo-swarm-executors/bridges/claude-code-bridge.sh', 'acp'),
+      entry('claude-code', 'packages/zo-swarm-executors/bridges/claude-code-bridge.sh', 'acp'),
       cb(),
     ) as ACPTransport;
     const health = await ccTransport.healthCheck();
@@ -120,9 +129,9 @@ describe('Mixed-transport executor set', () => {
     expect(health.message).toContain('claude-agent-acp');
   });
 
-  itZoOnly('codex-acp health check finds binary', async () => {
+  itBinaryOnly('codex-acp health check finds binary', 'codex-acp', async () => {
     const codexAcp = createTransport(
-      entry('codex', 'Skills/zo-swarm-executors/bridges/codex-bridge.sh', 'acp'),
+      entry('codex', 'packages/zo-swarm-executors/bridges/codex-bridge.sh', 'acp'),
       cb(),
     ) as ACPTransport;
     const health = await codexAcp.healthCheck();
@@ -130,9 +139,9 @@ describe('Mixed-transport executor set', () => {
     expect(health.message).toContain('codex-acp');
   });
 
-  itZoOnly('gemini ACP health check finds binary (gemini --acp)', async () => {
+  itBinaryOnly('gemini ACP health check finds binary (gemini --acp)', 'gemini', async () => {
     const geminiAcp = createTransport(
-      entry('gemini', 'Skills/zo-swarm-executors/bridges/gemini-bridge.sh', 'acp'),
+      entry('gemini', 'packages/zo-swarm-executors/bridges/gemini-bridge.sh', 'acp'),
       cb(),
     ) as ACPTransport;
     const health = await geminiAcp.healthCheck();
@@ -140,9 +149,9 @@ describe('Mixed-transport executor set', () => {
     expect(health.message).toContain('gemini');
   });
 
-  itZoOnly('hermes ACP health check finds native binary', async () => {
+  itBinaryOnly('hermes ACP health check finds native binary', 'hermes', async () => {
     const hermesAcp = createTransport(
-      entry('hermes', 'Skills/zo-swarm-executors/bridges/hermes-bridge.sh', 'acp'),
+      entry('hermes', 'packages/zo-swarm-executors/bridges/hermes-bridge.sh', 'acp'),
       cb(),
     ) as ACPTransport;
     const health = await hermesAcp.healthCheck();

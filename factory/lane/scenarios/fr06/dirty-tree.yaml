@@ -1,0 +1,8 @@
+scenario_id: dirty-tree
+description: Coding cascade refuses dirty worktree reuse and cleans isolated attempts.
+seed: 109
+steps:
+  - name: dirty-tree-guard
+    run: bun {scripts_dir}/coding-cascade-selftest.ts
+    timeout_ms: 30000
+    expect: { exit_code: 0 }

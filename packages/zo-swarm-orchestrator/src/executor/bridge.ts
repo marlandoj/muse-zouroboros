@@ -38,8 +38,9 @@ function loadPersonas(): PersonaEntry[] {
   if (personaCache !== null) return personaCache;
   const loaded: PersonaEntry[] = [];
   try {
-    // bridge.ts lives at packages/swarm/src/executor/bridge.ts;
-    // registry is at packages/swarm/assets/persona-registry.json
+    // bridge.ts lives at packages/zo-swarm-orchestrator/src/executor/bridge.ts;
+    // registry is at packages/zo-swarm-orchestrator/assets/persona-registry.json
+    // (resolved relative to this file, so the layout is location-independent)
     const here = dirname(new URL(import.meta.url).pathname);
     const registryPath = join(here, '..', '..', 'assets', 'persona-registry.json');
     if (existsSync(registryPath)) {

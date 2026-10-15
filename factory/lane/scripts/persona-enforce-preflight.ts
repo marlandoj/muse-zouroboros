@@ -2,7 +2,6 @@
 
 import { createHash } from "node:crypto";
 import {
-  createZoMcpListPersonasCaller,
   resolvePersonas,
 } from "./persona-directory";
 import {
@@ -46,7 +45,12 @@ export async function runPersonaEnforcePreflight(
       required: true,
       required_scopes: ["files:read"],
     }],
-    listPersonas: deps.listPersonas ?? createZoMcpListPersonasCaller(),
+    listPersonas: deps.listPersonas ?? (async () => {
+      throw new Error(
+        "persona enforce preflight needs an explicit listPersonas: the Zo persona directory " +
+        "was removed (Zo Computer retired 2026-10-14).",
+      );
+    }),
     timeoutMs: options.timeoutMs,
   });
   if (!resolution.ok || resolution.resolved.length !== 1) {

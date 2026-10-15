@@ -30,7 +30,15 @@ import { existsSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync 
 import { join, resolve } from "node:path";
 
 const PROJECT_ROOT = resolve(import.meta.dir, "..");
-const DEFAULT_STATE_DIR = factoryStatePath("mvp");
+// Lazy: factoryStatePath() throws when FACTORY_STATE_DIR is unset outside
+// compatibility/test mode, and the smoke command must work without it.
+function defaultStateDir(): string {
+  try {
+    return factoryStatePath("mvp");
+  } catch {
+    return join(PROJECT_ROOT, ".mvp-state");
+  }
+}
 
 interface MvpEnv {
   stateDir: string;
@@ -40,13 +48,18 @@ interface MvpEnv {
 }
 
 function resolveMvpEnv(stateDirArg?: string): MvpEnv {
-  const stateDir = resolve(stateDirArg ?? DEFAULT_STATE_DIR);
+  const stateDir = resolve(stateDirArg ?? defaultStateDir());
   const workspaceRoot = resolve(process.env.ZOUROBOROS_WORKSPACE ?? PROJECT_ROOT);
   if (stateDir === workspaceRoot || !stateDir.startsWith(workspaceRoot + "/")) {
     throw new Error(`--state-dir must be inside ${workspaceRoot} (cascade worktree safety boundary), got ${stateDir}`);
   }
-  const prodPool = factoryStatePath("pool");
-  if (stateDir === prodPool || stateDir.startsWith(prodPool + "/")) {
+  let prodPool: string | null = null;
+  try {
+    prodPool = factoryStatePath("pool");
+  } catch {
+    prodPool = null; // unset FACTORY_STATE_DIR: nothing production to protect against
+  }
+  if (prodPool !== null && (stateDir === prodPool || stateDir.startsWith(prodPool + "/"))) {
     throw new Error(`--state-dir must not point at the production pool state (${prodPool})`);
   }
   return {
@@ -278,8 +291,15 @@ export async function mvpStatus(env: MvpEnv): Promise<Record<string, unknown>> {
 // ─── smoke ────────────────────────────────────────────────────────────────────
 
 export async function runSmoke(): Promise<boolean> {
-  mkdirSync(factoryStateRoot(), { recursive: true });
-  const smokeRoot = mkdtempSync(factoryStatePath("mvp-smoke-"));
+  const smokeBase = defaultStateDir();
+  mkdirSync(smokeBase, { recursive: true });
+  // Pin an isolated state dir for the whole smoke run so every lane module
+  // (several resolve factoryStateRoot() at import time) stays inside the
+  // smoke sandbox and never touches production state. Test mode skips the
+  // production marker requirement.
+  process.env.FACTORY_STATE_DIR = smokeBase;
+  process.env.FACTORY_STATE_MODE = "test";
+  const smokeRoot = mkdtempSync(join(smokeBase, "mvp-smoke-"));
   const env = resolveMvpEnv(smokeRoot);
   let evidence: MvpRunEvidence | null = null;
   try {
