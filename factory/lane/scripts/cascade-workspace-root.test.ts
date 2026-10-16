@@ -2,7 +2,7 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { spawnSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { prepareCascadeWorktree } from "./coding-cascade";
 import { executionWorkspaceRoot } from "./execution-repository";
 
@@ -66,11 +66,11 @@ describe("cascade workspace root anchoring (ZOU-1570)", () => {
     expect(git(worktree, "rev-parse", "HEAD").toLowerCase()).toBe(baseCommit);
   });
 
-  test("executionWorkspaceRoot defaults to the host workspace and honors ZOUROBOROS_WORKSPACE", () => {
+  test("executionWorkspaceRoot defaults to the repo root and honors ZOUROBOROS_WORKSPACE", () => {
     const saved = process.env.ZOUROBOROS_WORKSPACE;
     try {
       delete process.env.ZOUROBOROS_WORKSPACE;
-      expect(executionWorkspaceRoot()).toBe("/home/workspace");
+      expect(executionWorkspaceRoot()).toBe(resolve(import.meta.dir, "../../.."));
       process.env.ZOUROBOROS_WORKSPACE = "/tmp/zou1570-override";
       expect(executionWorkspaceRoot()).toBe("/tmp/zou1570-override");
     } finally {

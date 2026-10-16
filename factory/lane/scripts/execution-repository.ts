@@ -1,15 +1,17 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync, realpathSync } from "node:fs";
 import { spawnSync } from "node:child_process";
-import { basename, dirname, isAbsolute, join, relative } from "node:path";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-const WORKSPACE_ROOT = "/home/workspace";
+// Default to the repo this file ships in so fresh clones work from any path.
+// Conveyor-style deployments that execute the factory from a release dir
+// outside the workspace should set ZOUROBOROS_WORKSPACE instead (ZOU-1570):
+// the old hardcoded "/home/workspace" rejected every checkout not rooted
+// there, which is every public user.
 
 // The root that owns execution-repository clone/worktree placement. Cascade
-// containment guards must anchor to this same root (ZOU-1570): coding-cascade's
-// script-derived default resolves to the conveyor release root under
-// /home/workspace/.runtime, which never contains these clones.
+// containment guards must anchor to this same root (ZOU-1570).
 export function executionWorkspaceRoot(): string {
-  return process.env.ZOUROBOROS_WORKSPACE ?? WORKSPACE_ROOT;
+  return process.env.ZOUROBOROS_WORKSPACE ?? resolve(import.meta.dir, "../../..");
 }
 
 export interface ExecutionRepositoryOptions {
@@ -159,8 +161,8 @@ export function resolveExecutionRepository(
   const exists = options.exists ?? existsSync;
   const canonicalize = options.realpath ?? realpathSync;
   const run = options.run ?? defaultRun;
-  const workspaceRoot = canonicalize(options.workspaceRoot ?? WORKSPACE_ROOT);
-  const fallback = canonicalize(options.fallback ?? WORKSPACE_ROOT);
+  const workspaceRoot = canonicalize(options.workspaceRoot ?? executionWorkspaceRoot());
+  const fallback = canonicalize(options.fallback ?? executionWorkspaceRoot());
   requireInsideWorkspace(fallback, workspaceRoot);
 
   const target = targetRepo?.trim();
@@ -236,7 +238,7 @@ function sanitizeTicketId(ticketId: string): string {
 
 function worktreesRootFor(options: IsolatedWorktreeOptions): string {
   const canonicalize = options.realpath ?? realpathSync;
-  return factoryWorktreesRoot(options.worktreesRoot, join(canonicalize(options.workspaceRoot ?? WORKSPACE_ROOT), WORKTREES_DIRNAME));
+  return factoryWorktreesRoot(options.worktreesRoot, join(canonicalize(options.workspaceRoot ?? executionWorkspaceRoot()), WORKTREES_DIRNAME));
 }
 
 /** PURE: deterministic worktree path + base ref for a repo+ticket (no I/O). */
@@ -342,7 +344,7 @@ export function createIsolatedWorktree(
   const run = options.run ?? defaultRun;
   const now = options.now ?? (() => new Date().toISOString());
   const canonicalize = options.realpath ?? realpathSync;
-  const workspaceRoot = canonicalize(options.workspaceRoot ?? WORKSPACE_ROOT);
+  const workspaceRoot = canonicalize(options.workspaceRoot ?? executionWorkspaceRoot());
 
   const { worktreePath, baseRef } = planIsolatedWorktree(repoPath, ticketId, options);
   const profile = loadFactoryPathProfile();

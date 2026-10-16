@@ -44,8 +44,8 @@ info "4/5 — Writing workshop.env and wiring shell profile"
 cat > "$ZCFG/workshop.env" <<EOF
 # Zouroboros workshop paths — written by bootstrap.sh, safe to re-run.
 export ZO_MEMORY_DB="\$HOME/.zo/memory/shared-facts.db"
-export SWARM_EXECUTOR_REGISTRY="\$HOME/workspace/zouroboros-for-muse/packages/zo-swarm-executors/registry/executor-registry.json"
-export SWARM_WORKSPACE="\$HOME/workspace/zouroboros-for-muse"
+export SWARM_EXECUTOR_REGISTRY="$REPO/packages/zo-swarm-executors/registry/executor-registry.json"
+export SWARM_WORKSPACE="$REPO"
 EOF
 chmod 600 "$ZCFG/workshop.env"
 for rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
