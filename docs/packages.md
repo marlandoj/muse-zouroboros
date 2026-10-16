@@ -17,9 +17,12 @@ auto-capture pipeline, contradiction detection with supersession, 5-tier
 adaptive decay, and per-workload model routing.
 
 - **Entry points:** `bun scripts/memory.ts` (CLI: `store`, `search`,
-  `hybrid`, `episodes`, `open-loops`, `stats`), MCP server `zo-memory`
+  `hybrid`, `vector`, `episodes`, `open-loops`, `stats`, `forget`/`restore`,
+  `decay-sweep`, `promote-sweep`, `review-queue`), MCP server `zo-memory`
   (stdio) exposing `memory_search`, `memory_store`, `memory_episodes`,
-  `memory_procedures`, `cognitive_profile`.
+  `memory_procedures`, `cognitive_profile`. Fact-touching surfaces require
+  an actor identity (`--actor` / MCP `actor` arg) and fail closed with
+  `MISSING_ACTOR` without one; every access is audited in `memory_audit`.
 - **Storage:** SQLite at `~/.zo/memory/shared-facts.db` (FTS5 always;
   vector index when embeddings are available).
 - **Models:** embeddings via OpenAI `text-embedding-3-small`; generation

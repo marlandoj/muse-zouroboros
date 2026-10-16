@@ -3,7 +3,7 @@
  * zo-memory-system MCP Server — HTTP Transport v1.0
  *
  * Streamable HTTP MCP server for network access by all agents and personas.
- * Runs as a Zo hosted service on PORT env var.
+ * Runs as a local hosted service on PORT env var (localhost only).
  *
  * Endpoints:
  *   POST /mcp   — MCP Streamable HTTP (JSON-RPC)
@@ -26,6 +26,14 @@ import { randomUUID } from "crypto";
 import { existsSync, readFileSync } from "fs";
 import { join } from "path";
 import { embeddings as mcEmbeddings } from "./model-client";
+import {
+  ensureIntelligencePlaneSchema,
+  newCallId,
+  notForgottenSql,
+  recordAudit,
+  resolveScope,
+  scopeSql,
+} from "./scope";
 
 // --- Config ---
 const PORT = parseInt(process.env.PORT || "48400");
@@ -42,6 +50,7 @@ function getDb(): Database {
     db = new Database(DB_PATH);
     db.exec("PRAGMA journal_mode = WAL");
     db.exec("PRAGMA busy_timeout = 5000");
+    ensureIntelligencePlaneSchema(db);
   }
   return db;
 }
@@ -103,17 +112,22 @@ function parseRelativeTime(input: string): number {
 // ==========================================================================
 
 async function toolMemorySearch(args: {
+  actor: string;
   query: string;
   category?: string;
   persona?: string;
   limit?: number;
 }): Promise<string> {
+  // Fail-closed (Track 1): no actor, no read.
+  const scope = resolveScope(args?.actor, "memory_search");
   const db = getDb();
   const { query, category, persona, limit = 6 } = args;
   const nowSec = Math.floor(Date.now() / 1000);
+  recordAudit(db, { actor: scope.actor, scope: scope.personas.join(","), action: "search", callId: newCallId() });
 
-  const ftsWhere: string[] = [];
-  const ftsParams: SQLQueryBindings[] = [];
+  const scoped = scopeSql(scope, "f.persona");
+  const ftsWhere: string[] = [scoped.sql, notForgottenSql("f.id")];
+  const ftsParams: SQLQueryBindings[] = [...scoped.params];
 
   if (persona) { ftsWhere.push("f.persona = ?"); ftsParams.push(persona); }
   if (category) { ftsWhere.push("f.category = ?"); ftsParams.push(category); }
@@ -152,10 +166,12 @@ async function toolMemorySearch(args: {
       SELECT fe.fact_id, fe.embedding FROM fact_embeddings fe
       JOIN facts f ON f.id = fe.fact_id
       WHERE (f.expires_at IS NULL OR f.expires_at > ?)
+      AND ${scoped.sql}
+      AND ${notForgottenSql("f.id")}
       ${persona ? "AND f.persona = ?" : ""}
       ${category ? "AND f.category = ?" : ""}
     `).all(
-      ...[nowSec, ...(persona ? [persona] : []), ...(category ? [category] : [])]
+      ...[nowSec, ...scoped.params, ...(persona ? [persona] : []), ...(category ? [category] : [])]
     ) as Array<{ fact_id: string; embedding: Buffer }>;
 
     vectorResults = rows.map(r => {
@@ -178,7 +194,9 @@ async function toolMemorySearch(args: {
 
   const results: string[] = [];
   for (const [id, score] of ranked) {
-    const row = db.prepare("SELECT * FROM facts WHERE id = ?").get(id) as Record<string, unknown> | null;
+    const row = db.prepare(
+      `SELECT f.* FROM facts f WHERE f.id = ? AND ${scoped.sql} AND ${notForgottenSql("f.id")}`
+    ).get(id, ...scoped.params) as Record<string, unknown> | null;
     if (row) {
       results.push(
         `[${row.decay_class}] ${row.entity}.${row.key || "_"} = ${(row.value as string).slice(0, 200)}` +
@@ -187,12 +205,14 @@ async function toolMemorySearch(args: {
     }
   }
 
+  const scopeLine = `scope: actor=${scope.actor} personas=[${scope.personas.join(", ")}]`;
   return results.length > 0
-    ? `Found ${results.length} results for "${query}":\n\n${results.join("\n\n")}`
-    : `No results found for "${query}".`;
+    ? `Found ${results.length} results for "${query}" (${scopeLine}):\n\n${results.join("\n\n")}`
+    : `No results found for "${query}" (${scopeLine}).`;
 }
 
 async function toolMemoryStore(args: {
+  actor: string;
   entity: string;
   key?: string;
   value: string;
@@ -201,12 +221,15 @@ async function toolMemoryStore(args: {
   persona?: string;
   text?: string;
 }): Promise<string> {
+  // Fail-closed (Track 1): no actor, no write.
+  const scope = resolveScope(args?.actor, "memory_store");
   const db = getDb();
   const id = randomUUID();
   const now = Date.now();
   const nowSec = Math.floor(now / 1000);
   const category = args.category || "fact";
   const decayClass = args.decay_class || "stable";
+  const persona = args.persona || scope.actor;
 
   const TTL: Record<string, number | null> = {
     permanent: null, stable: 90 * 86400, active: 14 * 86400,
@@ -220,8 +243,10 @@ async function toolMemoryStore(args: {
     INSERT INTO facts (id, persona, entity, key, value, text, category, decay_class,
                        importance, source, created_at, expires_at, last_accessed, confidence)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1.0, 'mcp', ?, ?, ?, 1.0)
-  `).run(id, args.persona || "shared", args.entity, args.key || null,
+  `).run(id, persona, args.entity, args.key || null,
     args.value, text, category, decayClass, now, expiresAt, nowSec);
+
+  recordAudit(db, { actor: scope.actor, scope: persona, action: "store", factId: id });
 
   const embedding = await getEmbedding(text);
   if (embedding) {
@@ -229,7 +254,7 @@ async function toolMemoryStore(args: {
       .run(id, Buffer.from(new Float32Array(embedding).buffer), EMBEDDING_MODEL);
   }
 
-  return `Stored fact ${id}\n  entity: ${args.entity}\n  key: ${args.key || "(none)"}\n  value: ${args.value.slice(0, 100)}\n  embedding: ${embedding ? "generated" : "failed"}`;
+  return `Stored fact ${id}\n  entity: ${args.entity}\n  key: ${args.key || "(none)"}\n  value: ${args.value.slice(0, 100)}\n  persona: ${persona}\n  scope: actor=${scope.actor} personas=[${scope.personas.join(", ")}]\n  embedding: ${embedding ? "generated" : "failed"}`;
 }
 
 function toolMemoryEpisodes(args: {
@@ -346,32 +371,45 @@ function toolMemoryProcedures(args: { name?: string }): string {
   return `Found ${results.length} procedures:\n\n${results.join("\n")}`;
 }
 
-function toolMemoryDelete(args: { id: string }): string {
+function toolMemoryDelete(args: { actor: string; id: string }): string {
+  // Fail-closed (Track 1): no actor, no delete; only in-scope facts deletable.
+  const scope = resolveScope(args?.actor, "memory_delete");
   if (!args.id) return JSON.stringify({ error: "id is required" });
   const db = getDb();
   db.exec("PRAGMA foreign_keys = ON");
-  const existing = db.prepare("SELECT id FROM facts WHERE id = ?").get(args.id) as Record<string, unknown> | null;
-  if (!existing) return JSON.stringify({ error: `Fact not found: ${args.id}` });
+  const scoped = scopeSql(scope);
+  const existing = db.prepare(
+    `SELECT id FROM facts WHERE id = ? AND ${scoped.sql}`
+  ).get(args.id, ...scoped.params) as Record<string, unknown> | null;
+  if (!existing) return JSON.stringify({ error: `Fact not found (or outside actor scope): ${args.id}` });
   db.prepare("DELETE FROM facts WHERE id = ?").run(args.id);
-  return JSON.stringify({ deleted: true, id: args.id });
+  recordAudit(db, { actor: scope.actor, scope: scope.personas.join(","), action: "delete", factId: args.id });
+  return JSON.stringify({ deleted: true, id: args.id, scope: { actor: scope.actor, personas: scope.personas } });
 }
 
-function toolMemoryPrune(args: { dry_run?: boolean }): string {
+function toolMemoryPrune(args: { actor: string; dry_run?: boolean }): string {
+  // Fail-closed (Track 1): no actor, no prune; only in-scope facts pruned.
+  const scope = resolveScope(args?.actor, "memory_prune");
   const db = getDb();
   const dryRun = args.dry_run ?? false;
   const nowSec = Math.floor(Date.now() / 1000);
+  const scoped = scopeSql(scope);
   const rows = db.prepare(
-    "SELECT id FROM facts WHERE expires_at IS NOT NULL AND expires_at < ?"
-  ).all(nowSec) as Array<{ id: string }>;
+    `SELECT id FROM facts WHERE expires_at IS NOT NULL AND expires_at < ? AND ${scoped.sql}`
+  ).all(nowSec, ...scoped.params) as Array<{ id: string }>;
   if (!dryRun && rows.length > 0) {
     db.exec("PRAGMA foreign_keys = ON");
-    db.prepare("DELETE FROM facts WHERE expires_at IS NOT NULL AND expires_at < ?").run(nowSec);
+    db.prepare(
+      `DELETE FROM facts WHERE expires_at IS NOT NULL AND expires_at < ? AND ${scoped.sql}`
+    ).run(nowSec, ...scoped.params);
+    recordAudit(db, { actor: scope.actor, scope: scope.personas.join(","), action: "purge" });
   }
   return JSON.stringify({
     dry_run: dryRun,
     pruned: dryRun ? 0 : rows.length,
     would_delete: dryRun ? rows.length : undefined,
     ids: dryRun ? rows.slice(0, 20).map(r => r.id) : undefined,
+    scope: { actor: scope.actor, personas: scope.personas },
   });
 }
 
@@ -420,33 +458,35 @@ function toolCognitiveProfile(args: { executor_id: string }): string {
 const TOOLS_DEFINITION = [
   {
     name: "memory_search",
-    description: "Search the memory system using hybrid FTS + vector search with RRF fusion. Returns facts matching the query.",
+    description: "Search the memory system using hybrid FTS + vector search with RRF fusion. Requires a caller identity (actor); calls without one fail closed with MISSING_ACTOR. Results are scoped to the actor plus the shared pool.",
     inputSchema: {
       type: "object" as const,
       properties: {
+        actor: { type: "string", description: "REQUIRED caller identity (persona/seat, e.g. 'claude-code'). Fail-closed: calls without an actor are rejected. Visibility = own persona + shared pool." },
         query: { type: "string", description: "Search query" },
         category: { type: "string", description: "Filter by category", enum: ["preference", "fact", "decision", "convention", "other", "reference", "project"] },
-        persona: { type: "string", description: "Filter by persona name" },
+        persona: { type: "string", description: "Narrow results to one persona WITHIN the actor scope" },
         limit: { type: "number", description: "Max results (default: 6)" },
       },
-      required: ["query"],
+      required: ["actor", "query"],
     },
   },
   {
     name: "memory_store",
-    description: "Store a new fact in the memory system with automatic embedding generation.",
+    description: "Store a new fact in the memory system with automatic embedding generation. Requires a caller identity (actor); calls without one fail closed with MISSING_ACTOR.",
     inputSchema: {
       type: "object" as const,
       properties: {
+        actor: { type: "string", description: "REQUIRED caller identity (persona/seat). Fail-closed: calls without an actor are rejected. Use 'shared' only for deliberately cross-persona facts." },
         entity: { type: "string", description: "Entity name (e.g., 'user', 'project.ffb')" },
         key: { type: "string", description: "Key/attribute (optional)" },
         value: { type: "string", description: "Value to store" },
         category: { type: "string", description: "Category (default: fact)", enum: ["preference", "fact", "decision", "convention", "other", "reference", "project"] },
         decay_class: { type: "string", description: "Decay class (default: stable)", enum: ["permanent", "stable", "active", "session", "checkpoint"] },
-        persona: { type: "string", description: "Persona name (default: shared)" },
+        persona: { type: "string", description: "Persona the fact is stored under (defaults to the actor, never silently 'shared')" },
         text: { type: "string", description: "Full text for embedding (auto-generated if not provided)" },
       },
-      required: ["entity", "value"],
+      required: ["actor", "entity", "value"],
     },
   },
   {
@@ -486,23 +526,26 @@ const TOOLS_DEFINITION = [
   },
   {
     name: "memory_delete",
-    description: "Delete a specific fact by ID. Cascades to embeddings, links, and activation.",
+    description: "Delete a specific fact by ID. Cascades to embeddings, links, and activation. Requires a caller identity (actor); only facts within the actor scope can be deleted.",
     inputSchema: {
       type: "object" as const,
       properties: {
+        actor: { type: "string", description: "REQUIRED caller identity (persona/seat). Fail-closed: calls without an actor are rejected." },
         id: { type: "string", description: "The fact UUID to delete" },
       },
-      required: ["id"],
+      required: ["actor", "id"],
     },
   },
   {
     name: "memory_prune",
-    description: "Garbage-collect expired facts. Returns count of deleted facts.",
+    description: "Garbage-collect expired facts within the actor scope. Requires a caller identity (actor). Returns count of deleted facts.",
     inputSchema: {
       type: "object" as const,
       properties: {
+        actor: { type: "string", description: "REQUIRED caller identity (persona/seat). Fail-closed: calls without an actor are rejected." },
         dry_run: { type: "boolean", description: "Preview what would be pruned without deleting (default false)" },
       },
+      required: ["actor"],
     },
   },
 ];

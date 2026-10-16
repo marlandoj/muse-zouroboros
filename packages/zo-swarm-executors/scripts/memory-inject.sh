@@ -28,7 +28,9 @@ inject_memory() {
   local MEMORY_CLI="${ZO_MEMORY_CLI_PATH:-/home/zouroboros/Skills/zo-memory-system/scripts/memory.ts}"
   if [ -z "$SESSION_CTX" ] || [ "$SESSION_CTX" = "null" ]; then
     if command -v bun &>/dev/null && [ -f "$MEMORY_CLI" ]; then
-      SESSION_CTX=$(ZO_MEMORY_DB="${ZO_MEMORY_DB:-/var/lib/zouroboros/memory/shared-facts.db}" timeout 15 bun "$MEMORY_CLI" search "current session context" --limit 5 2>/dev/null) || SESSION_CTX=""
+      # Actor-scoped memory (fail-closed): identify this caller. Older
+      # memory CLIs ignore --actor; newer ones require it.
+      SESSION_CTX=$(ZO_MEMORY_DB="${ZO_MEMORY_DB:-/var/lib/zouroboros/memory/shared-facts.db}" timeout 15 bun "$MEMORY_CLI" search "current session context" --limit 5 --actor "${PERSONA:-swarm-executor}" 2>/dev/null) || SESSION_CTX=""
       INJECTION_SOURCE="memory_cli_fallback"
     else
       echo "MEMORY_WARN: gate unavailable and memory CLI missing: $MEMORY_CLI" >&2

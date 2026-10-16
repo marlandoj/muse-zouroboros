@@ -17,6 +17,10 @@
 
 This skill gives your AI personas long-term memory that persists across conversations:
 
+- **Actor-Scoped Access (fail-closed)** -- Every fact read/write requires an actor identity (`--actor` / MCP `actor` arg); visibility is the actor's persona plus the shared pool, with no silent defaults and a full `memory_audit` trail
+- **Reversible Forgetting** -- `forget`/`restore` hide and recover facts; a decay sweep on the canonical vocabulary (permanent/stable/active/session/checkpoint) forgets reversibly, and hard deletion only happens via a retention-window purge
+- **Promotion Pipeline** -- Rules-based capture → extraction → review → promotion ledger; only contradictions reach the human review queue
+- **Three-Signal Eval Harness** -- Hermetic per-signal ablation (keyword/vector/graph) with deterministic pseudo-embeddings and a CI gate (`scripts/eval-three-signal.ts`)
 - **Hybrid Search** -- Combines keyword matching (BM25) with vector similarity so you find facts even when you phrase things differently
 - **Knowledge Graph** -- Link facts together with typed relationships, find connections between entities, and identify gaps in your knowledge base
 - **Auto-Capture** -- Feed a conversation transcript in, get structured facts out. No manual entry required
@@ -72,7 +76,10 @@ bun scripts/memory.ts init
 #### Store a fact
 
 ```bash
+# Every fact read/write requires --actor (fail-closed; the fact's persona
+# defaults to the actor — pass --persona shared for cross-harness facts).
 bun scripts/memory.ts store \
+  --actor "my-persona" \
   --entity "user" \
   --key "brand-voice" \
   --value "Concise, confident, no fluff" \
@@ -83,15 +90,15 @@ bun scripts/memory.ts store \
 
 ```bash
 # Continuation recall across facts + episodes + open loops
-bun scripts/memory.ts continuation "where did we leave off on the dashboard?"
+bun scripts/memory.ts continuation "where did we leave off on the dashboard?" --actor "my-persona"
 bun scripts/memory.ts open-loops --status open
 bun scripts/memory.ts resolve-loop "The dashboard issue is fixed now"
 
 # Semantic + keyword hybrid search (recommended)
-bun scripts/memory.ts hybrid "why did we choose SQLite"
+bun scripts/memory.ts hybrid "why did we choose SQLite" --actor "my-persona"
 
 # Fast exact keyword search
-bun scripts/memory.ts search "router password"
+bun scripts/memory.ts search "router password" --actor "my-persona"
 ```
 
 #### Add memory support for a persona
@@ -260,7 +267,14 @@ bun scripts/mcp-server.ts          # Start directly
 bun scripts/memory.ts mcp          # Start via CLI
 ```
 
-**Available tools:** `memory_search`, `memory_store`, `memory_episodes`, `memory_procedures`, `cognitive_profile`
+**Available tools:** `memory_search`, `memory_store`, `memory_episodes`, `memory_procedures`, `cognitive_profile` (the HTTP server additionally exposes `memory_delete` and `memory_prune`)
+
+> **BREAKING (2026-10-14):** `memory_search`, `memory_store`, `memory_delete`,
+> and `memory_prune` now REQUIRE an `actor` argument (the caller's
+> persona/seat, e.g. `"claude-code"`). Calls without it fail closed with a
+> `MISSING_ACTOR` error — correct behavior, not a bug. Update every MCP
+> client so its tool calls pass `actor`; results are scoped to
+> `actor + shared` and every access is recorded in the `memory_audit` table.
 
 Add to Claude Desktop or `.claude.json`:
 
@@ -273,6 +287,12 @@ Add to Claude Desktop or `.claude.json`:
     }
   }
 }
+```
+
+Example scoped call once connected:
+
+```json
+{ "name": "memory_store", "arguments": { "actor": "claude-code", "entity": "user", "value": "Prefers concise replies" } }
 ```
 
 ### Import Pipeline
@@ -361,6 +381,10 @@ zouroboros-memory-system/
 ├── README.md                 # This file
 ├── scripts/
 │   ├── memory.ts             # Main CLI (hybrid search, store, episodes, procedures, import, mcp)
+│   ├── scope.ts              # Actor scoping choke point + memory_audit (fail-closed)
+│   ├── forgetting.ts         # Reversible forgetting + decay sweep + retention purge
+│   ├── promotion.ts          # Rules-based promotion pipeline + contradiction review queue
+│   ├── eval-three-signal.ts  # Hermetic keyword/vector/graph ablation harness (CI-gated)
 │   ├── memory-gate.ts        # Model-routed relevance gate
 │   ├── mcp-server.ts         # MCP server (5 tools, stdio transport)
 │   ├── import.ts             # Import pipeline (ChatGPT, Obsidian, markdown)

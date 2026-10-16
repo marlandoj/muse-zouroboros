@@ -12,6 +12,18 @@
  */
 
 import { Database } from "bun:sqlite";
+import { ensureIntelligencePlaneSchema, notForgottenSql, scopeSql } from "./scope";
+
+/**
+ * Visibility scope for graph traversal (Track 1 scope-leak fix): every
+ * neighbor fact fetched through the graph arm is filtered to these personas
+ * and to non-forgotten facts. Build one with resolveScope() from scope.ts.
+ * REQUIRED — the graph arm was the definer-rights leak path (neighbor
+ * injection used to fetch facts with no persona filter at all).
+ */
+export interface GraphScope {
+  personas: string[];
+}
 
 /** Cache whether vault_links table exists to avoid repeated schema queries. */
 let _vaultLinksExists: boolean | null = null;
@@ -150,12 +162,18 @@ export function findGraphNeighbors(
   db: Database,
   topIds: string[],
   existingIds: Set<string>,
-  maxInject: number = 3
+  maxInject: number = 3,
+  scope: GraphScope
 ): Array<{ factId: string; linkedFrom: string; relation: string; weight: number }> {
   if (topIds.length === 0) return [];
 
+  ensureIntelligencePlaneSchema(db);
   const nowSec = Math.floor(Date.now() / 1000);
   const placeholders = topIds.map(() => "?").join(",");
+  // Scope-leak fix: the injected neighbor must itself be visible to the
+  // caller — persona within scope AND not reversibly forgotten.
+  const scope1 = scopeSql(scope, "f.persona");
+  const scope2 = scopeSql(scope, "f2.persona");
 
   const baseNeighborSQL = `
     SELECT fl.source_id, fl.target_id, fl.relation, fl.weight
@@ -164,13 +182,15 @@ export function findGraphNeighbors(
       CASE WHEN fl.source_id IN (${placeholders}) THEN fl.target_id ELSE fl.source_id END
     ) = f.id
     WHERE (fl.source_id IN (${placeholders}) OR fl.target_id IN (${placeholders}))
-      AND (f.expires_at IS NULL OR f.expires_at > ?)`;
+      AND (f.expires_at IS NULL OR f.expires_at > ?)
+      AND ${scope1.sql}
+      AND ${notForgottenSql("f.id")}`;
   const neighborSQL = hasVaultLinks(db)
-    ? `${baseNeighborSQL} UNION ALL SELECT vl.source_id, vl.target_id, vl.relation, vl.weight FROM vault_links vl JOIN facts f2 ON (CASE WHEN vl.source_id IN (${placeholders}) THEN vl.target_id ELSE vl.source_id END) = f2.id WHERE (vl.source_id IN (${placeholders}) OR vl.target_id IN (${placeholders})) AND (f2.expires_at IS NULL OR f2.expires_at > ?) ORDER BY weight DESC LIMIT ?`
+    ? `${baseNeighborSQL} UNION ALL SELECT vl.source_id, vl.target_id, vl.relation, vl.weight FROM vault_links vl JOIN facts f2 ON (CASE WHEN vl.source_id IN (${placeholders}) THEN vl.target_id ELSE vl.source_id END) = f2.id WHERE (vl.source_id IN (${placeholders}) OR vl.target_id IN (${placeholders})) AND (f2.expires_at IS NULL OR f2.expires_at > ?) AND ${scope2.sql} AND ${notForgottenSql("f2.id")} ORDER BY weight DESC LIMIT ?`
     : `${baseNeighborSQL} ORDER BY fl.weight DESC LIMIT ?`;
   const neighborParams = hasVaultLinks(db)
-    ? [...topIds, ...topIds, ...topIds, nowSec, ...topIds, ...topIds, ...topIds, nowSec, maxInject * 3]
-    : [...topIds, ...topIds, ...topIds, nowSec, maxInject * 3];
+    ? [...topIds, ...topIds, ...topIds, nowSec, ...scope1.params, ...topIds, ...topIds, ...topIds, nowSec, ...scope2.params, maxInject * 3]
+    : [...topIds, ...topIds, ...topIds, nowSec, ...scope1.params, maxInject * 3];
   const neighbors = db.prepare(neighborSQL).all(...neighborParams) as FactLink[];
 
   const injected: Array<{ factId: string; linkedFrom: string; relation: string; weight: number }> = [];
@@ -214,6 +234,7 @@ function resolveNode(
   id: string,
   weight: number,
   hop: number,
+  scope: GraphScope,
 ): GraphNeighbor | null {
   if (id.startsWith("vf-")) {
     const row = db.prepare(
@@ -223,9 +244,10 @@ function resolveNode(
     return { id: row.id, type: "vault_file", weight, hop, file_path: row.file_path, title: row.title ?? undefined };
   }
 
+  const scoped = scopeSql(scope);
   const row = db.prepare(
-    "SELECT id, entity, value FROM facts WHERE id = ? AND (expires_at IS NULL OR expires_at > ?)"
-  ).get(id, Math.floor(Date.now() / 1000)) as { id: string; entity: string; value: string } | null;
+    `SELECT id, entity, value FROM facts WHERE id = ? AND (expires_at IS NULL OR expires_at > ?) AND ${scoped.sql} AND ${notForgottenSql()}`
+  ).get(id, Math.floor(Date.now() / 1000), ...scoped.params) as { id: string; entity: string; value: string } | null;
   if (!row) return null;
   return { id: row.id, type: "fact", weight, hop, entity: row.entity, value: row.value };
 }
@@ -251,8 +273,10 @@ export function findGraphNeighborsDeep(
   seedIds: string[],
   excludeIds: Set<string> = new Set(),
   maxDepth: number = 1,
+  scope: GraphScope,
 ): GraphNeighbor[] {
   if (seedIds.length === 0) return [];
+  ensureIntelligencePlaneSchema(db);
 
   const depth = Math.max(1, Math.min(maxDepth, MAX_DEPTH_LIMIT));
   const startTime = performance.now();
@@ -294,7 +318,7 @@ export function findGraphNeighborsDeep(
         visited.add(neighborId);
 
         const neighborHop = hop + 1;
-        const resolved = resolveNode(db, neighborId, link.weight, neighborHop);
+        const resolved = resolveNode(db, neighborId, link.weight, neighborHop, scope);
         if (resolved) {
           results.push(resolved);
         }
