@@ -18,27 +18,41 @@ One rule decides where everything goes: *if it's about you, it lives in Muse. If
 
 ![Meta Muse × Zouroboros — symbiotic AI concierge plus workshop: the architecture](docs/assets/architecture-diagram.png)
 
-*The architecture in one picture: Muse on the left as the personal concierge layer, Zouroboros on the right as the building layer — seven AI harnesses, the software factory, and the infrastructure beneath. Build requests flow one way, refined results flow back.*
+*The big picture: Muse on the left as your personal layer, Zouroboros on the right as the building layer — your AI tools, the build pipeline, and the shared memory underneath. Requests flow one way, finished work flows back.*
 
-## What you get
+## What your Muse can do now
 
-Five working systems, each useful on its own, better together:
+Everything below happens in your normal Muse chat. You don't learn new tools — Muse just gets more capable.
 
-**A shared memory.** One place where everything your AI tools learn gets stored — facts, decisions, how things went, unfinished tasks. Your Claude Code session, your Codex session, and Muse itself all draw from the same well, so knowledge never starts from zero again. It understands meaning, not just keywords, and it quietly figures out when a conversation needs background context.
+**Build software from a conversation.** Tell Muse what you want built, in plain words. It writes up the job, hands it to the workshop, and comes back with a finished pull request on your repo. Not a code snippet in chat — a real, tested, reviewed PR you can merge. The first time Muse hands you a PR instead of a wall of code, you'll feel the difference.
 
-**A multi-harness swarm.** Instead of one AI doing everything, the swarm spreads work across the AI coding tools you already have installed and pay for — Claude Code, Codex, OpenCode, and others. It picks the right tool for each piece, reroutes around failures automatically, keeps spending inside a budget you set, and writes down every decision it made so you can audit it later.
+**Remember everything, across every tool.** Muse stops starting from zero. Decisions you made, things you tried, what worked and what didn't — it's all in a shared memory that Muse, your coding tools, and the workshop all draw from. Ask "what did we decide about the API design?" and get an answer, not a shrug.
 
-**A software factory.** For real build work, there's a proper pipeline: you describe what you want as a ticket, the factory checks the description is complete, builds it with the swarm, tests the result, reviews what's missing, and opens a pull request. Nothing ships because an AI *felt* done — it ships because the checks passed.
+**Put your AI subscriptions to work together.** If you pay for coding tools, they're probably sitting idle most of the time. Now when there's real work, Muse spreads it across the ones you have — the right tool for each piece, automatic retries when one stumbles, all inside a budget you set. You paid for them; now they earn it.
 
-**Prompt-time hooks.** Three small guardians that watch your AI tools as they work. One suggests the right skill for the job. One refuses to let an agent declare victory when the tests haven't passed since the last edit. One trims repeated output so long sessions don't drown in their own context. All three start in observation mode — they watch and report before they ever enforce.
+**Ship work that's actually checked.** Nothing arrives because an AI *felt* done. Before any PR reaches you, the work is built, tested, and reviewed by specialists — a systems thinker, a testing skeptic, a security eye. They start by watching and reporting; you decide when they've earned the right to hold work back.
 
-**A review panel.** Before the factory turns finished work into a pull request, specialist personas — a systems engineer, a testing skeptic, and as needed an AI engineer and a security engineer — review it. It starts in shadow mode: verdicts recorded, nothing blocked, you make the calls. There's a documented path to enforcement when the panel has earned your trust, and even then it can only hold work back, never approve a merge on its own.
+**Get smarter the more you build.** Every job teaches the workshop something — which approaches worked, where things broke, what you'd want done differently. That knowledge compounds. Your tenth build goes smoother than your first, because the system remembers what the first nine taught it.
 
-**Bridges to Muse.** Small connectors so Muse can check on the workshop ("is everything healthy?"), read the shared work memory, and file build tickets — without you leaving the chat.
+## A day with it
 
-## How the pieces fit together
+You talk to Muse like always. The difference is what it can say yes to.
 
-You talk to Muse like always. When something needs building, Muse hands it to the workshop instead of doing it all inline. The swarm does the heavy work across your AI tools, the shared memory records what was learned, the factory verifies the result, and Muse brings you the finished pull request. Your personal memory, your schedule, your messages — none of that ever enters the workshop. The bridge carries work requests and status reports, never your private credentials.
+> **You:** "Build me a landing page for my side project — dark theme, email signup, mobile-friendly."
+>
+> **Muse:** "On it — I'll put together the spec and send it to the workshop. I'll check back when the PR is ready."
+>
+> *(Twenty minutes later.)*
+>
+> **Muse:** "Done — PR is up. Built, tested, reviewed. Two things the reviewers flagged for you to look at before merging."
+
+Other things you'll find yourself asking:
+
+- *"What did we learn from the last three builds?"* — Muse answers from the shared memory, not from guessing.
+- *"Is the workshop healthy?"* — a quick status check, no terminal required.
+- *"Remind me why we chose Postgres for this?"* — decisions are recorded, so they stay decided.
+
+Your personal life stays in Muse — your schedule, your messages, your private memory. None of that ever enters the workshop. The bridge carries build requests and status reports, never your credentials.
 
 ## Is this for you?
 
@@ -58,15 +72,15 @@ curl -fsSL https://raw.githubusercontent.com/marlandoj/muse-zouroboros/main/scri
 
 **Short on time but prefer to drive?** Start with
 [walkthrough/00-quickstart.md](walkthrough/00-quickstart.md) — install,
-prove it's alive, and get your first three wins (shared memory, a factory
-ticket from chat, health at a glance) in about half an hour. The one real
-prerequisite: one AI builder — a coding CLI you already pay for, installed
-and logged in, **or** the Gemini CLI free tier (personal Google account,
-~1000 free requests/day, no credit card; the installer offers it when it
-finds no healthy executor). The factory can't drive builders you don't have.
+prove it's alive, and get your first three wins in about half an hour:
+Muse remembering something for you, your first build request from chat,
+and a health check at a glance. The one real prerequisite: an AI coding
+tool you already pay for, installed and logged in — **or** the free tier
+the installer offers (a personal Google account, ~1000 free requests a day,
+no credit card). The workshop can only build with tools you have.
 
-**Want the full operator path?** Everything is in the walkthrough folder,
-in order, written for someone doing this the first time. It starts with what your machine needs, then walks you through each system one at a time — memory first, then the swarm, then the hooks, then the factory — with a check at the end of every step so you know it worked before moving on. Plan on an afternoon, most of it waiting on installs.
+**Want the full tour?** Everything is in the walkthrough folder, in order,
+written for someone doing this the first time. It starts with what your machine needs, then walks you through each capability one at a time — with a check at the end of every step so you know it worked before moving on. Plan on an afternoon, most of it waiting on installs.
 
 A few things to know going in:
 
@@ -77,7 +91,7 @@ A few things to know going in:
 
 ## Honest notes
 
-This is a working system extracted from a live setup, not a polished product. Some edges are rough, and the walkthrough marks every known one. The factory's event-driven automation exists but ships turned off — the ticket-driven path is the one to use. The review panel watches and reports but doesn't block anything yet. These are deliberate choices: observation before enforcement, everywhere.
+This is a working system extracted from a live setup, not a polished product. Some edges are rough, and the walkthrough marks every known one. The deeper automation exists but ships turned off — the chat-driven path is the one to use. The reviewers watch and report but don't block anything yet. These are deliberate choices: observation before enforcement, everywhere.
 
 ## Questions people ask
 
@@ -91,13 +105,13 @@ To start, one thing: an OpenAI API key, which powers the memory's understanding 
 Two is the practical minimum, so that when one fails or is slow, there's somewhere else for the work to go. You don't need all seven — install the ones you actually use.
 
 **Does my data leave my machine?**
-Only to the AI services you choose to configure. The memory database, the hooks, and the factory all live on your machine. The safety hooks are designed to keep it that way — one of them runs with no AI model at all, and another logs fingerprints of prompts rather than the prompts themselves.
+Only to the AI services you choose to use. Your memory, your builds, and your history all live on your machine. The system is designed so a broken or missing piece gets skipped with a clear note — never silently, and never taking the rest down with it.
 
 **I'm not very technical. Can I still set this up?**
 The walkthrough was written for exactly that person. It goes step by step, tells you what each piece does in plain terms, and every step ends with a check so you know it worked before moving on. If a step confuses you, ask your Muse — that's what it's for.
 
 **What if something breaks?**
-There's a verification script that checks every system and tells you which one is unhappy and where to look. And the design rule throughout is graceful: a broken piece gets skipped with a note, never silently, and never takes the rest down with it.
+There's a health check that looks at every part of the system and tells you — in plain language — which part is unhappy and where to look. And the rule throughout is graceful: a broken piece gets skipped with a note, never silently, and never takes the rest down with it.
 
 ## License
 
