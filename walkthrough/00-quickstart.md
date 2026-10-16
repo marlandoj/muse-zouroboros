@@ -7,22 +7,53 @@ to your first three wins in about half an hour, most of it installing one
 thing.
 
 The whole bet of this track: **you barely touch the workshop directly.**
-You install it once, then you operate it the way you operate everything
-else — by talking to Muse.
+The easiest way to do it is to let Muse run the onboarding for you —
+that's the concierge path below. The manual path underneath it does the
+same thing by hand.
 
-## What you need going in
+## The concierge path (recommended)
+
+**Ask Muse to set up Zouroboros.** That's it — that's the step. Muse hands
+you one command:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/marlandoj/muse-zouroboros/main/scripts/quickstart.sh | bash
+```
+
+Paste it into a terminal. The installer clones the repo, runs the setup
+(answering its questions as they come), verifies the install, and prints a
+handoff block. **Paste the handoff block back to Muse.** From there, Muse
+reads what's green and red, walks you through anything that needs
+attention, and guides you to your first three wins — shared memory, a
+factory ticket, health at a glance — all in chat. You never open this
+manual unless you want to.
+
+How it works behind the curtain: the script does the mechanical work
+(clone, install, verify); Muse does the judgment (triage, explanations,
+decisions). The full playbook Muse follows lives in
+[docs/concierge.md](../docs/concierge.md), if you're curious what it's
+thinking.
+
+## The manual path
+
+Prefer to drive? Everything below is what the concierge path does for you.
+
+### What you need going in
 
 Two things, and the second one is the one that matters:
 
 1. **A machine with the basics.** Bun, Node 22+, Python 3.11+, git, jq.
    `bootstrap.sh` checks all of these and tells you exactly what's missing.
-2. **One AI coding subscription, with its CLI installed and logged in.**
-   Claude Code, Codex CLI, Gemini CLI, OpenCode, Kimi, or Pi — whichever you
-   already pay for. The workshop is a dispatcher: it drives the subscriptions
-   you already have, spreads work across them, and keeps the receipts. It
-   cannot drive what isn't installed, and the factory — the part that builds
-   things for you — stays parked until at least one executor is healthy.
-   That's not a bug, it's the design: no phantom builders.
+2. **One AI builder.** Either a coding subscription you already pay for
+   (Claude Code, Codex CLI, Gemini CLI, OpenCode, Kimi, or Pi — CLI
+   installed and logged in), **or** the Gemini CLI free tier: a personal
+   Google account, about 1000 free requests/day, no credit card. The
+   installer offers the free tier when it finds no healthy executor. The
+   workshop is a dispatcher: it drives the builders you have, spreads work
+   across them, and keeps the receipts. It cannot drive what isn't
+   installed, and the factory — the part that builds things for you —
+   stays parked until at least one executor is healthy. That's not a bug,
+   it's the design: no phantom builders.
 
 That's it. No API keys required to start (memory runs keyword-only without
 them, and the walkthrough shows you where keys go when you want the full

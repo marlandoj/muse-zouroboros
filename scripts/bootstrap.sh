@@ -62,6 +62,109 @@ if [ -f "$REPO/packages/wayfinder/requirements.txt" ]; then
   python3 -m pip install --user -q -r "$REPO/packages/wayfinder/requirements.txt" 2>/dev/null && pass "wayfinder python deps" || info "  (wayfinder pip install skipped — run manually)"
 fi
 
+# gemini_bin -- print the gemini CLI path if usable, else nothing.
+# Mirrors the bridge's resolution order, plus npm's own global bin dir
+# (npm's global prefix isn't always on PATH, e.g. nvm/fnm layouts).
+gemini_bin() {
+  local p prefix
+  p="$(command -v gemini 2>/dev/null || true)"
+  if [ -n "$p" ]; then echo "$p"; return 0; fi
+  prefix="$(npm prefix -g 2>/dev/null || true)"
+  if [ -n "$prefix" ] && [ -x "$prefix/bin/gemini" ]; then echo "$prefix/bin/gemini"; return 0; fi
+  if [ -x "$HOME/.local/bin/gemini" ]; then echo "$HOME/.local/bin/gemini"; return 0; fi
+  return 1
+}
+
+# ask PROMPT DEFAULT -- yes/no prompt. DEFAULT is "y" or "n". Reads from
+# /dev/tty so it works under `curl | bash`; non-interactive shells take DEFAULT.
+ask() {
+  local prompt="$1" def="${2:-y}" ans=""
+  if [ -r /dev/tty ] && [ -t 2 ]; then
+    printf '%s ' "$prompt" > /dev/tty 2>/dev/null || printf '%s ' "$prompt"
+    read -r ans < /dev/tty 2>/dev/null || ans=""
+  else
+    ans="$def"
+  fi
+  case "${ans:-$def}" in
+    [Yy]*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+info "6/6 — Executor check (the builders)"
+HEALTHY=0
+if (cd "$REPO/packages/zo-swarm-executors" && timeout 120 bun scripts/doctor.ts 2>/dev/null | grep -qE '✓.*health-command'); then
+  HEALTHY=1
+  pass "at least one executor is healthy"
+fi
+if [ "$HEALTHY" = "0" ]; then
+  info ""
+  info "No healthy AI builders found. The workshop drives the AI coding tools"
+  info "you already pay for — it can't drive what isn't installed. Two ways"
+  info "forward:"
+  info "  1) Install and log into one you pay for (Claude Code, Codex, Gemini"
+  info "     CLI, OpenCode, Kimi, Pi), then re-run this script."
+  info "  2) Take the Gemini CLI free tier: a personal Google account, about"
+  info "     1000 free requests/day, no credit card. Enough to feel the whole"
+  info "     loop; paid subscriptions do the heavy work."
+  info ""
+  if ask "Install the Gemini CLI free tier now? [Y/n]" "y"; then
+    if [ -n "$(gemini_bin || true)" ]; then
+      pass "gemini CLI already installed"
+    elif command -v npm >/dev/null 2>&1; then
+      info "Installing @google/gemini-cli ..."
+      if npm install -g @google/gemini-cli >/dev/null 2>&1 && [ -n "$(gemini_bin || true)" ]; then
+        pass "gemini CLI installed"
+      else
+        info "Install didn't leave a usable 'gemini' binary. Try manually:"
+        info "  npm install -g @google/gemini-cli"
+      fi
+    else
+      info "npm not found — install Node.js (with npm), then run: npm install -g @google/gemini-cli"
+    fi
+    # Make sure the binary is on PATH: npm's global prefix often isn't
+    # (nvm/fnm layouts are the exception, not the rule).
+    if BIN="$(gemini_bin || true)" && [ -n "$BIN" ]; then
+      BINDIR="$(dirname "$BIN")"
+      case ":$PATH:" in
+        *":$BINDIR:"*) ;;
+        *)
+          for rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
+            [ -f "$rc" ] || continue
+            grep -qF "$BINDIR" "$rc" 2>/dev/null || echo "export PATH=\"$BINDIR:\$PATH\"" >> "$rc"
+          done
+          export PATH="$BINDIR:$PATH"
+          info "Added $BINDIR to PATH"
+          ;;
+      esac
+    fi
+    if [ -n "$(gemini_bin || true)" ]; then
+      info ""
+      info "Next: run '$(gemini_bin || echo gemini)', choose 'Login with Google', finish the browser"
+      info "step, then exit the CLI (/quit). It takes about a minute."
+      info ""
+      if ask "Have you finished the Gemini login? [y/N]" "n"; then
+        if (cd "$REPO/packages/zo-swarm-executors" && timeout 120 bun scripts/doctor.ts 2>/dev/null | grep -qE '✓.*health-command'); then
+          pass "gemini executor is healthy"
+          if ! grep -q "SWARM_FREE_TIER" "$ZCFG/workshop.env" 2>/dev/null; then
+            echo 'export SWARM_FREE_TIER="1"' >> "$ZCFG/workshop.env"
+          fi
+          pass "free-tier model profile on (Flash-class, quota-safe)"
+        else
+          info "Doctor still reports no healthy executor. Finish the 'gemini'"
+          info "login, then re-run: bash scripts/bootstrap.sh"
+        fi
+      else
+        info "No problem — run 'gemini' and log in whenever, then re-run:"
+        info "  bash scripts/bootstrap.sh"
+      fi
+    fi
+  else
+    info "Skipped. The factory stays parked until an executor is healthy —"
+    info "memory, hooks, and verify.sh all work without one."
+  fi
+fi
+
 info ""
 info "Done. Still manual (by design — they deserve your attention):"
 info "  - Put OPENAI_API_KEY in $ZCFG/apis.env (mode 600)"

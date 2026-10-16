@@ -44,12 +44,22 @@ It's probably not for you yet if you only use Muse for conversation and scheduli
 
 ## How to get started
 
-**Short on time?** Start with
+**Easiest: ask Muse to set you up.** Muse hands you one command, you paste
+it into a terminal, then paste the result back — Muse walks you through
+the rest in chat:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/marlandoj/muse-zouroboros/main/scripts/quickstart.sh | bash
+```
+
+**Short on time but prefer to drive?** Start with
 [walkthrough/00-quickstart.md](walkthrough/00-quickstart.md) — install,
 prove it's alive, and get your first three wins (shared memory, a factory
 ticket from chat, health at a glance) in about half an hour. The one real
-prerequisite: one AI coding CLI you already pay for, installed and logged
-in — the factory can't drive subscriptions you don't have.
+prerequisite: one AI builder — a coding CLI you already pay for, installed
+and logged in, **or** the Gemini CLI free tier (personal Google account,
+~1000 free requests/day, no credit card; the installer offers it when it
+finds no healthy executor). The factory can't drive builders you don't have.
 
 **Want the full operator path?** Everything is in the walkthrough folder,
 in order, written for someone doing this the first time. It starts with what your machine needs, then walks you through each system one at a time — memory first, then the swarm, then the hooks, then the factory — with a check at the end of every step so you know it worked before moving on. Plan on an afternoon, most of it waiting on installs.

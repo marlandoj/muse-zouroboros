@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+# Pick up workshop.env when spawned outside a login shell (it carries
+# SWARM_FREE_TIER and model overrides; verify.sh sources it the same way).
+[ -f "${HOME:-}/.config/zouroboros/workshop.env" ] && source "${HOME}/.config/zouroboros/workshop.env"
 # Gemini CLI bridge script — invokes Gemini CLI in one-shot (headless) mode
 # If the gemini-daemon is running, routes through it for ~10x faster startup.
 # Falls back to direct CLI invocation otherwise.
@@ -70,6 +73,17 @@ case "$_SWARM_MODEL" in
     MODEL="$DEFAULT_MODEL"
     ;;
 esac
+
+# Free-tier profile (SWARM_FREE_TIER=1, written by bootstrap.sh when the user
+# takes the Gemini free executor path): keep tier-resolved models on
+# Flash-class so the ~1000 req/day free quota survives real work. An explicit
+# model choice (gemini-*/gc-*) always wins over the pin.
+if [ "${SWARM_FREE_TIER:-0}" = "1" ]; then
+  case "${_SWARM_MODEL:-}${_GEMINI_MODEL:-}" in
+    gemini*|gc/*|models/*) ;;
+    *) MODEL="gemini-3.8-flash" ;;
+  esac
+fi
 
 # --- Spec 2: Capture start time for duration metrics ---
 START_TIME=$(date +%s%N)
@@ -161,6 +175,8 @@ elif [ -x "/usr/local/bin/gemini" ]; then
   GEMINI_BIN="/usr/local/bin/gemini"
 elif [ -x "$HOME/.local/bin/gemini" ]; then
   GEMINI_BIN="$HOME/.local/bin/gemini"
+elif _NPM_PREFIX="$(npm prefix -g 2>/dev/null)" && [ -x "$_NPM_PREFIX/bin/gemini" ]; then
+  GEMINI_BIN="$_NPM_PREFIX/bin/gemini"
 else
   echo "ERROR: gemini binary not found. Install with: npm install -g @google/gemini-cli" >&2
   exit 1
