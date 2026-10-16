@@ -1,5 +1,9 @@
 # Zouroboros for Muse
 
+[![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-0.1.0-green.svg)](package.json)
+[![Muse](https://img.shields.io/badge/for-Meta%20Muse-0668E1.svg)](https://www.meta.ai)
+
 ![Muse × Zouroboros — Two Minds. One Infinite Loop. One symbiotic system.](docs/assets/infographic.png)
 
 **The workshop behind your personal AI.**
@@ -98,3 +102,7 @@ There's a verification script that checks every system and tells you which one i
 ## License
 
 MIT. See LICENSE. The hooks build on fine open-source work that's credited in their own folders.
+
+---
+
+*If this earns a place in your workflow, a ⭐ helps others find it. Questions and ideas welcome in [Issues](https://github.com/marlandoj/muse-zouroboros/issues) — and if you build something with it, we'd love to hear about it.*
