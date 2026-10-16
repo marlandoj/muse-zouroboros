@@ -4,7 +4,7 @@
 [![Version](https://img.shields.io/badge/version-0.1.0-green.svg)](package.json)
 [![Muse](https://img.shields.io/badge/for-Meta%20Muse-0668E1.svg)](https://www.meta.ai)
 
-![Muse × Zouroboros — Two Minds. One Infinite Loop. One symbiotic system.](docs/assets/infographic.png)
+![Muse × Zouroboros — The workshop behind your personal AI.](docs/assets/hero-muse-workshop.png)
 
 **The workshop behind your personal AI.**
 
