@@ -1,5 +1,9 @@
 # Walkthrough 00 — Overview
 
+> **In a hurry?** [00-quickstart.md](00-quickstart.md) gets you to your
+> first three wins in about half an hour. This page is the full operator
+> path — every system, every check, every manual.
+
 This walkthrough takes you from a bare Muse VM to a working Zouroboros
 workshop, in order. Each step ends with a check that proves it worked before
 you move on. Total time: an afternoon, most of it waiting on installs.

@@ -44,7 +44,15 @@ It's probably not for you yet if you only use Muse for conversation and scheduli
 
 ## How to get started
 
-Everything is in the walkthrough folder, in order, written for someone doing this the first time. It starts with what your machine needs, then walks you through each system one at a time — memory first, then the swarm, then the hooks, then the factory — with a check at the end of every step so you know it worked before moving on. Plan on an afternoon, most of it waiting on installs.
+**Short on time?** Start with
+[walkthrough/00-quickstart.md](walkthrough/00-quickstart.md) — install,
+prove it's alive, and get your first three wins (shared memory, a factory
+ticket from chat, health at a glance) in about half an hour. The one real
+prerequisite: one AI coding CLI you already pay for, installed and logged
+in — the factory can't drive subscriptions you don't have.
+
+**Want the full operator path?** Everything is in the walkthrough folder,
+in order, written for someone doing this the first time. It starts with what your machine needs, then walks you through each system one at a time — memory first, then the swarm, then the hooks, then the factory — with a check at the end of every step so you know it worked before moving on. Plan on an afternoon, most of it waiting on installs.
 
 A few things to know going in:
 
