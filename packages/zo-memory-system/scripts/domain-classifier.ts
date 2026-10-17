@@ -2,13 +2,13 @@
 /**
  * Domain Classifier (T2 — PKA Session Briefing)
  * Classifies workspace files into knowledge domains via path heuristics.
- * Domains: ffb, jhf-trading, zouroboros, personal, infrastructure, shared
+ * Domains: ffb, trading, zouroboros, personal, infrastructure, shared
  */
 
 import { Database } from "bun:sqlite";
 import { parseArgs } from "util";
 
-export type Domain = "ffb" | "jhf-trading" | "zouroboros" | "personal" | "infrastructure" | "shared";
+export type Domain = "ffb" | "trading" | "zouroboros" | "personal" | "infrastructure" | "shared";
 
 interface DomainRule {
   domain: Domain;
@@ -28,14 +28,12 @@ export const DOMAIN_RULES: DomainRule[] = [
     ],
   },
   {
-    domain: "jhf-trading",
+    domain: "trading",
     patterns: [
-      /Projects\/jhf[-_]/i,
+      /Projects\/\w*[-_]?trading/i,
       /Skills\/backtesting[-_]/i,
       /Skills\/alpaca[-_]/i,
       /Skills\/alphavantage[-_]/i,
-      /jackson[-_]heritage/i,
-      /JHF[_\/]/,
       /Projects\/trading/i,
       /Investment_Analysis/i,
     ],
@@ -118,7 +116,7 @@ if (import.meta.main) {
     db.close();
 
     const counts: Record<Domain, number> = {
-      ffb: 0, "jhf-trading": 0, zouroboros: 0, personal: 0, infrastructure: 0, shared: 0,
+      ffb: 0, trading: 0, zouroboros: 0, personal: 0, infrastructure: 0, shared: 0,
     };
     const classified: { file_path: string; domain: Domain }[] = [];
 

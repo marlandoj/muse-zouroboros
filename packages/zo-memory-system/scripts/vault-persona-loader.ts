@@ -286,7 +286,7 @@ if (import.meta.main) {
   bun vault-persona-loader.ts --all                         Show coverage for all personas
   Add --json for JSON output
 
-  Domains: ffb, jhf-trading, zouroboros, personal, infrastructure, shared`);
+  Domains: ffb, trading, zouroboros, personal, infrastructure, shared`);
     process.exit(0);
   }
 

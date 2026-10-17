@@ -37,7 +37,7 @@ Found 363 articulation point(s)
 
 Top critical points:
 - Chat-History-Migration (656 bridges)
-- JHF trading bot architecture (4 bridges)
+- Trading bot architecture (4 bridges)
 - FFB performance audit (2 bridges)
 ```
 
@@ -134,7 +134,7 @@ Connected components: Multiple
 | Rank | Entity | Key | Bridges | Risk |
 |------|--------|-----|---------|------|
 | 1 | chatgpt.Chat-History-Migration | summary | 656 | 🔴 Critical |
-| 2 | project.jhf-trading-bot | architecture-plan | 4 | 🟡 Medium |
+| 2 | project.trading-bot | architecture-plan | 4 | 🟡 Medium |
 | 3 | test._ | _ | 3 | 🟡 Medium |
 | 4 | project.ffb | performance-audit | 2 | 🟢 Low |
 | 5 | portfolio.alpaca-cfee-hidden-cost | _ | 2 | 🟢 Low |

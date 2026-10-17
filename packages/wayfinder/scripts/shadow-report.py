@@ -32,7 +32,7 @@ CASES = [
     {'q': 'execute this wave in parallel across the worker pool',
      'want': ['zo-swarm-executors'], 'why': 'fan out swarm tasks'},
     {'q': 'research the last 24 hours of premarket movers and rank by gap percent',
-     'want': ['jhf-daily-top5', 'smart-money'], 'why': 'premarket screener run'},
+     'want': ['daily-top5', 'smart-money'], 'why': 'premarket screener run'},
     {'q': 'make a new avatar portrait for the persona',
      'want': ['heygen-avatar', 'ai-character-builder'], 'why': 'persona avatar'},
     {'q': 'audit the governance policy and produce a post-flight evidence report',

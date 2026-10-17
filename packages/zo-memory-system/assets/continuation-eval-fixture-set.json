@@ -24,10 +24,10 @@
       "lastAccessedDaysAgo": 4
     },
     {
-      "entity": "project.jhf-risk-dashboard",
+      "entity": "project.risk-dashboard",
       "key": "focus",
-      "value": "JHF risk dashboard should show concentration risk, stop-loss coverage, and portfolio exposure.",
-      "text": "Jackson Heritage Finance risk dashboard focus is concentration risk, stop-loss coverage, portfolio exposure.",
+      "value": "The risk dashboard should show concentration risk, stop-loss coverage, and portfolio exposure.",
+      "text": "The risk dashboard focus is concentration risk, stop-loss coverage, portfolio exposure.",
       "category": "project",
       "decayClass": "active",
       "createdDaysAgo": 7,
@@ -171,7 +171,7 @@
     },
     {
       "id": "risk-dashboard-focus",
-      "query": "what were we tracking on the jhf risk dashboard?",
+      "query": "what were we tracking on the risk dashboard?",
       "expectDetection": true,
       "expectAny": [
         "concentration risk",

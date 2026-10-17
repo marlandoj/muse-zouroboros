@@ -31,9 +31,9 @@ const domainTests: [string, Domain][] = [
   ["Skills/ffb-hub/SKILL.md", "ffb"],
   ["Notes/FFB_Canon/FFB_SKU_CANON.md", "ffb"],
   ["fauna-flora-store/client/src/App.tsx", "ffb"],
-  ["Projects/jhf-trading-platform/server/index.ts", "jhf-trading"],
-  ["Skills/backtesting-skill/scripts/backtest.ts", "jhf-trading"],
-  ["Skills/alpaca-trading-skill/SKILL.md", "jhf-trading"],
+  ["Projects/trading-platform/server/index.ts", "trading"],
+  ["Skills/backtesting-skill/scripts/backtest.ts", "trading"],
+  ["Skills/alpaca-trading-skill/SKILL.md", "trading"],
   ["Zouroboros/BACKLOG.md", "zouroboros"],
   ["Skills/zo-memory-system/scripts/memory.ts", "zouroboros"],
   ["Seeds/zouroboros/seed-pka.yaml", "zouroboros"],
@@ -165,15 +165,15 @@ assert(decision2.method !== "briefing_skip", `second call doesn't use briefing_s
 
 console.log("\n=== Domain Map Tests ===");
 
-assert(getPersonaDomain("financial-advisor") === "jhf-trading", "financial-advisor → jhf-trading");
+assert(getPersonaDomain("financial-advisor") === "trading", "financial-advisor → trading");
 assert(getPersonaDomain("alaric") === "personal", "alaric → personal");
 assert(getPersonaDomain("devops-automator") === "infrastructure", "devops-automator → infrastructure");
 assert(getPersonaDomain("brand-guardian") === "ffb", "brand-guardian → ffb");
 assert(getPersonaDomain("nonexistent-persona") === "shared", "unknown persona → shared");
 
-const financePersonas = getPersonasForDomain("jhf-trading");
-assert(financePersonas.includes("financial-advisor"), "jhf-trading domain includes financial-advisor");
-assert(financePersonas.length >= 9, `jhf-trading has ≥9 personas (got ${financePersonas.length})`);
+const financePersonas = getPersonasForDomain("trading");
+assert(financePersonas.includes("financial-advisor"), "trading domain includes financial-advisor");
+assert(financePersonas.length >= 9, `trading has ≥9 personas (got ${financePersonas.length})`);
 
 assert(DEFAULT_POOLS.length === 5, `DEFAULT_POOLS has 5 pools (got ${DEFAULT_POOLS.length})`);
 assert(DEFAULT_POOLS.some(p => p.name === "engineering"), "DEFAULT_POOLS includes engineering");

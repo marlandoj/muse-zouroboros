@@ -3,7 +3,7 @@
  * domain-map.ts — Single source of truth for persona→domain mapping
  *
  * All persona→domain lookups should import from this file.
- * Domains match those in domain-classifier.ts: ffb, jhf-trading, zouroboros, infrastructure, personal, shared
+ * Domains match those in domain-classifier.ts: ffb, trading, zouroboros, infrastructure, personal, shared
  */
 
 import type { Domain } from "./domain-classifier.ts";
@@ -46,17 +46,17 @@ export const PERSONA_DOMAIN_MAP: Record<string, Domain> = {
   "analytics-insights-reporter": "ffb",
   "competitive-intelligence-analyst": "ffb",
 
-  // ── JHF Trading / Finance ──
-  "financial-advisor": "jhf-trading",
-  "financial-modeling-analyst": "jhf-trading",
-  "financial-research-analyst": "jhf-trading",
-  "quantitative-developer": "jhf-trading",
-  "portfolio-risk-manager": "jhf-trading",
-  "algorithmic-trading-strategist": "jhf-trading",
-  "tax-optimization-strategist": "jhf-trading",
-  "retirement-planning-advisor": "jhf-trading",
-  "estate-planning-advisor": "jhf-trading",
-  "insurance-risk-advisor": "jhf-trading",
+  // ── Trading / Finance ──
+  "financial-advisor": "trading",
+  "financial-modeling-analyst": "trading",
+  "financial-research-analyst": "trading",
+  "quantitative-developer": "trading",
+  "portfolio-risk-manager": "trading",
+  "algorithmic-trading-strategist": "trading",
+  "tax-optimization-strategist": "trading",
+  "retirement-planning-advisor": "trading",
+  "estate-planning-advisor": "trading",
+  "insurance-risk-advisor": "trading",
 
   // ── Zouroboros (System / Memory / Swarm / AI Engineering) ──
   "ai-engineer": "zouroboros",
@@ -138,7 +138,7 @@ export const PERSONA_DOMAIN_MAP: Record<string, Domain> = {
  * instead of a single domain. Used by session-briefing.ts for aggregated context.
  */
 export const MULTI_DOMAIN_PERSONAS: Record<string, Domain[]> = {
-  "alaric": ["zouroboros", "jhf-trading", "ffb", "infrastructure", "personal"],
+  "alaric": ["zouroboros", "trading", "ffb", "infrastructure", "personal"],
 };
 
 /**

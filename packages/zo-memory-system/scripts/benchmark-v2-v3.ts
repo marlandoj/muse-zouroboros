@@ -168,8 +168,8 @@ function seedDatabase(db: Database): SeedFact[] {
     { id: "", entity: "system.swarm", key: "performance", value: "FFB workload 11 tasks in 985s, bottleneck is Zo API latency 120-360s per prompt", category: "fact", decay: "active" },
     { id: "", entity: "decision.swarm-mcp", key: "choice", value: "Claude Code bridge must use --allowedTools for MCP tools, bypassPermissions insufficient", category: "decision", decay: "permanent" },
     // Additional facts for density
-    { id: "", entity: "project.jhf-site", key: "name", value: "Jackson Heritage Financial website review and performance audit", category: "project", decay: "active" },
-    { id: "", entity: "project.jhf-site", key: "status", value: "Comprehensive executive report delivered March 4 2026", category: "fact", decay: "active" },
+    { id: "", entity: "project.finance-site", key: "name", value: "Sample finance website review and performance audit", category: "project", decay: "active" },
+    { id: "", entity: "project.finance-site", key: "status", value: "Comprehensive executive report delivered March 4 2026", category: "fact", decay: "active" },
     { id: "", entity: "system.zo", key: "personas", value: "97 persona IDENTITY files created, full migration complete", category: "fact", decay: "stable" },
   ];
 

@@ -47,7 +47,7 @@ const PERSONA_MAP: Record<string, string[]> = {
   "Skills/alpaca-trading-skill/": ["financial-advisor", "trading-strategist"],
   "Skills/alphavantage-skill/": ["financial-advisor"],
   "Skills/backtesting-skill/": ["financial-advisor", "trading-strategist"],
-  "Projects/jhf-trading-platform/": ["financial-advisor", "trading-strategist"],
+  "Projects/trading-platform/": ["financial-advisor", "trading-strategist"],
   "OmniRoute/": ["agents-orchestrator"],
   "Skills/zo-swarm-orchestrator/": ["agents-orchestrator"],
   "Skills/zo-memory-system/": ["agents-orchestrator"],

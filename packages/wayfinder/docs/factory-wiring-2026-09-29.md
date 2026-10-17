@@ -44,7 +44,7 @@ is already gone from the factory's `settings.json`.
 HIT  REST endpoint on the factory swarm API + 32-case suite → compile-build-spec
 MISS run the swarm for this seed yaml and manage the waves   → visual-verifier
 SKIP execute this wave in parallel across the worker pool     → (abstained)
-HIT  premarket movers, rank by gap percent                   → jhf-daily-top5
+HIT  premarket movers, rank by gap percent                   → daily-top5
 HIT  new avatar portrait for the persona                     → heygen-avatar
 HIT  audit governance policy, post-flight evidence report    → zouroboros-governance
 HIT  interrupted mid-run, recover checkpoint, finish contract → automation-resilience
@@ -58,7 +58,7 @@ HIT  product launch video with voiceover and captions        → academy-video-p
 ## The finding that matters for promotion
 
 Every miss is a **Zo-internal skill**. Hits are `heygen-avatar`, `tier-resolver`,
-`automation-resilience`, `jhf-daily-top5`, `ux-laws` — skills whose descriptions use
+`automation-resilience`, `daily-top5`, `ux-laws` — skills whose descriptions use
 language a general-purpose MS MARCO model has seen. Misses are `zo-swarm-orchestrator`,
 `zo-memory-system`, `ponytail-audit` — skills whose vocabulary is factory jargon
 (*seed yaml, wave, worker pool, churn*).

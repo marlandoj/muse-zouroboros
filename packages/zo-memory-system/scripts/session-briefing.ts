@@ -61,7 +61,7 @@ function getRecentEpisodes(domain?: string, limit = 5, dbPath?: string): string[
       // Filter episodes by entity patterns matching domain (centralized in domain-map.ts)
       const DOMAIN_ENTITY_PATTERNS: Record<string, string[]> = {
         ffb: ["ffb", "fauna", "flora"],
-        "jhf-trading": ["jhf", "trading", "alpaca", "backtest"],
+        "trading": ["trading", "alpaca", "backtest"],
         zouroboros: ["zouroboros", "swarm", "memory", "vault", "orchestrat"],
         personal: ["personal", "user"],
         infrastructure: ["infra", "deploy", "service"],
@@ -416,7 +416,7 @@ if (import.meta.main) {
   bun session-briefing.ts <persona> --json             JSON output
   bun session-briefing.ts <persona> --max-tokens 300   Cap synthesis input
 
-  Domains: ffb, jhf-trading, zouroboros, personal, infrastructure, shared`);
+  Domains: ffb, trading, zouroboros, personal, infrastructure, shared`);
     process.exit(0);
   }
 
