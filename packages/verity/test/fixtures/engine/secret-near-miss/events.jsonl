@@ -1,0 +1,1 @@
+{"hook_event_name":"PreToolUse","session_id":"secret-near-miss","cwd":"/p","tool_name":"Write","tool_input":{"file_path":"/p/a.ts","content":"// example key AKIAIOSFODNN7EXAMPLE from the docs"}}

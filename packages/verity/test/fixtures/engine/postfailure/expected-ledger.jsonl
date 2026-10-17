@@ -1,0 +1,1 @@
+{"ts":0,"type":"event","cwd":"/p","phase":"post","hookEvent":"PostToolUseFailure","tool":"Bash","fact":{"kind":"command","command":"npm test","exitCode":null,"verify":true,"fingerprint":"f135f9fa4f38fd0c","summary":"","code":[]}}

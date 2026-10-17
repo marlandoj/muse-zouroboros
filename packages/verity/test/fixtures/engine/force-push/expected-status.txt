@@ -1,0 +1,1 @@
+no sessions recorded for / under HOME; `node "CLI" sessions` lists every project's

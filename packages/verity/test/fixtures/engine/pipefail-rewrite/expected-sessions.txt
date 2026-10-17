@@ -1,0 +1,1 @@
+TS  HOME/sessions/claude-pipefail-rewrite.jsonl  /p

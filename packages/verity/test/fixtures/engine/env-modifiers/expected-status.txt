@@ -1,0 +1,8 @@
+session   claude-env-modifiers.jsonl
+project   /p
+events    3
+edited    a.ts
+verified  yes: `FOO=1 ! tsc -p .` passed after the last edit
+last cmd  `FOO=1 ! tsc -p .` exit 0: ok
+stops     allow
+jev       0 calls, 0 cached, 0 failed

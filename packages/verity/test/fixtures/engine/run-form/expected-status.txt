@@ -1,0 +1,8 @@
+session   claude-run-form.jsonl
+project   /p
+events    3
+edited    a.ts
+verified  no passing check since the last edit
+last cmd  `bun run test` exit 0: ok
+stops     block
+jev       0 calls, 0 cached, 0 failed

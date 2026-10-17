@@ -1,0 +1,7 @@
+session   claude-write-stop-block.jsonl
+project   /p
+events    4
+edited    a.ts
+verified  no passing check since the last edit
+stops     block, block, block
+jev       0 calls, 0 cached, 0 failed

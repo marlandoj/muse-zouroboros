@@ -1,0 +1,1 @@
+{"hook_event_name":"PreToolUse","session_id":"secret-rsa","cwd":"/p","tool_name":"Write","tool_input":{"file_path":"/p/k.pem","content":"-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA"}}

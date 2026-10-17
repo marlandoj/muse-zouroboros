@@ -1,6 +1,6 @@
 ---
 name: verity
-description: Verity is a cross-harness done-gate built on Canny (qkal/Canny by Kal, MIT). It records every edit and check in Claude Code, Codex CLI, Kimi Code and Gemini CLI, and refuses a "done" claim when code changed with no passing test, build, lint or type-check since; it also guards against secrets in written files, deleted tests and piped test commands. Defaults to shadow mode (log only); `scripts/verity.sh mode live` enforces, scoped per harness and per check. Use to review verdicts, switch shadow/live, decide promotion, or disable it.
+description: Verity is a cross-harness done-gate with a clean-room engine. It records every edit and check in Claude Code, Codex CLI, Kimi Code and Gemini CLI, and refuses a "done" claim when code changed with no passing test, build, lint or type-check since; it also guards against secrets in written files, deleted tests and piped test commands. Defaults to shadow mode (log only); `scripts/verity.sh mode live` enforces, scoped per harness and per check. Use to review verdicts, switch shadow/live, decide promotion, or disable it.
 compatibility: Created for Zo Computer
 metadata:
   author: marlandoj.zo.computer
@@ -9,7 +9,7 @@ metadata:
 # Verity
 
 **Repo:** private `marlandoj/verity` (this directory is its checkout; renamed from `canny-shadow` on 2026-09-23).
-**Engine:** Canny by Kal, `Integrations/canny` pinned at `f2c5e53` (v0.3.0). Credit it in anything public.
+**Engine:** Verity's clean-room engine in `engine/` (Node ESM, no dependencies).
 **Tracking:** ZOU-1680. Promotion review 2026-10-07.
 
 ## Wiring on this host
@@ -45,9 +45,9 @@ Config: `~/.verity/config.json`, read on every hook call (no restart needed).
 
 | Path | Holds |
 |---|---|
-| `~/.canny/sessions/*.jsonl` | Canny's ledger. Command lines can contain secrets (owner-only dir) |
+| `~/.verity/engine/sessions/*.jsonl` | Verity's ledger. Command lines can contain secrets (owner-only dir) |
 | `~/.verity/verdicts.jsonl` | Every non-empty verdict with harness, mode, kind, `applied`, latency (history migrated from `~/.canny/shadow.jsonl`) |
-| `~/.canny/errors.log` | Canny crashes |
+| `~/.verity/engine/errors.log` | Engine crashes |
 
 ## Commands
 
@@ -60,9 +60,9 @@ node Integrations/canny/dist/cli.js status                        # latest sessi
 
 ## Promotion criteria (review 2026-10-07)
 
-1. `done` blocks: sample each against its session. False positive when verification was something Canny doesn't
+1. `done` blocks: sample each against its session. False positive when verification was something Verity doesn't
    count (`bun Skills/x/scripts/y.test.ts`, curl smoke tests); add those as `verify` regexes in a trusted
-   `.canny.json` first.
+   `.verity.json` first.
 2. `deny`: every one must be a real secret or test deletion. Promote first: `verity.sh mode live --checks deny`.
 3. p50 under 250 ms per tool call, zero crashes.
 4. Then add `done`.

@@ -1,0 +1,1 @@
+{"hook_event_name":"PreToolUse","session_id":"secret-hardcoded","cwd":"/p","tool_name":"Write","tool_input":{"file_path":"/p/a.ts","content":"token = \"abcdefghij0123456789\";"}}

@@ -1,0 +1,4 @@
+{"hook_event_name":"PreToolUse","session_id":"rewrite-flow","cwd":"/p","tool_name":"Bash","tool_input":{"command":"npm test | tail -5"}}
+{"hook_event_name":"PostToolUse","session_id":"rewrite-flow","cwd":"/p","tool_name":"Write","tool_input":{"file_path":"/p/a.ts","content":"x"},"tool_response":{"stdout":"","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"rewrite-flow","cwd":"/p","tool_name":"Bash","tool_input":{"command":"set -o pipefail && npm test | tail -5"},"tool_response":{"stdout":"ok","exit_code":0}}
+{"hook_event_name":"Stop","session_id":"rewrite-flow","cwd":"/p","last_assistant_message":"done"}

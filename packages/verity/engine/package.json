@@ -1,0 +1,1 @@
+{"description":"Clean-room reimplementation of the Verity done-gate engine. No shared code with any prior implementation; behavior specified by test/fixtures/engine.","name":"verity-engine","private":true,"type":"module","version":"0.1.0"}

@@ -1,0 +1,2 @@
+errors    1 hook crash in HOME/errors.log, and a crashed hook checks nothing. Last: TS SyntaxError: Unexpected token 'o', "not json" is not valid JSON
+no sessions recorded for / under HOME; `node "CLI" sessions` lists every project's

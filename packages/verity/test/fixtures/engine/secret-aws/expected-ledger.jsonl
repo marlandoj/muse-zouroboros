@@ -1,0 +1,1 @@
+{"ts":0,"type":"verdict","cwd":"/p","phase":"pre","decision":"deny","message":"Verity: .env would contain what looks like a AWS access key. An env file is only the place for it once git ignores the file, and a committed template never is."}

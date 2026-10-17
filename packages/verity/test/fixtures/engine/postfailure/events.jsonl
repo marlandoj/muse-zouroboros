@@ -1,0 +1,1 @@
+{"hook_event_name":"PostToolUseFailure","session_id":"postfailure","cwd":"/p","tool_name":"Bash","tool_input":{"command":"npm test"},"error":{"message":"Command exited with code 3"}}

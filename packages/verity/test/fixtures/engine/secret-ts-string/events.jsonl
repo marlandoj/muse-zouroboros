@@ -1,0 +1,1 @@
+{"hook_event_name":"PreToolUse","session_id":"secret-ts-string","cwd":"/p","tool_name":"Write","tool_input":{"file_path":"/p/cfg.ts","content":"const key = \"AKIAIOSFODNN7EXAMPLE\";"}}

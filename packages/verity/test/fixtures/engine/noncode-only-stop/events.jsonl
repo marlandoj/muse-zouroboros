@@ -1,0 +1,2 @@
+{"hook_event_name":"PostToolUse","session_id":"noncode-only-stop","cwd":"/p","tool_name":"Write","tool_input":{"file_path":"/p/README.md","content":"# docs"},"tool_response":{"stdout":"","exit_code":0}}
+{"hook_event_name":"Stop","session_id":"noncode-only-stop","cwd":"/p","last_assistant_message":"done"}

@@ -1,0 +1,1 @@
+{"hook_event_name":"PreToolUse","session_id":"secret-nested-path","cwd":"/p","tool_name":"Write","tool_input":{"file_path":"/p/e2e/spec.cy.ts","content":"key = \"AKIAIOSFODNN7EXAMPLE\";"}}

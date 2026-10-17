@@ -1,0 +1,7 @@
+session   claude-noncode-only-stop.jsonl
+project   /p
+events    2
+edited    nothing that needs a check
+verified  no passing check since the last edit
+stops     allow
+jev       0 calls, 0 cached, 0 failed

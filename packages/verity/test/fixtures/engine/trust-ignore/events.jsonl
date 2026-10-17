@@ -1,0 +1,3 @@
+{"hook_event_name":"PostToolUse","session_id":"trust-ignore","cwd":"/p","tool_name":"Write","tool_input":{"file_path":"/p/x.log"},"tool_response":{"stdout":"","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"trust-ignore","cwd":"/p","tool_name":"Write","tool_input":{"file_path":"/p/a.ts"},"tool_response":{"stdout":"","exit_code":0}}
+{"hook_event_name":"Stop","session_id":"trust-ignore","cwd":"/p","last_assistant_message":"done"}

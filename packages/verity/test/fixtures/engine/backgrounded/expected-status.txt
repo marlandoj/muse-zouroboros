@@ -1,0 +1,8 @@
+session   claude-backgrounded.jsonl
+project   /p
+events    3
+edited    a.ts
+verified  no passing check since the last edit
+last cmd  `npm test &` exit 0: 
+stops     block
+jev       0 calls, 0 cached, 0 failed

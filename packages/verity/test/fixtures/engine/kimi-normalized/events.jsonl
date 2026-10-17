@@ -1,0 +1,4 @@
+{"hook_event_name":"PreToolUse","session_id":"kimi-k1","tool_name":"Write","tool_input":{"path":"/p/a.ts","content":"x","file_path":"/p/a.ts"},"cwd":"/p"}
+{"hook_event_name":"PostToolUse","session_id":"kimi-k1","tool_name":"Write","tool_input":{"path":"/p/a.ts","content":"x","file_path":"/p/a.ts"},"tool_output":"","tool_response":{"stdout":"","exit_code":0},"cwd":"/p"}
+{"hook_event_name":"PostToolUse","session_id":"kimi-k1","tool_name":"Bash","tool_input":{"command":"npm test"},"tool_output":"12 passed","tool_response":{"stdout":"12 passed","exit_code":0},"cwd":"/p"}
+{"hook_event_name":"Stop","session_id":"kimi-k1","last_assistant_message":"done","tool_input":{},"cwd":"/p"}

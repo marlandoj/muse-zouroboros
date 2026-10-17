@@ -1,0 +1,4 @@
+{"hook_event_name": "PreToolUse", "session_id": "gemini-g1", "cwd": "/p", "tool_name": "Write", "tool_input": {"file_path": "/p/a.ts", "content": "x"}}
+{"hook_event_name": "PostToolUse", "session_id": "gemini-g1", "cwd": "/p", "tool_name": "Write", "tool_input": {"file_path": "/p/a.ts", "content": "x"}, "tool_response": {"stdout": "done", "exit_code": 0}}
+{"hook_event_name": "PostToolUse", "session_id": "gemini-g1", "cwd": "/p", "tool_name": "Bash", "tool_input": {"command": "npm test"}, "tool_response": {"stdout": "Output: ok\nExit Code: 0", "exit_code": 0}}
+{"hook_event_name": "Stop", "session_id": "gemini-g1", "cwd": "/p", "tool_name": "", "tool_input": {}, "last_assistant_message": "done", "stop_hook_active": false}

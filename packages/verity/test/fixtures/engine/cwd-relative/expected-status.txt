@@ -1,0 +1,7 @@
+session   claude-cwd-relative.jsonl
+project   /p
+events    2
+edited    ../q/x.ts
+verified  no passing check since the last edit
+stops     block
+jev       0 calls, 0 cached, 0 failed

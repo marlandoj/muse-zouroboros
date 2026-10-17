@@ -1,0 +1,16 @@
+{"hook_event_name":"PostToolUse","session_id":"runner-battery","cwd":"/p","tool_name":"Bash","tool_input":{"command":"npx jest"},"tool_response":{"stdout":"ok","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"runner-battery","cwd":"/p","tool_name":"Bash","tool_input":{"command":"pytest -x"},"tool_response":{"stdout":"ok","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"runner-battery","cwd":"/p","tool_name":"Bash","tool_input":{"command":"cargo test"},"tool_response":{"stdout":"ok","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"runner-battery","cwd":"/p","tool_name":"Bash","tool_input":{"command":"go test ./..."},"tool_response":{"stdout":"ok","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"runner-battery","cwd":"/p","tool_name":"Bash","tool_input":{"command":"tsc --noEmit"},"tool_response":{"stdout":"ok","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"runner-battery","cwd":"/p","tool_name":"Bash","tool_input":{"command":"eslint ."},"tool_response":{"stdout":"ok","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"runner-battery","cwd":"/p","tool_name":"Bash","tool_input":{"command":"make test"},"tool_response":{"stdout":"ok","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"runner-battery","cwd":"/p","tool_name":"Bash","tool_input":{"command":"bun test"},"tool_response":{"stdout":"ok","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"runner-battery","cwd":"/p","tool_name":"Bash","tool_input":{"command":"npm run build"},"tool_response":{"stdout":"ok","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"runner-battery","cwd":"/p","tool_name":"Bash","tool_input":{"command":"pip install foo"},"tool_response":{"stdout":"ok","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"runner-battery","cwd":"/p","tool_name":"Bash","tool_input":{"command":"jest --watch"},"tool_response":{"stdout":"ok","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"runner-battery","cwd":"/p","tool_name":"Bash","tool_input":{"command":"npm test -- --coverage"},"tool_response":{"stdout":"ok","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"runner-battery","cwd":"/p","tool_name":"Bash","tool_input":{"command":"python -m pytest"},"tool_response":{"stdout":"ok","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"runner-battery","cwd":"/p","tool_name":"Bash","tool_input":{"command":"yarn test"},"tool_response":{"stdout":"ok","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"runner-battery","cwd":"/p","tool_name":"Bash","tool_input":{"command":"pnpm test"},"tool_response":{"stdout":"ok","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"runner-battery","cwd":"/p","tool_name":"Bash","tool_input":{"command":"deno test"},"tool_response":{"stdout":"ok","exit_code":0}}

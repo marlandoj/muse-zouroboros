@@ -1,0 +1,2 @@
+{"ts":0,"type":"event","cwd":"/p","phase":"stop","hookEvent":"Stop","tool":"","fact":{"kind":"stop","stopHookActive":false,"messageHash":"6726a7a7634101bf"}}
+{"ts":0,"type":"verdict","cwd":"/p","phase":"stop","decision":"allow"}

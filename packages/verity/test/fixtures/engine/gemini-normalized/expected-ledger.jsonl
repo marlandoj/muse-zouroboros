@@ -1,0 +1,4 @@
+{"ts":0,"type":"event","cwd":"/p","phase":"post","hookEvent":"PostToolUse","tool":"Write","fact":{"kind":"edit","files":["a.ts"],"deleted":[],"code":["a.ts"]}}
+{"ts":0,"type":"event","cwd":"/p","phase":"post","hookEvent":"PostToolUse","tool":"Bash","fact":{"kind":"command","command":"npm test","exitCode":0,"verify":true,"fingerprint":"bba1bddc62918c00","summary":"Exit Code: 0","code":[]}}
+{"ts":0,"type":"event","cwd":"/p","phase":"stop","hookEvent":"Stop","tool":"","fact":{"kind":"stop","stopHookActive":false,"messageHash":"a4c3ed04a95a3da1"}}
+{"ts":0,"type":"verdict","cwd":"/p","phase":"stop","decision":"allow"}

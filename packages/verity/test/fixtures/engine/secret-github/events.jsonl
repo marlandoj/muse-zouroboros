@@ -1,0 +1,1 @@
+{"hook_event_name":"PreToolUse","session_id":"secret-github","cwd":"/p","tool_name":"Write","tool_input":{"file_path":"/p/tok.txt","content":"ghp_abcdefghijklmnopqrstuvwxyz0123456789"}}

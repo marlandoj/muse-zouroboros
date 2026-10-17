@@ -1,0 +1,1 @@
+TS  HOME/sessions/claude-write-test-stop-allow.jsonl  /p

@@ -1,0 +1,1 @@
+TS  HOME/sessions/claude-write-fail-stop-block.jsonl  /p

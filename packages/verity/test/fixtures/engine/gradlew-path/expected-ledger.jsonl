@@ -1,0 +1,1 @@
+{"ts":0,"type":"verdict","cwd":"/p","phase":"pre","decision":"rewrite","message":"Verity ran this with `set -o pipefail`, so the check's own exit status is the result and it counts as a check."}

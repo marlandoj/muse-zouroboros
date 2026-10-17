@@ -1,0 +1,2 @@
+{"hook_event_name":"PostToolUse","session_id":"cwd-relative","cwd":"/p","tool_name":"Write","tool_input":{"file_path":"/q/x.ts","content":"x"},"tool_response":{"stdout":"","exit_code":0}}
+{"hook_event_name":"Stop","session_id":"cwd-relative","cwd":"/p","last_assistant_message":"done"}

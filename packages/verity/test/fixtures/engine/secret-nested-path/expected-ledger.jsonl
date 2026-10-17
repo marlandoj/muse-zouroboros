@@ -1,0 +1,1 @@
+{"ts":0,"type":"verdict","cwd":"/p","phase":"pre","decision":"deny","message":"Verity: e2e/spec.cy.ts would contain what looks like a AWS access key. Read the value from the environment or a git-ignored env file instead of writing it into the file."}

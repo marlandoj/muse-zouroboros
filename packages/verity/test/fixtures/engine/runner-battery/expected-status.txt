@@ -1,0 +1,8 @@
+session   claude-runner-battery.jsonl
+project   /p
+events    16
+edited    nothing that needs a check
+verified  yes: `deno test` passed after the last edit
+last cmd  `deno test` exit 0: ok
+stops     none yet
+jev       0 calls, 0 cached, 0 failed

@@ -64,29 +64,52 @@ check "check filter shadows other kinds" "$(hook claude "$STOP")" "{}"
 check "check filter applies listed kind" "$(FAKE_VERDICT=$DENY hook claude '{"hook_event_name":"PreToolUse"}' | jq -r .hookSpecificOutput.permissionDecision)" "deny"
 check "env overrides config" "$(VERITY_MODE=shadow FAKE_VERDICT=$DENY hook claude '{"hook_event_name":"PreToolUse"}')" "{}"
 check "live applied logged" "$(jq -s 'map(select(.applied)) | length > 0' "$T/v/verdicts.jsonl")" "true"
-check "bad verdict fails open" "$(FAKE_VERDICT='not json' hook claude "$STOP")" "{}"
+check "bad verdict fails closed" "$(FAKE_VERDICT='not json' hook claude "$STOP" | jq -r .decision)" "block"
+check "kimi bad verdict fails closed" "$(FAKE_VERDICT='not json' hook kimi "$STOP" | jq -r .hookSpecificOutput.permissionDecision)" "deny"
 $V reset >/dev/null
 check "reset to shadow" "$(hook claude "$STOP")" "{}"
 unset CANNY_CLI TYPESAFE_API_KEY VERITY_HOME
 
 # Installer: wires all four harnesses, keeps existing hooks, and is idempotent.
-mkdir -p "$T/home/.gemini" "$T/proj/.claude" "$T/canny/.git" "$T/canny/dist"
+mkdir -p "$T/home/.gemini" "$T/proj/.claude"
 echo '{"hooks":{"Stop":[{"hooks":[{"type":"command","command":"keep-me"}]}]}}' > "$T/proj/.claude/settings.json"
-touch "$T/canny/dist/cli.js"
-git -C "$T/canny" init -q 2>/dev/null
-inst() { HOME="$T/home" bash "$ROOT/scripts/install.sh" --project "$T/proj" --canny-dir "$T/canny" --backup-dir "$T/bk" >/dev/null 2>&1; }
+inst() { HOME="$T/home" bash "$ROOT/scripts/install.sh" --project "$T/proj" --backup-dir "$T/bk" >/dev/null 2>&1; }
 inst; check "installer exit" "$?" "0"; inst
 check "claude keeps existing hook" "$(jq -r '.hooks.Stop[0].hooks[0].command' "$T/proj/.claude/settings.json")" "keep-me"
 check "claude wired once" "$(jq '[.hooks[][] | tostring | select(test("verity-hook"))] | length' "$T/proj/.claude/settings.json")" "5"
 check "codex wired once" "$(jq '[.hooks[][] | tostring | select(test("verity-hook"))] | length' "$T/proj/.codex/hooks.json")" "4"
 check "gemini wired once" "$(jq '[.hooks[][] | tostring | select(test("verity-hook"))] | length' "$T/home/.gemini/settings.json")" "4"
 check "kimi wired once" "$(grep -c verity-hook "$T/home/.kimi-code/config.toml")" "5"
-check "custom canny dir passed" "$(grep -c "CANNY_DIR=$T/canny" "$T/home/.kimi-code/config.toml")" "5"
 mkdir -p "$T/old/.claude"; echo '{"hooks":{"Stop":[{"hooks":[{"type":"command","command":"bash /x/Skills/canny-shadow/scripts/canny-shadow-hook.sh claude"}]}]}}' > "$T/old/.claude/settings.json"
-HOME="$T/home" bash "$ROOT/scripts/install.sh" --harness claude --project "$T/old" --canny-dir "$T/canny" --backup-dir "$T/bk" >/dev/null 2>&1
+HOME="$T/home" bash "$ROOT/scripts/install.sh" --harness claude --project "$T/old" --backup-dir "$T/bk" >/dev/null 2>&1
 check "legacy entry migrated" "$(jq '[.hooks[][] | tostring | select(test("verity-hook"))] | length' "$T/old/.claude/settings.json")" "5"
 check "no legacy left" "$(grep -c canny-shadow "$T/old/.claude/settings.json")" "0"
 check "backup written" "$(ls "$T/bk" | grep -c proj_.claude_settings)" "1"
+
+# Real engine (not the fake CLI): end-to-end verdicts through verity-hook.sh.
+# Hermetic: temp engine home, live mode, session ids unique to this run.
+export VERITY_ENGINE_CLI="$ROOT/engine/cli.js" VERITY_ENGINE_HOME="$T/eh" VERITY_HOME="$T/v2"
+unset CANNY_CLI
+bash "$ROOT/scripts/verity.sh" mode live >/dev/null
+ehook() { printf '%s' "$2" | bash "$ROOT/scripts/verity-hook.sh" "$1"; }
+SID="eng-$RANDOM"
+W='{"hook_event_name":"PostToolUse","session_id":"'$SID'","cwd":"/p","tool_name":"Write","tool_input":{"file_path":"/p/a.ts"},"tool_response":{"stdout":"","exit_code":0}}'
+S='{"hook_event_name":"Stop","session_id":"'$SID'","cwd":"/p","last_assistant_message":"done"}'
+ehook claude "$W" >/dev/null
+check "engine stop after edit blocks" "$(ehook claude "$S" | jq -r .decision)" "block"
+check "engine block names file" "$(ehook claude "$S" | jq -r .reason | grep -c 'a.ts changed')" "1"
+SID2="eng2-$RANDOM"
+W2='{"hook_event_name":"PostToolUse","session_id":"'$SID2'","cwd":"/p","tool_name":"Write","tool_input":{"file_path":"/p/a.ts"},"tool_response":{"stdout":"","exit_code":0}}'
+T2='{"hook_event_name":"PostToolUse","session_id":"'$SID2'","cwd":"/p","tool_name":"Bash","tool_input":{"command":"npm test"},"tool_response":{"stdout":"ok","exit_code":0}}'
+S2='{"hook_event_name":"Stop","session_id":"'$SID2'","cwd":"/p","last_assistant_message":"done"}'
+ehook claude "$W2" >/dev/null; ehook claude "$T2" >/dev/null
+check "engine stop after passing check allows" "$(ehook claude "$S2")" "{}"
+SECRET='{"hook_event_name":"PreToolUse","session_id":"'$SID2'","cwd":"/p","tool_name":"Write","tool_input":{"file_path":"/p/k.ts","content":"x = AKIAIOSFODNN7EXAMPLE"}}'
+check "engine secret denied" "$(ehook claude "$SECRET" | jq -r .hookSpecificOutput.permissionDecision)" "deny"
+NOTE='{"hook_event_name":"SessionStart","session_id":"'$SID2'","cwd":"/p"}'
+check "engine session note" "$(ehook claude "$NOTE" | jq -r .hookSpecificOutput.hookEventName)" "SessionStart"
+check "engine ledger written" "$(ls "$T/eh/sessions" | wc -l | tr -d ' ')" "2"
+unset VERITY_ENGINE_CLI VERITY_ENGINE_HOME VERITY_HOME
 
 echo "$pass passed, $fail failed"
 [ "$fail" = 0 ]

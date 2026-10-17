@@ -1,0 +1,3 @@
+{"hook_event_name":"PostToolUse","session_id":"trust-verify","cwd":"%%T%%/proj","tool_name":"Write","tool_input":{"file_path":"%%T%%/proj/a.ts","content":"x"},"tool_response":{"stdout":"","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"trust-verify","cwd":"%%T%%/proj","tool_name":"Bash","tool_input":{"command":"mycheck"},"tool_response":{"stdout":"ok","exit_code":0}}
+{"hook_event_name":"Stop","session_id":"trust-verify","cwd":"%%T%%/proj","last_assistant_message":"done"}

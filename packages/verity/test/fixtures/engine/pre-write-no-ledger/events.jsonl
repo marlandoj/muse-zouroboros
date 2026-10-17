@@ -1,0 +1,2 @@
+{"hook_event_name":"PreToolUse","session_id":"pre-write-no-ledger","cwd":"/p","tool_name":"Write","tool_input":{"file_path":"/p/a.ts","content":"x"}}
+{"hook_event_name":"Stop","session_id":"pre-write-no-ledger","cwd":"/p","last_assistant_message":"done"}

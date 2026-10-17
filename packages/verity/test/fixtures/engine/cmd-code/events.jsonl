@@ -1,0 +1,11 @@
+{"hook_event_name":"PostToolUse","session_id":"cmd-code","cwd":"/p","tool_name":"Bash","tool_input":{"command":"rm a b c"},"tool_response":{"stdout":"","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"cmd-code","cwd":"/p","tool_name":"Bash","tool_input":{"command":"rm --force /p/x.ts"},"tool_response":{"stdout":"","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"cmd-code","cwd":"/p","tool_name":"Bash","tool_input":{"command":"sudo rm /p/y.ts"},"tool_response":{"stdout":"","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"cmd-code","cwd":"/p","tool_name":"Bash","tool_input":{"command":"rm -f *.log"},"tool_response":{"stdout":"","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"cmd-code","cwd":"/p","tool_name":"Bash","tool_input":{"command":"git rm /p/z.ts"},"tool_response":{"stdout":"","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"cmd-code","cwd":"/p","tool_name":"Bash","tool_input":{"command":"rm \"/p/my file.ts\""},"tool_response":{"stdout":"","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"cmd-code","cwd":"/p","tool_name":"Bash","tool_input":{"command":"rm -rf /p/dir/"},"tool_response":{"stdout":"","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"cmd-code","cwd":"/p","tool_name":"Bash","tool_input":{"command":"mv /p/a.ts /p/b.ts"},"tool_response":{"stdout":"","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"cmd-code","cwd":"/p","tool_name":"Bash","tool_input":{"command":"mv a b c"},"tool_response":{"stdout":"","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"cmd-code","cwd":"/p","tool_name":"Bash","tool_input":{"command":"cp a b"},"tool_response":{"stdout":"","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"cmd-code","cwd":"/p","tool_name":"Bash","tool_input":{"command":"cp -r /p/d1 /p/d2"},"tool_response":{"stdout":"","exit_code":0}}

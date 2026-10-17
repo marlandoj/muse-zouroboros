@@ -1,0 +1,8 @@
+session   claude-trust-verify.jsonl
+project   TDIR/proj
+events    3
+edited    a.ts
+verified  yes: `mycheck` passed after the last edit
+last cmd  `mycheck` exit 0: ok
+stops     allow
+jev       0 calls, 0 cached, 0 failed

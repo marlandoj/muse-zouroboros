@@ -1,0 +1,4 @@
+{"hook_event_name":"PostToolUse","session_id":"write-stop-block","cwd":"/p","tool_name":"Write","tool_input":{"file_path":"/p/a.ts","content":"const x=1;"},"tool_response":{"stdout":"","exit_code":0}}
+{"hook_event_name":"Stop","session_id":"write-stop-block","cwd":"/p","last_assistant_message":"done"}
+{"hook_event_name":"Stop","session_id":"write-stop-block","cwd":"/p","stop_hook_active":false,"last_assistant_message":"done"}
+{"hook_event_name":"Stop","session_id":"write-stop-block","cwd":"/p","stop_hook_active":true,"last_assistant_message":"done"}

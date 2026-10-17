@@ -1,0 +1,5 @@
+{"ts":0,"type":"verdict","cwd":"/p","phase":"pre","decision":"rewrite","message":"Verity ran this with `set -o pipefail`, so the check's own exit status is the result and it counts as a check."}
+{"ts":0,"type":"event","cwd":"/p","phase":"post","hookEvent":"PostToolUse","tool":"Write","fact":{"kind":"edit","files":["a.ts"],"deleted":[],"code":["a.ts"]}}
+{"ts":0,"type":"event","cwd":"/p","phase":"post","hookEvent":"PostToolUse","tool":"Bash","fact":{"kind":"command","command":"set -o pipefail && npm test | tail -5","exitCode":0,"verify":true,"fingerprint":"6c32c24d03796d1b","summary":"ok","code":[]}}
+{"ts":0,"type":"event","cwd":"/p","phase":"stop","hookEvent":"Stop","tool":"","fact":{"kind":"stop","stopHookActive":false,"messageHash":"a4c3ed04a95a3da1"}}
+{"ts":0,"type":"verdict","cwd":"/p","phase":"stop","decision":"allow"}

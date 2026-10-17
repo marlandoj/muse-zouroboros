@@ -1,0 +1,8 @@
+session   claude-cmd-code.jsonl
+project   /p
+events    11
+edited    a, b, c, x.ts, y.ts, z.ts, my file.ts, dir, b.ts, a.ts, d2
+verified  no passing check since the last edit
+last cmd  `cp -r /p/d1 /p/d2` exit 0: 
+stops     none yet
+jev       0 calls, 0 cached, 0 failed

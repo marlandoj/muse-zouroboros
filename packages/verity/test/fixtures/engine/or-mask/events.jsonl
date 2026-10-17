@@ -1,0 +1,3 @@
+{"hook_event_name":"PostToolUse","session_id":"or-mask","cwd":"/p","tool_name":"Write","tool_input":{"file_path":"/p/a.ts","content":"x"},"tool_response":{"stdout":"","exit_code":0}}
+{"hook_event_name":"PostToolUse","session_id":"or-mask","cwd":"/p","tool_name":"Bash","tool_input":{"command":"npm test || true"},"tool_response":{"stdout":"ok","exit_code":0}}
+{"hook_event_name":"Stop","session_id":"or-mask","cwd":"/p","last_assistant_message":"done"}

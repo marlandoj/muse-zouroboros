@@ -1,0 +1,8 @@
+session   claude-write-stop-hollow-pass.jsonl
+project   TDIR/proj
+events    3
+edited    a.ts
+verified  no: `npm test` passed but the repo has no test files
+last cmd  `npm test` exit 0: ok
+stops     block
+jev       0 calls, 0 cached, 0 failed

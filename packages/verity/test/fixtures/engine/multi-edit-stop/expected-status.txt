@@ -1,0 +1,7 @@
+session   claude-multi-edit-stop.jsonl
+project   /p
+events    3
+edited    a.ts, b.ts
+verified  no passing check since the last edit
+stops     block
+jev       0 calls, 0 cached, 0 failed

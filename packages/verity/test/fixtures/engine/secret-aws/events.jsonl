@@ -1,0 +1,1 @@
+{"hook_event_name":"PreToolUse","session_id":"secret-aws","cwd":"/p","tool_name":"Write","tool_input":{"file_path":"/p/.env","content":"AWS_KEY=AKIAIOSFODNN7EXAMPLE"}}

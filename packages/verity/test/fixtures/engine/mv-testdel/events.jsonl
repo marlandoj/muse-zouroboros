@@ -1,0 +1,1 @@
+{"hook_event_name":"PreToolUse","session_id":"mv-testdel","cwd":"/p","tool_name":"Bash","tool_input":{"command":"mv /p/src/a.test.ts /p/src/a.test.ts.bak"}}

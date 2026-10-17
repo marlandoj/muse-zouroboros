@@ -1,0 +1,8 @@
+session   claude-postfailure.jsonl
+project   /p
+events    1
+edited    nothing that needs a check
+verified  no passing check since the last edit
+last cmd  `npm test` exit ?: 
+stops     none yet
+jev       0 calls, 0 cached, 0 failed

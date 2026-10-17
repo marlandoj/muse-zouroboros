@@ -1,0 +1,4 @@
+{"hookSpecificOutput":{"hookEventName":"PreToolUse","updatedInput":{"command":"set -o pipefail && npm test | tail -5"},"additionalContext":"Verity ran this with `set -o pipefail`, so the check's own exit status is the result and it counts as a check."}}
+{}
+{}
+{}
