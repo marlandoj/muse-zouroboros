@@ -278,8 +278,17 @@ bun scripts/persona-panel.ts validate --json
 bun scripts/consensus-quality-gate.ts run \
   --panel-only --file /tmp/change.diff \
   --criteria "correctness,security" --label "panel-review" --json
+
+# Or run the whole panel end to end through the gate CLI:
+bun scripts/consensus-gate.ts panel --file /tmp/change.diff \
+  --criteria "correctness,security" --seat-dispatch --json
 ```
 
+- **Seat-dispatch scoping.** `consensus-gate panel` runs each seat through its
+  resolved harness via the swarm ExecutorClient when `--seat-dispatch` is
+  passed — the expected mode. Without it, seats fall back to the shared MoA
+  transport, which is retired: that path holds at preflight by design (fail
+  closed), it does not execute. The panel stays shadow-only either way.
 - **Harness failover.** Each seat carries an ordered chain. If the primary is missing, the seat
   resolves to the next harness that is both registered in the executor registry and executable on
   PATH. A persona never drops off the panel because one harness is down.

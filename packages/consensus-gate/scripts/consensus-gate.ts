@@ -46,6 +46,19 @@ import {
 } from "./reviewer-independence";
 import { selectConsensusVoters } from "./consensus-availability";
 import { getResilientChain, providerForConsensusModel, writeRouteHealth } from "./provider-resilience";
+import {
+  DEFAULT_PERSONA_PANEL_PATH,
+  assessPanelReadiness,
+  loadPersonaPanel,
+  validatePersonaPanel,
+  type PersonaPanelArtifact,
+} from "./persona-panel";
+import {
+  buildPanelTransportProfile,
+  runQualityGate,
+  type QualityGateResult,
+} from "./consensus-quality-gate";
+import { createHarnessSeatCallModel } from "./panel-seat-executor";
 
 const dbPath = `${process.env.HOME}/.zouroboros/consensus-gate.json`;
 const logPath = `${process.env.HOME}/.zouroboros/consensus-gate.log`;
@@ -439,6 +452,10 @@ const options = {
   models: { type: "string" as const },
   scope: { type: "string" as const, default: "auto" },
   author: { type: "string" as const },
+  panel: { type: "string" as const },
+  "panel-profile": { type: "string" as const },
+  "seat-dispatch": { type: "boolean" as const, default: false },
+  risk: { type: "string" as const, default: "high" },
   help: { type: "boolean" as const, default: false },
 };
 
@@ -1954,12 +1971,216 @@ async function dissent(opts: { since: string; json: boolean; limit: number; minC
   }
 }
 
+/** Seat → harness binding surfaced in panel records and renders. */
+interface PanelSeatBinding {
+  seat: string;
+  harness: string | null;
+}
+
+interface PanelGateResultRecord {
+  schemaVersion: 1;
+  id: string;
+  timestamp: string;
+  label: string;
+  gate: "panel";
+  panelStatus: string;
+  panelHash: string;
+  diversityAxis: "persona";
+  enforcement: "disabled";
+  profileStatus: "shadow";
+  seatDispatch: { enabled: boolean; bindings: PanelSeatBinding[] };
+  decision: string;
+  recommendedDecision?: string;
+  preliminaryDecision: string;
+  decisionReason: string;
+  automaticApprovalEligible: boolean;
+  independence: unknown;
+  panelState: unknown;
+  reviewers: unknown[];
+  adjudication: unknown;
+  readiness: unknown;
+  quality: QualityGateResult;
+}
+
+const PANEL_GATE_EXIT = { INVALID_PANEL: 2 };
+
+/**
+ * Panel gate — the governed entry point that runs the persona panel end to end.
+ *
+ * Deliberately separate from `validate`: the legacy path keys independence on
+ * distinct model families and calls a shared transport. This one keys it on
+ * distinct personas, runs four separately-harnessed seats, and fails closed when
+ * the panel artifact is absent or structurally invalid.
+ *
+ * Seat execution: with `--seat-dispatch`, each seat is dispatched to its
+ * resolved local harness via the swarm ExecutorClient
+ * (panel-seat-executor.ts). Without it, seats run through the shared MoA
+ * transport — which is retired, so that path holds at preflight by design;
+ * `--seat-dispatch` is the expected mode.
+ *
+ * The panel stays `status: "shadow"` and `enforcement: "disabled"` regardless.
+ * Wiring a caller is an independent axis from promoting the panel.
+ */
+async function runPanelGate(opts: {
+  input: string;
+  criteria: string;
+  label: string;
+  panelPath?: string;
+  profilePath?: string;
+  risk: "high" | "advisory";
+  json: boolean;
+  seatDispatch: boolean;
+}): Promise<QualityGateResult> {
+  const panelPath = opts.panelPath ?? DEFAULT_PERSONA_PANEL_PATH;
+
+  let panel: PersonaPanelArtifact;
+  try {
+    panel = loadPersonaPanel(panelPath);
+  } catch (error) {
+    console.error(
+      `panel gate: cannot load panel artifact at ${panelPath} — failing closed` +
+      `${error instanceof Error ? ` (${error.message})` : ""}`,
+    );
+    process.exit(PANEL_GATE_EXIT.INVALID_PANEL);
+  }
+
+  const validation = validatePersonaPanel(panel);
+  if (!validation.valid) {
+    console.error(
+      `panel gate: panel artifact at ${panelPath} is structurally invalid — failing closed`,
+    );
+    for (const err of validation.errors) console.error(`   - ${err}`);
+    process.exit(PANEL_GATE_EXIT.INVALID_PANEL);
+  }
+
+  const readiness = assessPanelReadiness(panel);
+  if (!readiness.ready) {
+    console.error(
+      `panel gate: panel readiness is ${readiness.decision} — failing closed`,
+    );
+    if (readiness.heldSeats.length) {
+      console.error(`   held seats: ${readiness.heldSeats.join(", ")}`);
+    }
+    console.error(`   reason: ${readiness.reason}`);
+    for (const degradation of readiness.degradations) console.error(`   - ${degradation}`);
+    process.exit(PANEL_GATE_EXIT.INVALID_PANEL);
+  }
+
+  // The panel artifact is the seat source of truth; the model-keyed profile file is
+  // deliberately NOT loaded here. Coupling the panel gate to lineup.consensus.json
+  // would make the persona path depend on the model-keyed path it is replacing.
+  const transportProfile = buildPanelTransportProfile();
+  const callModel = opts.seatDispatch
+    ? createHarnessSeatCallModel({ panel })
+    : undefined;
+  const bindings: PanelSeatBinding[] = [...panel.reviewers, panel.adjudicator].map(
+    (s) => ({ seat: s.seat, harness: s.resolvedHarness }),
+  );
+
+  const quality = await runQualityGate({
+    input: opts.input,
+    criteria: opts.criteria,
+    label: opts.label,
+    risk: opts.risk,
+    profile: transportProfile,
+    personaPanel: panel,
+    ...(callModel ? { callModel } : {}),
+  });
+
+  if (opts.json) {
+    const record: PanelGateResultRecord = {
+      schemaVersion: 1,
+      id: quality.id,
+      timestamp: quality.timestamp,
+      label: quality.label,
+      gate: "panel",
+      panelStatus: panel.status,
+      panelHash: panel.panelHash,
+      diversityAxis: "persona",
+      enforcement: "disabled",
+      profileStatus: "shadow",
+      seatDispatch: {
+        enabled: Boolean(callModel),
+        bindings,
+      },
+      decision: quality.decision,
+      ...(quality.recommendedDecision ? { recommendedDecision: quality.recommendedDecision } : {}),
+      preliminaryDecision: quality.preliminaryDecision,
+      decisionReason: quality.decisionReason,
+      automaticApprovalEligible: quality.automaticApprovalEligible,
+      independence: quality.independence,
+      panelState: quality.personaPanelState,
+      reviewers: quality.reviewers,
+      adjudication: quality.adjudication,
+      readiness: quality.readiness,
+      quality,
+    };
+    console.log(JSON.stringify(record, null, 2));
+  } else {
+    renderPanelGate(quality, panel, bindings);
+  }
+  return quality;
+}
+
+/** Render in the same shape the legacy validator emits, so downstream parsers
+ *  read a panel run unchanged. */
+function renderPanelGate(
+  quality: QualityGateResult,
+  panel: PersonaPanelArtifact,
+  bindings: PanelSeatBinding[],
+): void {
+  console.log(`\n🕶️  PANEL GATE (${panel.status}) — profile=${quality.profileStatus}, enforcement=${quality.enforcement}`);
+  console.log(`   panel hash: ${panel.panelHash}`);
+  console.log(`   diversity axis: ${quality.independence.axis}`);
+
+  const bindingBySeat = new Map(bindings.map((b) => [b.seat, b]));
+  for (const record of quality.reviewers) {
+    const icon = record.status === "valid" ? (record.response?.verdict === "PASS" ? "✅" : "⚠️") : "⛔";
+    const charter = record.charter ? ` · ${record.charter.personaName} (${record.charter.domain})` : "";
+    const binding = bindingBySeat.get(record.seat);
+    const via = binding?.harness ? ` · via ${binding.harness}` : "";
+    const verdict = record.response?.verdict ?? record.status;
+    console.log(`  ${icon} ${record.seat} — ${verdict}${charter}${via} (${record.latencyMs}ms)`);
+    if (record.error) console.log(`     ↳ error: ${record.error}`);
+    for (const finding of record.response?.findings ?? []) {
+      console.log(`     • [${finding.severity}] ${finding.criterion}: ${finding.finding}`);
+    }
+  }
+  if (quality.adjudication) {
+    const adj = quality.adjudication;
+    const icon = adj.status === "valid" ? "⚖️" : "⛔";
+    const binding = bindingBySeat.get("adjudicator");
+    console.log(`  ${icon} adjudicator — ${adj.classification ?? adj.status}${binding?.harness ? ` · via ${binding.harness}` : ""}`);
+    if (adj.error) console.log(`     ↳ error: ${adj.error}`);
+  }
+
+  const abstained = quality.reviewers.filter((r) => r.response?.verdict === "ABSTAIN").length;
+  if (abstained) console.log(`\n${abstained} reviewer(s) abstained`);
+
+  const decisionWord = quality.decision.toLowerCase();
+  console.log(`\n📋 Consensus: ${decisionWord}`);
+  if (quality.decision === "PASS") {
+    console.log(`   ✅ Panel PASS on the persona axis — ${quality.decisionReason}\n`);
+  } else if (quality.decision === "REJECT") {
+    console.log(`   ❌ Panel REJECT — ${quality.decisionReason}\n`);
+  } else {
+    console.log(`   ⚠️ HOLD — ${quality.decisionReason}`);
+    if (quality.recommendedDecision) {
+      console.log(`   recommended: ${quality.recommendedDecision}\n`);
+    } else {
+      console.log("");
+    }
+  }
+  console.log(`ID: ${quality.id}`);
+}
+
 async function main() {
   if (values.help) {
     console.log(`Usage:
   consensus-gate preflight [--models "model-a,model-b,model-c"]
   consensus-gate validate --code "<code>" --criteria "security,correctness" --label "step-name" [--models "model-a,model-b,model-c"] [--scope auto|diff|full]
   consensus-gate validate --file path/to/file.ts --criteria "security"
+  consensus-gate panel --file path/to/file.ts --criteria "security" [--panel <panel.json>] [--seat-dispatch] [--risk high|advisory] [--json]
   consensus-gate result <id>
   consensus-gate list [--limit 10]
   consensus-gate dissent [--since 7d] [--limit 20] [--min-confidence 0.65] [--json]`);
@@ -2006,6 +2227,22 @@ async function main() {
     );
   } else if (command === "result") {
     await getResult(commandArgs[0]);
+  } else if (command === "panel") {
+    const panelCode = values.code || (values.file ? fs.readFileSync(values.file, "utf-8") : "");
+    if (!panelCode) {
+      console.error("Error: provide --code or --file");
+      process.exit(1);
+    }
+    await runPanelGate({
+      input: panelCode,
+      criteria: values.criteria || "correctness,security",
+      label: values.label || "unlabeled",
+      risk: values.risk === "advisory" ? "advisory" : "high",
+      json: Boolean(values.json),
+      seatDispatch: Boolean(values["seat-dispatch"]),
+      ...(values.panel ? { panelPath: values.panel } : {}),
+      ...(values["panel-profile"] ? { profilePath: values["panel-profile"] } : {}),
+    });
   } else if (command === "list") {
     await list(parseInt(values.limit || "10", 10));
   } else if (command === "dissent") {
@@ -2021,6 +2258,7 @@ Usage:
   consensus-gate preflight [--models "model-a,model-b,model-c"]
   consensus-gate validate --code "<code>" --criteria "security,correctness" --label "step-name" [--arbiter] [--escalate]
   consensus-gate validate --file path/to/file.ts --criteria "security" [--arbiter] [--escalate]
+  consensus-gate panel --file path/to/file.ts --criteria "security" [--panel <panel.json>] [--seat-dispatch] [--risk high|advisory] [--json]
   consensus-gate result <id>
   consensus-gate list [--limit 10]
   consensus-gate dissent [--since 7d] [--limit 20] [--min-confidence 0.65] [--json]
@@ -2028,6 +2266,8 @@ Usage:
 Flags:
   --arbiter   Adds a non-LLM 4th rung (R3): syntax + mechanical lint + dangerous patterns.
   --escalate  When verdict is 'escalate', escalates to zouroboros-governance for adjudication (R1).
+  --panel     Path to the persona panel artifact. The panel subcommand fails closed (exit 2) when it is absent or invalid.
+  --seat-dispatch  Run each seat through its resolved harness via the swarm ExecutorClient instead of the shared MoA transport.
 `);
   }
 }
