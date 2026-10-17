@@ -698,6 +698,36 @@ FACTORY_DISPATCH_OPERATOR_OVERRIDE=1 bun pool-worker.ts dispatch --campaign <id>
   the supervisor checkpoints as an `operator-override` stage.
 - The gate stays the default for everyone else.
 
+### 6.1a Hermes Kanban worker cap (2026-10-16)
+
+The Hermes Kanban dispatcher (`hermes kanban dispatch`) throttles worker
+spawns when system `MemAvailable` drops below 15% ("elevated") or 5%
+("critical"). On memory-constrained Muse hosts (7.7 GiB, ~83% baseline),
+this stalls all factory work intermittently with no clear error.
+
+**Policy:** cap concurrent Kanban workers at 2 via `~/.hermes/config.yaml`:
+
+```yaml
+kanban:
+  review_dispatch: true
+  max_in_progress: 2
+  max_in_progress_per_profile: 2
+```
+
+The machine-readable policy lives at
+`config/hermes-kanban-resource-policy.json`. Revisit if host memory
+increases or baseline utilization drops below 70%.
+
+**Operator notes:**
+- `dispatch` skips unassigned tasks silently. Assign to a profile before
+  dispatching (`hermes kanban --board <slug> assign <task> default`).
+- `claim` is for manual workers, not the dispatcher. Claiming then
+  dispatching is a no-op — the dispatcher only spawns for assigned,
+  unclaimed ready tasks.
+- Check pressure before debugging "stuck" tasks:
+  `hermes kanban --board <slug> dispatch --dry-run` reports
+  `Memory pressure elevated/critical` when throttled.
+
 ### 6.2 Stale-claim reclaim (F-002) and `failAssignment` (F-003)
 
 - A dispatch now stamps `harness_started_at` on the assignment **exactly when
