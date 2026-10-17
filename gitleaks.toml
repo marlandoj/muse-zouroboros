@@ -1,0 +1,18 @@
+# Gitleaks config for the public muse-zouroboros package.
+# See zouroboros-monorepo docs/security/secret-handling-policy.md §3b.
+# Extends default rules; allowlists ONLY paths audited 2026-10-16 to
+# contain synthetic test/calibration secrets. Production code must
+# never appear here.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Audited test fixtures with synthetic secrets (2026-10-16)"
+paths = [
+  '''.*\.test\.ts$''',
+  '''.*/__tests__/.*''',
+  '''.*/test/fixtures/.*''',
+  '''packages/consensus-gate/data/calibration/.*''',
+  '''walkthrough/.*''',
+]
