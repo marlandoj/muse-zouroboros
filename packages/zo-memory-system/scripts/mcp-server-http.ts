@@ -40,7 +40,7 @@ const PORT = parseInt(process.env.PORT || "48400");
 const DB_PATH = process.env.ZO_MEMORY_DB || "/home/workspace/.zo/memory/shared-facts.db";
 const EMBEDDING_MODEL = process.env.ZO_EMBEDDING_MODEL || "text-embedding-3-small";
 const HISTORY_PATH = join(process.env.HOME || "/tmp", ".swarm", "executor-history.json");
-const BEARER_TOKEN = process.env.ZO_MEMORY_MCP_TOKEN || "";
+const BEARER_TOKEN = process.env.ZO_MCP_BEARER_TOKEN || "";
 
 // --- DB ---
 let db: Database;
@@ -592,16 +592,12 @@ function createSessionServer(requestedSessionId?: string): { transport: WebStand
 
 // --- Auth check ---
 function checkAuth(req: Request): boolean {
-  if (!BEARER_TOKEN) return true; // No token configured = open access (localhost only)
+  if (!BEARER_TOKEN) return false; // No token configured = deny all (fail closed). Set ZO_MCP_BEARER_TOKEN.
   const auth = req.headers.get("authorization");
   if (!auth?.startsWith("Bearer ")) return false;
   const token = auth.slice(7);
-  
-  // Transition hack: Accept current token OR the mangled one cached by the bridge
-  const MANGLED_LEGACY = "nG1&xW5#jE8@fD2(uG6)tZ1[rA3]nP0*xL7!vR4^mQ2";
-  if (token === BEARER_TOKEN || token === MANGLED_LEGACY) return true;
 
-  // Constant-time fallback for security
+  // Constant-time comparison
   if (token.length !== BEARER_TOKEN.length) return false;
   let mismatch = 0;
   for (let i = 0; i < token.length; i++) {
@@ -671,5 +667,5 @@ const server = Bun.serve({
 
 console.error(`[zo-memory-mcp] HTTP MCP server running on http://0.0.0.0:${PORT}/mcp`);
 console.error(`[zo-memory-mcp] Health check: http://0.0.0.0:${PORT}/health`);
-console.error(`[zo-memory-mcp] Auth: ${BEARER_TOKEN ? "Bearer token required" : "Open (no token configured)"}`);
+console.error(`[zo-memory-mcp] Auth: ${BEARER_TOKEN ? "Bearer token required (ZO_MCP_BEARER_TOKEN)" : "DENY-ALL (no token configured — set ZO_MCP_BEARER_TOKEN)"}`);
 console.error(`[zo-memory-mcp] DB: ${DB_PATH}`);
