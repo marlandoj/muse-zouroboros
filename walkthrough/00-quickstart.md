@@ -17,8 +17,10 @@ same thing by hand.
 you one command:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/marlandoj/muse-zouroboros/main/scripts/quickstart.sh | bash
+npx -y muse-zouroboros@latest
 ```
+
+(The curl equivalent: `curl -fsSL https://raw.githubusercontent.com/marlandoj/muse-zouroboros/main/scripts/quickstart.sh | bash`.)
 
 Paste it into a terminal. The installer clones the repo, runs the setup
 (answering its questions as they come), verifies the install, and prints a

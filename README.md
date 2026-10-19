@@ -1,7 +1,7 @@
 # Zouroboros for Muse
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.1.0-green.svg)](package.json)
+[![Version](https://img.shields.io/badge/version-0.1.1-green.svg)](package.json)
 [![Muse](https://img.shields.io/badge/for-Meta%20Muse-0668E1.svg)](https://www.meta.ai)
 
 ![Muse × Zouroboros — The workshop behind your personal AI.](docs/assets/hero-muse-workshop.png)
@@ -80,8 +80,10 @@ it into a terminal, then paste the result back — Muse walks you through
 the rest in chat:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/marlandoj/muse-zouroboros/main/scripts/quickstart.sh | bash
+npx -y muse-zouroboros@latest
 ```
+
+(Prefer curl? `curl -fsSL https://raw.githubusercontent.com/marlandoj/muse-zouroboros/main/scripts/quickstart.sh | bash` does the same thing.)
 
 **Short on time but prefer to drive?** Start with
 [walkthrough/00-quickstart.md](walkthrough/00-quickstart.md) — install,

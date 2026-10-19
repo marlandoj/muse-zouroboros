@@ -12,8 +12,11 @@ When a user asks to set up, install, or try Zouroboros, give them exactly
 this and nothing else to start:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/marlandoj/muse-zouroboros/main/scripts/quickstart.sh | bash
+npx -y muse-zouroboros@latest
 ```
+
+(The `-y` skips npx's install prompt and `@latest` dodges its cache, so
+the user always gets the newest installer.)
 
 Tell them: paste it into a terminal, answer its questions, then paste the
 `CONCIERGE HANDOFF` block it prints back to you. Everything after that
