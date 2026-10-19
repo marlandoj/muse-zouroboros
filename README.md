@@ -60,6 +60,19 @@ This is for you if you use Muse regularly, you build software (or want AI help b
 
 It's probably not for you yet if you only use Muse for conversation and scheduling — the workshop earns its keep on building work. And it's not a second assistant: if what you want is someone to talk to, that's Muse, and this repo won't change that.
 
+## Hosted Workshop — skip the setup
+
+Don't want to run the infrastructure yourself? The hosted workshop puts the same system on a private VPS, provisioned for you in about 10 minutes — no terminal, no installs, no maintenance.
+
+**[Get a hosted workshop →](https://account.zouroboros.ai)**
+
+- **Your own private VPS** — single-tenant, 8 vCPU / 16 GB RAM, ready for heavy multi-agent builds
+- **All 7 executors** — Claude Code, Codex, Gemini, OpenCode, Kimi, Hermes, and Pi, orchestrated as one team
+- **Your subscriptions, no second meter** — routes through the Claude/ChatGPT accounts you already pay for
+- **Plans:** Free self-hosted tier, or Solo $59/mo, Pro $149/mo, Team $399/mo (annual = 10× monthly)
+
+This repo is the self-hosted path — same software, your hardware, your responsibility. The hosted workshop is the same software, our hardware, our responsibility. Your code and memory export cleanly either way, so you're never locked in.
+
 ## How to get started
 
 **Easiest: ask Muse to set you up.** Muse hands you one command, you paste
