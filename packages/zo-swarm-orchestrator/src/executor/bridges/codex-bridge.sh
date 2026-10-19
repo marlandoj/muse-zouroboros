@@ -58,7 +58,7 @@ source "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/model-catalog-resolv
 case "$RAW_MODEL" in
   swarm-light|light|trivial|simple)    CODEX_MODEL="$(catalog_model codex light gpt-6-luna)" ;;
   swarm-mid|mid|moderate)        CODEX_MODEL="$(catalog_model codex mid gpt-6-sol)" ;;
-  swarm-heavy|heavy|complex)    CODEX_MODEL="$(catalog_model codex heavy gpt-6-astra)" ;;
+  swarm-heavy|heavy|complex)    CODEX_MODEL="$(catalog_model codex heavy gpt-5.6-terra)" ;;
   swarm-failover|failover) CODEX_MODEL="$(catalog_model codex light gpt-6-luna)" ;;
   swarm-*)              CODEX_MODEL="$(catalog_model codex light gpt-6-luna)" ;;
   *)              CODEX_MODEL="$RAW_MODEL" ;;
