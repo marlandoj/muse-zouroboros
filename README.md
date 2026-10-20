@@ -81,15 +81,16 @@ This repo is the self-hosted path — same software, your hardware, your respons
 
 ## What you get: the MCP workshop
 
-A hosted workshop is an MCP server your Muse connects to. Everything below is a tool Muse can call — 24 in all.
+A hosted workshop is an MCP server your Muse connects to. Everything below is a tool Muse can call — 28 in all.
 
 - **Memory** — `memory_search`: search everything the workshop remembers; `memory_store`: save a fact or decision; `memory_episodes`: recall past work sessions; `memory_procedures`: how-to knowledge that accumulates; `cognitive_profile`: the workshop's model of how you work.
 - **Swarm** — `swarm_dispatch`: hand a task to the AI build team (Claude Code, Codex, Gemini, and more, routed automatically); `swarm_status`: check running work; `swarm_results`: collect finished work; `swarm_executors`: see the team roster and health; `swarm_doctor`: diagnose the team.
-- **Factory** — `factory_run`: run the spec-to-build-to-verified lane; `factory_smoke`: quick end-to-end check; `factory_status`: lane status.
+- **Factory** — `factory_run`: run the spec-to-build-to-verified lane; `factory_smoke`: quick end-to-end check; `factory_status`: lane status; `factory_queue`: every task bundle shipped to the factory — title, state (queued/running/done/failed), ship and finish times.
 - **Workshop** — `workshop_guide`: how to use the workshop; `onboarding_status`: setup progress; `workshop_update`: pull the latest release.
 - **Make it yours** — `workshop_add_executor`: connect another AI subscription; `workshop_set_model`: choose models per executor; `workshop_add_skill`: adopt a new skill (security-scanned first); `workshop_add_mcp`: adopt another MCP server (probed and classified first).
 - **Manage** — `workshop_memory_config`: memory retention and forgetting controls; `workshop_schedule`: recurring jobs on timers; `workshop_team`: seats and invites.
-- **API access** — `workshop_api_key`: mint API keys for automation.
+- **Live views** — `workshop_status`: the whole workshop in one call — VPS service states, executor roster, swarm activity, memory stats; `bridge_inbox_list`: task bundles waiting in the factory-dispatch bridge inbox (read-only).
+- **API & data** — `workshop_api_key`: mint API keys for automation; `workshop_export`: export everything — repo, memory, configs (secrets redacted) — as a tarball or GitHub branch; password re-auth required. No lock-in.
 
 **Prefer API access?** Create an API key in chat (shown once; only a hash is stored) and call the same MCP endpoint with a Bearer key from scripts, cron jobs, or other agent orchestrators — no browser login needed. OAuth 2.0 with PKCE remains the standard sign-in for Muse.
 
