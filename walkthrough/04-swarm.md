@@ -45,9 +45,9 @@ watch a full cycle: route → execute → ledger → result.
 bun scripts/orchestrate-v5.ts status
 ```
 
-shows your run, both tasks succeeded, and the decision ledger records which
-executor ran each task and why. Open the ledger row and read it — this is
-your audit trail, and trusting it starts now.
+shows your run, both tasks succeeded, and each result records which
+executor ran the task and why. Read the results — this is your audit trail,
+and trusting it starts now.
 
 ## Break it on purpose
 

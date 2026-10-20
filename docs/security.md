@@ -36,8 +36,6 @@ this repo.
 - **Sift protects failures and instructions.** Pruning proposals only cover
   repeated, byte-identical, successful tool output; the original is stored
   and verified before any reference replaces it.
-- **The decision ledger is local.** Swarm routing rows are hash-chained
-  append-only on your disk — auditable without a third party.
 - **Hooks fail open.** A crashing hook answers `{}`; the agent proceeds. The
   workshop never blocks your work because its own tooling broke.
 

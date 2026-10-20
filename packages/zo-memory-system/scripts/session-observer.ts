@@ -14,8 +14,8 @@
  *  1. Raw facts/episodes are never mutated. The observer pass is read-only
  *     against the fact store; it only INSERTs/UPDATEs `observations` rows.
  *  2. Identity boundary: the observer sees only facts with persona = actor
- *     (strictly per-actor for v1 — SME Q4). resolveScope() is still the
- *     fail-closed entry point (requireActor throws on missing actor).
+ *     (strictly per-actor for v1 — SME Q4). resolveScope() is the scope
+ *     entry point; a missing actor resolves to the 'shared' persona.
  *     NOTE: this package's baseline scope rule is actor + shared pool, but
  *     the observation layer deliberately narrows to persona = actor exactly —
  *     a v1 governance decision carried over from the monorepo, not an
@@ -60,7 +60,7 @@ import { randomUUID } from "crypto";
 import { Database } from "bun:sqlite";
 import { ensureObservationSchema, type ObservationDecayClass } from "./observations";
 import {
-  requireActor,
+  resolveActor,
   resolveScope,
   recordAudit,
   newCallId,
@@ -90,7 +90,7 @@ const DECAY_LIVENESS: Record<ObservationDecayClass, number> = {
 };
 
 export interface ObserveSessionsOptions {
-  /** Actor identity — required, fail-closed. Observer sees persona = actor only (v1). */
+  /** Actor identity (optional; default 'shared'). Observer sees persona = actor only (v1). */
   actor: string;
   /** Only episodes with happened_at >= since (unix seconds). Default 0 (all). */
   since?: number;
@@ -265,9 +265,9 @@ export async function observeSessions(
   db: Database,
   options: ObserveSessionsOptions
 ): Promise<ObserveSessionsResult> {
-  const actor = requireActor(options.actor, "observeSessions");
-  // resolveScope is the fail-closed entry point; v1 policy (SME Q4) then
-  // narrows to persona = actor exactly — strictly per-actor, no shared pool.
+  const actor = resolveActor(options.actor, "observeSessions");
+  // v1 policy (SME Q4) narrows the resolved scope to persona = actor
+  // exactly — strictly per-actor, no shared pool.
   const scope = resolveScope(actor, "observeSessions");
   ensureObservationSchema(db);
   ensureObservationEmbeddingsTable(db);
@@ -464,7 +464,7 @@ export async function observeSessions(
  * re-running the observer refines the observation back to active.
  */
 export function fadeOrphanedSessionObservations(db: Database, actor: string): { faded: number } {
-  const a = requireActor(actor, "fadeOrphanedSessionObservations");
+  const a = resolveActor(actor, "fadeOrphanedSessionObservations");
   const scope = resolveScope(a, "fadeOrphanedSessionObservations");
   ensureObservationSchema(db);
   const callId = newCallId();
@@ -514,7 +514,7 @@ export function searchSessionObservations(
   query: string,
   options: { actor: string; limit?: number }
 ): SessionObservationHit[] {
-  const actor = requireActor(options.actor, "searchSessionObservations");
+  const actor = resolveActor(options.actor, "searchSessionObservations");
   ensureObservationSchema(db);
   const limit = options.limit ?? 10;
   const rows = db
@@ -604,11 +604,6 @@ async function main() {
   const { initDb } = await import("./memory");
   const envDb = process.env.ZOUROBOROS_MEMORY_DB || process.env.ZO_MEMORY_DB;
   const db = await initDb(envDb || undefined);
-
-  if (!flags.actor) {
-    console.error("--actor is required (fail-closed)");
-    process.exit(1);
-  }
 
   if (command === "run") {
     const r = await observeSessions(db, {

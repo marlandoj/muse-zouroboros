@@ -20,9 +20,9 @@ adaptive decay, and per-workload model routing.
   `hybrid`, `vector`, `episodes`, `open-loops`, `stats`, `forget`/`restore`,
   `decay-sweep`, `promote-sweep`, `review-queue`), MCP server `zo-memory`
   (stdio) exposing `memory_search`, `memory_store`, `memory_episodes`,
-  `memory_procedures`, `cognitive_profile`. Fact-touching surfaces require
-  an actor identity (`--actor` / MCP `actor` arg) and fail closed with
-  `MISSING_ACTOR` without one; every access is audited in `memory_audit`.
+  `memory_procedures`, `cognitive_profile`. Fact-touching surfaces accept
+  an optional actor identity (`--actor` / MCP `actor` arg; a missing actor
+  resolves to the shared pool); every access is audited in `memory_audit`.
 - **Storage:** SQLite at `~/.zo/memory/shared-facts.db` (FTS5 always;
   vector index when embeddings are available).
 - **Models:** embeddings via OpenAI `text-embedding-3-small`; generation
@@ -41,7 +41,7 @@ adaptive decay, and per-workload model routing.
 
 Task orchestration across local harness executors: DAG definition, 6-signal
 composite routing, circuit-breaker health checks, fallback chains, budget
-governor, hash-chained decision ledger, systemd/cgroup sandboxing, and a
+governor, systemd/cgroup sandboxing, and a
 57-role specialist roster with persona consult.
 
 - **Entry points:** `bun scripts/orchestrate-v5.ts` (`doctor`, `status`),

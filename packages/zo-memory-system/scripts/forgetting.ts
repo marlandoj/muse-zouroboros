@@ -9,8 +9,9 @@
  * The decay sweep scores non-permanent facts on recency / importance /
  * relevance and forgets — never deletes — the ones below threshold.
  *
- * Every entry point requires an actor (fail closed, scope.ts) and writes a
- * memory_audit row. Shared by memory.ts (CLI) and the MCP servers.
+ * Every entry point resolves an actor through scope.ts (a missing actor
+ * resolves to the 'shared' pool) and writes a memory_audit row. Shared by
+ * memory.ts (CLI) and the MCP servers.
  */
 
 import { Database } from "bun:sqlite";

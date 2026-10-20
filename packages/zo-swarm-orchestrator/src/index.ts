@@ -195,39 +195,6 @@ export type {
 // ACP transport
 export { ACPTransport, type ACPTransportConfig } from './transport/acp-transport.js';
 
-// Decision factory (Track 2): records, tier policy, authority eval
-export {
-  FileDecisionRecordStore,
-  MemoryDecisionRecordStore,
-  resolveDecisionRecordStore,
-  sharedDecisionRecordStore,
-  DECISION_RECORDS_ENV,
-} from './decision-record.js';
-export type {
-  ApprovalTier,
-  BlastRadius,
-  DecisionEvent,
-  DecisionEventType,
-  DecisionGranularity,
-  DecisionOrigin,
-  DecisionOutcome,
-  DecisionRecord,
-  DecisionRecordStore,
-  ProposedAction,
-} from './decision-record.js';
-export {
-  DEFAULT_TIER_POLICY,
-  DecisionGate,
-  classifyBlastRadius,
-  escalateTier,
-  resolveDecisionOrigin,
-  tierFor,
-  type DecisionGateOptions,
-  type HumanApprover,
-  type TierPolicy,
-} from './approval-tiers.js';
-export { runAuthorityEvalSuite, type AuthorityEvalReport, type AuthorityProbeResult } from './authority-eval.js';
-
 // Heartbeat
 export { HeartbeatScheduler } from './heartbeat/scheduler.js';
 

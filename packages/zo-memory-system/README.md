@@ -17,10 +17,9 @@
 
 This skill gives your AI personas long-term memory that persists across conversations:
 
-- **Actor-Scoped Access (fail-closed)** -- Every fact read/write requires an actor identity (`--actor` / MCP `actor` arg); visibility is the actor's persona plus the shared pool, with no silent defaults and a full `memory_audit` trail
+- **Actor-Scoped Access** -- Fact reads/writes accept an optional actor identity (`--actor` / MCP `actor` arg; default `shared`); visibility is the actor's persona plus the shared pool, with a full `memory_audit` trail
 - **Reversible Forgetting** -- `forget`/`restore` hide and recover facts; a decay sweep on the canonical vocabulary (permanent/stable/active/session/checkpoint) forgets reversibly, and hard deletion only happens via a retention-window purge
 - **Promotion Pipeline** -- Rules-based capture → extraction → review → promotion ledger; only contradictions reach the human review queue
-- **Three-Signal Eval Harness** -- Hermetic per-signal ablation (keyword/vector/graph) with deterministic pseudo-embeddings and a CI gate (`scripts/eval-three-signal.ts`)
 - **Hybrid Search** -- Combines keyword matching (BM25) with vector similarity so you find facts even when you phrase things differently
 - **Knowledge Graph** -- Link facts together with typed relationships, find connections between entities, and identify gaps in your knowledge base
 - **Auto-Capture** -- Feed a conversation transcript in, get structured facts out. No manual entry required
@@ -269,12 +268,11 @@ bun scripts/memory.ts mcp          # Start via CLI
 
 **Available tools:** `memory_search`, `memory_store`, `memory_episodes`, `memory_procedures`, `cognitive_profile` (the HTTP server additionally exposes `memory_delete` and `memory_prune`)
 
-> **BREAKING (2026-10-14):** `memory_search`, `memory_store`, `memory_delete`,
-> and `memory_prune` now REQUIRE an `actor` argument (the caller's
-> persona/seat, e.g. `"claude-code"`). Calls without it fail closed with a
-> `MISSING_ACTOR` error — correct behavior, not a bug. Update every MCP
-> client so its tool calls pass `actor`; results are scoped to
-> `actor + shared` and every access is recorded in the `memory_audit` table.
+> **Actor scoping:** `memory_search`, `memory_store`, `memory_delete`,
+> and `memory_prune` accept an optional `actor` argument (the caller's
+> persona/seat, e.g. \"claude-code\"); when omitted, the call operates on
+> the `shared` pool. Results are scoped to `actor + shared` and every
+> access is recorded in the `memory_audit` table.
 
 Add to Claude Desktop or `.claude.json`:
 
@@ -381,10 +379,9 @@ zouroboros-memory-system/
 ├── README.md                 # This file
 ├── scripts/
 │   ├── memory.ts             # Main CLI (hybrid search, store, episodes, procedures, import, mcp)
-│   ├── scope.ts              # Actor scoping choke point + memory_audit (fail-closed)
+│   ├── scope.ts              # Actor scoping choke point + memory_audit
 │   ├── forgetting.ts         # Reversible forgetting + decay sweep + retention purge
 │   ├── promotion.ts          # Rules-based promotion pipeline + contradiction review queue
-│   ├── eval-three-signal.ts  # Hermetic keyword/vector/graph ablation harness (CI-gated)
 │   ├── memory-gate.ts        # Model-routed relevance gate
 │   ├── mcp-server.ts         # MCP server (5 tools, stdio transport)
 │   ├── import.ts             # Import pipeline (ChatGPT, Obsidian, markdown)

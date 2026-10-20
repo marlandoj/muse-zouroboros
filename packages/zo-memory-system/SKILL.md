@@ -14,7 +14,15 @@ metadata:
 
 Give your Zo personas persistent memory with semantic understanding, graph intelligence, and automatic fact capture.
 
-**v4.1 Updates (2026-10-14, intelligence plane):** Actor-scoped memory substrate — every fact read/write now requires a caller identity (`--actor` on the CLI, `actor` on MCP tools; fail-closed, no silent default to `shared`), one scope choke point (`scripts/scope.ts`) replaces all hand-rolled persona predicates, graph-arm scope-leak fix (neighbor injection is scope-filtered), `memory_audit` trail for every access, reversible forgetting on the canonical decay vocabulary (`forget`/`restore`/`decay-sweep`/`purge-forgotten`), rules-based promotion pipeline with a contradiction-only human review queue (`promote-sweep`/`review-queue`/`resolve-review`), and a hermetic three-signal retrieval eval harness (`eval-three-signal.ts`, deterministic pseudo-embeddings, CI gate). **BREAKING:** MCP clients that do not pass `actor` fail closed with `MISSING_ACTOR` — that is correct behavior; update client configs.
+**v4.1 Updates (2026-10-14):** Actor-scoped memory substrate — fact reads/writes
+accept a caller identity (`--actor` on the CLI, `actor` on MCP tools; a missing
+actor resolves to the `shared` pool), one scope choke point (`scripts/scope.ts`)
+replaces all hand-rolled persona predicates, graph-arm scope-leak fix (neighbor
+injection is scope-filtered), `memory_audit` trail for every access, reversible
+forgetting on the canonical decay vocabulary (`forget`/`restore`/`decay-sweep`/
+`purge-forgotten`), and a rules-based promotion pipeline with a
+contradiction-only human review queue (`promote-sweep`/`review-queue`/
+`resolve-review`).
 
 **v4.0 Updates (Q2-Q4 2026):** Context budget awareness (token tracking + proactive checkpointing), recursive episode summarization (model-routed FIFO compression), metrics dashboard (latency/recall/capture/gate stats), iterative multi-hop retrieval (confidence-based BFS with query refinement), cross-persona memory sharing (pools + inheritance hierarchy), conflict resolution (semantic/temporal detection + provenance tracking), enhanced knowledge graph (typed relations, cycle detection, DOT export, co-occurrence inference), embedding model benchmarking (3-model comparison + recall measurement).
 
@@ -28,12 +36,11 @@ Give your Zo personas persistent memory with semantic understanding, graph intel
 
 ## What You Get
 
-- **Actor-scoped access (fail-closed)** — every fact read/write requires an actor identity; visibility = own persona + shared pool; missing actor = `MISSING_ACTOR` error, never a silent `shared` default
+- **Actor-scoped access** — fact reads/writes accept an optional actor identity; visibility = own persona + shared pool; a missing actor resolves to the `shared` pool
 - **Single scope choke point** — `scripts/scope.ts` builds every persona predicate; no retrieval path hand-rolls its own (the definer-rights leak class is structurally closed)
 - **Audit trail** — every store/search/delete/forget/restore/purge writes a `memory_audit` row (actor, scope, action, fact, call id)
 - **Reversible forgetting** — `forget` hides a fact from all retrieval, `restore` brings it back; `decay-sweep` scores retention (recency/importance/relevance) on the canonical vocabulary (permanent facts never decay); hard deletion only via `purge-forgotten` after a retention window
 - **Promotion pipeline** — rules-based capture → extraction → review → promotion ledger; ONLY contradictions reach the human review queue (`resolve-review`: supersede/merge/flag)
-- **Three-signal eval harness** — `eval-three-signal.ts` ablates keyword/vector/graph arms on a hermetic scratch DB with deterministic pseudo-embeddings; CI-gated
 - **Automatic continuation recall** — Detects continuation-like messages and silently blends relevant context from the last 14 days
 - **First-class open loops** — Stores unfinished tasks, unresolved bugs/incidents, pending approvals, and next-step commitments as queryable records
 - **Searchable session summaries** — Episodes are indexed for continuation retrieval, not just listed by time
@@ -113,7 +120,7 @@ bun scripts/memory.ts init
 # Add memory to a persona
 bun scripts/add-persona.sh "my-persona" "Role description"
 
-# Store a fact (every read/write requires --actor; fail-closed)
+# Store a fact (--actor optional; defaults to the shared pool)
 bun scripts/memory.ts store \
   --actor "my-persona" \
   --entity "user" \
@@ -138,8 +145,8 @@ bun scripts/auto-capture.ts --input conversation.md --dry-run
 
 ### Store Facts
 ```bash
-# --actor is REQUIRED (fail-closed). The fact's persona defaults to the
-# actor; pass --persona shared for deliberately cross-harness facts.
+# --actor is optional (default 'shared'). The fact's persona defaults to
+# the actor; pass --persona shared for deliberately cross-harness facts.
 bun scripts/memory.ts store \
   --actor claude-code \
   --persona shared \
@@ -152,8 +159,8 @@ bun scripts/memory.ts store \
 
 ### Search Memory
 
-All searches require `--actor`; results are scoped to the actor's persona
-plus the shared pool, and every access is recorded in `memory_audit`.
+Searches accept an optional `--actor`; results are scoped to the actor's
+persona plus the shared pool, and every access is recorded in `memory_audit`.
 
 **Continuation Recall (facts + episodes + open loops):**
 ```bash
@@ -245,20 +252,6 @@ bun scripts/memory.ts resolve-review --id <fact-id> --decision supersede --actor
 #            flag      (contested; stays in review)
 ```
 
-### Three-Signal Eval Harness (Track 3)
-```bash
-# Hermetic per-signal ablation: keyword / vector / graph / keyword-vector /
-# all-three (production default) / no-graph-boost (A/B mirror). Scratch DB,
-# API keys stripped, deterministic pseudo-embeddings — zero network, zero cost.
-bun scripts/eval-three-signal.ts            # markdown report
-bun scripts/eval-three-signal.ts --json     # machine-readable
-
-# CI gate (exact deterministic counts + two-fresh-DB determinism check):
-bun test scripts/eval-three-signal.test.ts
-```
-A nightly lane on real embeddings is supported (unset `ZO_MODEL_EMBEDDING`,
-provide `OPENAI_API_KEY`, run with `--json`) but must stay OUT of the merge
-gate: network and billing never gate merges.
 
 ### Memory Defense (defense.ts)
 Every `store` / `batch-store` write is scanned for secrets and PII before it
@@ -630,16 +623,12 @@ bun scripts/memory.ts mcp          # Via CLI
 | `memory_procedures` | no | List or show workflow procedures |
 | `cognitive_profile` | no | Show executor cognitive profile (history, patterns, affinities) |
 
-### BREAKING: the `actor` cutover (2026-10-14)
+### The `actor` argument
 
-Every fact-touching tool now REQUIRES an `actor` argument — the caller's
-persona/seat identity (e.g. `"claude-code"`, `"codex"`, `"hermes"`). This is
-fail-closed by design (operator decision Q2): **old clients that do not send
-`actor` are rejected with a `MISSING_ACTOR` error. That is correct behavior,
-not a bug.** There is no silent default to `shared`; use `actor: "shared"`
-only for deliberately cross-harness identity. Roll out by updating each
-harness's MCP config/prompt so tool calls include `actor`, then restart the
-server. Results now include the resolved scope
+Every fact-touching tool accepts an optional `actor` argument — the caller's
+persona/seat identity (e.g. `claude-code`, `codex`, `hermes`). When omitted,
+the call operates on the `shared` pool; pass `actor: "shared"` explicitly for
+deliberately cross-harness identity. Results include the resolved scope
 (`actor=<a> personas=[<a>, shared]`), and every access is written to the
 `memory_audit` table for after-the-fact attribution.
 

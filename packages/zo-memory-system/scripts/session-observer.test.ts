@@ -23,7 +23,6 @@ import { Database } from "bun:sqlite";
 import { initDb, closeDb, storeWithEmbedding } from "./memory";
 import { createEpisodeRecord } from "./continuation";
 import { forgetFact } from "./forgetting";
-import { MissingActorError } from "./scope";
 import { ensureObservationSchema } from "./observations";
 import {
   observeSessions,
@@ -91,11 +90,11 @@ async function seedEpisodeWithFacts(
   return { epId, factIds };
 }
 
-describe("observeSessions — fail-closed scoping", () => {
-  test("throws MissingActorError on missing actor", async () => {
-    await expect(observeSessions(db, { actor: "" })).rejects.toThrow(MissingActorError);
-    // @ts-expect-error testing runtime guard
-    await expect(observeSessions(db, {})).rejects.toThrow(MissingActorError);
+describe("observeSessions — scoping", () => {
+  test("missing actor resolves to the shared scope", async () => {
+    await expect(observeSessions(db, { actor: "" })).resolves.toBeDefined();
+    // @ts-expect-error testing runtime default
+    await expect(observeSessions(db, {})).resolves.toBeDefined();
   });
 
   test("observer sees only the invoking actor facts (strictly per-actor v1)", async () => {
@@ -434,18 +433,27 @@ describe("memory_session_observations MCP tool (plane-native observation layer)"
     expect(out).toBe("No session observations found.");
   });
 
-  test("missing actor fails closed (MISSING_ACTOR)", async () => {
+  test("missing actor resolves to the shared scope", async () => {
+    await seedSessionObs();
     const { toolMemorySessionObservations } = await import("./mcp-server");
-    await expect(
-      toolMemorySessionObservations({ action: "search", actor: "", query: "x" })
-    ).rejects.toThrow(/actor is required/);
+    const out = await toolMemorySessionObservations({
+      action: "search",
+      actor: "",
+      query: "Redis",
+    });
+    // Shared scope holds no alice/bob observations.
+    expect(out).toBe("No session observations found.");
   });
 
-  test("blank actor fails closed", async () => {
+  test("blank actor resolves to the shared scope", async () => {
+    await seedSessionObs();
     const { toolMemorySessionObservations } = await import("./mcp-server");
-    await expect(
-      toolMemorySessionObservations({ action: "search", actor: "  ", query: "x" })
-    ).rejects.toThrow(MissingActorError);
+    const out = await toolMemorySessionObservations({
+      action: "search",
+      actor: "  ",
+      query: "Redis",
+    });
+    expect(out).toBe("No session observations found.");
   });
 
   test("observer triggering is not exposed (no observe/fade action)", async () => {

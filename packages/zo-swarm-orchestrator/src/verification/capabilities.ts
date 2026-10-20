@@ -314,23 +314,6 @@ export const CAPABILITY_MANIFEST: Capability[] = [
     dataPrerequisites: [],
     crossBoundary: [],
   },
-  {
-    id: 'decision-ledger',
-    name: 'Decision Ledger (G2)',
-    description: 'One append-only seat-keyed outcome ledger, written by the production ExecutorClient path when configured; model views derived on read',
-    edges: [
-      {
-        sourceModule: 'ledger/decision-ledger.ts',
-        exports: ['appendDecisionRow', 'readDecisionLedger'],
-        expectedImporters: ['client/executor-client.ts'],
-        callSites: [
-          { file: 'client/executor-client.ts', pattern: 'appendDecisionRow\\(' },
-        ],
-      },
-    ],
-    dataPrerequisites: [],
-    crossBoundary: [],
-  },
 ];
 
 /** Look up a capability by ID */

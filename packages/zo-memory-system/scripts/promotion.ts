@@ -31,7 +31,7 @@ import {
   ensureIntelligencePlaneSchema,
   notForgottenSql,
   recordAudit,
-  requireActor,
+  resolveActor,
   resolveScope,
   scopeSql,
   type ScopePredicate,
@@ -390,7 +390,7 @@ export function resolveReview(
   decision: ReviewDecision,
   options: { actor: string }
 ): ReviewResolution {
-  const actor = requireActor(options.actor, "resolveReview");
+  const actor = resolveActor(options.actor, "resolveReview");
   const scope = resolveScope(actor, "resolveReview");
   ensureIntelligencePlaneSchema(db);
   ensureConflictTable(db);

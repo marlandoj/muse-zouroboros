@@ -7,8 +7,7 @@ it across the AI CLIs installed on your machine (`packages/zo-swarm-executors`
 describes them). Each task is routed to the best *healthy* executor by a
 6-signal composite router (capability match, cost, latency history, procedure
 memory, temporal signals, load), with circuit breakers, fallback chains, a
-budget governor, and a hash-chained decision ledger recording every routing
-choice. Executors run sandboxed (systemd/cgroup) with prestaged user
+budget governor. Executors run sandboxed (systemd/cgroup) with prestaged user
 namespaces.
 
 Why: you already pay for several model subscriptions (Claude Max, ChatGPT,
@@ -59,8 +58,7 @@ bun scripts/orchestrate-v5.ts status   # queue / run state
 DAGs are defined in TypeScript (see `specs/` and `examples/` for shapes);
 `orchestrate-v5.ts` executes them with dependency ordering, per-task
 timeouts, retries with fallback executors, and mutation verification hooks.
-The decision ledger (`data/` by default) records each dispatch as a
-hash-chained row — re-run `status` to audit why task X went to executor Y.
+Re-run `status` to audit why task X went to executor Y.
 
 Other useful scripts: `tier-resolve.ts` (which model tier a task qualifies
 for), `dep-graph.ts` (visualize the DAG), `swarm-bench.ts` (benchmark an

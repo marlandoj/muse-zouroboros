@@ -12,7 +12,7 @@
  *   memory_procedures — List/show procedures
  *   cognitive_profile — Show executor cognitive profile
  *   memory_session_observations — Read-only retrieval over session-kind observations
- *     (plane-native observation layer; strictly per-actor, actor fail-closed)
+ *     (plane-native observation layer; strictly per-actor)
  */
 
 import { Server } from "@modelcontextprotocol/sdk/server/index.js";
@@ -32,6 +32,7 @@ import {
   newCallId,
   notForgottenSql,
   recordAudit,
+  resolveActor,
   resolveScope,
   scopeSql,
 } from "./scope";
@@ -121,14 +122,13 @@ function parseRelativeTime(input: string): number {
 // ==========================================================================
 
 export async function toolMemorySearch(args: {
-  actor: string;
+  actor?: string;
   query: string;
   category?: string;
   persona?: string;
   limit?: number;
 }): Promise<string> {
-  // Fail-closed (Track 1): no actor, no read. Results are scoped to the
-  // actor's persona + the shared pool; `persona` only narrows within scope.
+  // Results are scoped to the resolved actor (default 'shared').
   const scope = resolveScope(args?.actor, "memory_search");
   const db = getDb();
   const { query, category, persona, limit = 6 } = args;
@@ -271,7 +271,7 @@ export async function toolMemorySearch(args: {
 }
 
 export async function toolMemoryStore(args: {
-  actor: string;
+  actor?: string;
   entity: string;
   key?: string;
   value: string;
@@ -280,8 +280,8 @@ export async function toolMemoryStore(args: {
   persona?: string;
   text?: string;
 }): Promise<string> {
-  // Fail-closed (Track 1): no actor, no write. The fact's persona defaults
-  // to the actor — never silently to 'shared'.
+  // The fact's persona defaults to the resolved actor ('shared' when
+  // no actor is given).
   const scope = resolveScope(args?.actor, "memory_store");
   const db = getDb();
   const id = randomUUID();
@@ -382,13 +382,13 @@ function toolMemoryEpisodes(args: {
  * memory_session_observations — read-only retrieval over the plane-native
  * observation layer (session-observer.ts). Curated, dated per-session
  * digests with evidence links, returned bounded top-K (never whole-history
- * in context). Strictly per-actor (v1 governance): actor is required and
- * fail-closed; only observations with persona = actor are visible.
+ * in context). Strictly per-actor (v1 governance): only observations
+ * with persona = actor are visible; a missing actor resolves to 'shared'.
  * Observer triggering (observeSessions/fade) is deliberately NOT exposed.
  */
 export async function toolMemorySessionObservations(args: {
   action: string;
-  actor: string;
+  actor?: string;
   query: string;
   limit?: number;
 }): Promise<string> {
@@ -396,11 +396,12 @@ export async function toolMemorySessionObservations(args: {
   const action = args.action as string;
   const query = args.query as string;
   if (!query) throw new Error("query is required for memory_session_observations");
+  const actor = resolveActor(args.actor, "memory_session_observations");
   const hits =
     action === "search"
-      ? searchSessionObservations(db, query, { actor: args.actor, limit: args.limit })
+      ? searchSessionObservations(db, query, { actor, limit: args.limit })
       : action === "retrieve"
-        ? retrieveSessionObservations(db, query, { actor: args.actor, limit: args.limit })
+        ? retrieveSessionObservations(db, query, { actor, limit: args.limit })
         : null;
   if (!hits) throw new Error(`Unknown memory_session_observations action: ${action}`);
   if (hits.length === 0) return "No session observations found.";
@@ -521,35 +522,35 @@ const server = new Server(
 export const TOOLS = [
     {
       name: "memory_search",
-      description: "Search the memory system using hybrid FTS + vector search with RRF fusion. Requires a caller identity (actor); calls without one fail closed with MISSING_ACTOR. Results are scoped to the actor plus the shared pool.",
+      description: "Search the memory system using hybrid FTS + vector search with RRF fusion. Results are scoped to the caller's actor plus the shared pool; the actor is optional and defaults to 'shared'.",
       inputSchema: {
         type: "object" as const,
         properties: {
-          actor: { type: "string", description: "REQUIRED caller identity (persona/seat, e.g. 'claude-code'). Fail-closed: calls without an actor are rejected. Visibility = own persona + shared pool." },
+          actor: { type: "string", description: "Caller identity (persona/seat, e.g. 'claude-code'). Optional; defaults to 'shared'. Visibility = own persona + shared pool." },
           query: { type: "string", description: "Search query" },
           category: { type: "string", description: "Filter by category (preference, fact, decision, convention, other, reference, project)", enum: ["preference", "fact", "decision", "convention", "other", "reference", "project"] },
           persona: { type: "string", description: "Narrow results to one persona WITHIN the actor scope" },
           limit: { type: "number", description: "Max results (default: 6)" },
         },
-        required: ["actor", "query"],
+        required: ["query"],
       },
     },
     {
       name: "memory_store",
-      description: "Store a new fact in the memory system with automatic embedding generation. Requires a caller identity (actor); calls without one fail closed with MISSING_ACTOR.",
+      description: "Store a new fact in the memory system with automatic embedding generation. The optional actor defaults to 'shared'.",
       inputSchema: {
         type: "object" as const,
         properties: {
-          actor: { type: "string", description: "REQUIRED caller identity (persona/seat). Fail-closed: calls without an actor are rejected. Use 'shared' only for deliberately cross-persona facts." },
+          actor: { type: "string", description: "Caller identity (persona/seat). Optional; defaults to 'shared'. Use 'shared' only for deliberately cross-persona facts." },
           entity: { type: "string", description: "Entity name (e.g., 'user', 'project.ffb')" },
           key: { type: "string", description: "Key/attribute (optional)" },
           value: { type: "string", description: "Value to store" },
           category: { type: "string", description: "Category (default: fact)", enum: ["preference", "fact", "decision", "convention", "other", "reference", "project"] },
           decay_class: { type: "string", description: "Decay class (default: stable)", enum: ["permanent", "stable", "active", "session", "checkpoint"] },
-          persona: { type: "string", description: "Persona the fact is stored under (defaults to the actor, never silently 'shared')" },
+          persona: { type: "string", description: "Persona the fact is stored under (defaults to the actor, or 'shared' when no actor is given)" },
           text: { type: "string", description: "Full text for embedding (auto-generated if not provided)" },
         },
-        required: ["actor", "entity", "value"],
+        required: ["entity", "value"],
       },
     },
     {
@@ -589,16 +590,16 @@ export const TOOLS = [
     },
     {
       name: "memory_session_observations",
-      description: "Read session-kind observations — the plane-native observation layer retrieval signal. Curated, dated per-session digests with evidence links, retrieved bounded top-K (never whole-history in context). Strictly per-actor (v1 governance): actor is required and fail-closed via requireActor; only observations with persona = actor are visible. Read-only: observer triggering is not exposed here.",
+      description: "Read session-kind observations — the plane-native observation layer retrieval signal. Curated, dated per-session digests with evidence links, retrieved bounded top-K (never whole-history in context). Strictly per-actor (v1 governance): only observations with persona = actor are visible; the actor is optional and defaults to 'shared'. Read-only: observer triggering is not exposed here.",
       inputSchema: {
         type: "object" as const,
         properties: {
           action: { type: "string", enum: ["search", "retrieve"], description: "search: keyword over session observations; retrieve: RRF-fused bounded top-K (the eval-probe read path)" },
-          actor: { type: "string", description: "Actor identity — required, fail-closed. Missing/empty actor throws MISSING_ACTOR." },
+          actor: { type: "string", description: "Actor identity (optional; defaults to 'shared'). Only observations with persona = actor are visible." },
           query: { type: "string", description: "Search query" },
           limit: { type: "number", description: "Max results (default 10)" },
         },
-        required: ["action", "actor", "query"],
+        required: ["action", "query"],
       },
     },
   ];
@@ -649,7 +650,7 @@ async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   console.error("zo-memory-system MCP server running on stdio");
-  console.error("memory_search/memory_store require an 'actor' argument (fail-closed; old clients get MISSING_ACTOR)");
+  console.error("memory_search/memory_store accept an optional 'actor' argument (default 'shared')");
 }
 
 if (import.meta.main) {

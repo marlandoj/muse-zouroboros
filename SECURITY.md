@@ -26,7 +26,7 @@ agents on your machine, and reviews your code. Reports we're especially
 grateful for:
 
 - Anything that could leak an API key, token, or credential — through logs,
-  error messages, the decision ledger, or the Muse bridge
+  error messages or the Muse bridge
 - Hooks behaving differently than documented (blocking when they should only
   observe, sending data off the machine, running with more privilege than
   needed)

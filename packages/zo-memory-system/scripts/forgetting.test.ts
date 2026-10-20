@@ -18,7 +18,6 @@ import {
   sweepDecay,
   scoreRetention,
 } from "./forgetting";
-import { MissingActorError } from "./scope";
 
 process.env.ZO_MODEL_EMBEDDING = "deterministic:hash-v1";
 
@@ -86,12 +85,14 @@ describe("forget / restore", () => {
     expect(restoreFact(db, entry.id, { actor: ACTOR })).toBe(true);
   });
 
-  test("fail-closed: forgetting APIs require an actor", async () => {
+  test("forgetting APIs without an actor resolve to the shared scope", async () => {
     const db = await initDb();
     const entry = await seedFact("actor requirement probe");
-    expect(() => forgetFact(db, entry.id, { actor: undefined as never })).toThrow(MissingActorError);
-    expect(() => sweepDecay(db, { actor: "" as never })).toThrow(MissingActorError);
-    expect(() => purgeForgottenFacts(db, { actor: null as never })).toThrow(MissingActorError);
+    // No throw: a missing actor resolves to 'shared', which cannot see the
+    // ACTOR-owned fact, so the forget is a scoped no-op (false).
+    expect(forgetFact(db, entry.id, { actor: undefined as never })).toBe(false);
+    expect(() => sweepDecay(db, { actor: "" as never })).not.toThrow();
+    expect(() => purgeForgottenFacts(db, { actor: null as never })).not.toThrow();
   });
 });
 
