@@ -1,0 +1,62 @@
+name: ip-guard
+
+# Blocks Tier 3 IP (intelligence plane, decision factory, and — for this
+# repo's profile — other private-only components) from entering this public
+# repository. Marker/path/baseline lists live in .github/ip-guard-*.txt and
+# mirror the private IP-TIERS.yaml manifest, the single source of truth.
+# Hits inside the grandfathered baseline files (pre-freeze exposure, already
+# public) are tolerated; the same markers anywhere else fail the check.
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  ip-guard:
+    name: ip-guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Scan tracked files for Tier 3 markers and forbidden paths
+        run: |
+          set -u
+          fail=0
+          sort -u .github/ip-guard-baseline.txt > /tmp/baseline.txt
+
+          # --- forbidden paths outside the baseline set
+          while IFS= read -r re; do
+            [ -n "$re" ] || continue
+            phits=$(git ls-files | grep -E "$re" || true)
+            [ -n "$phits" ] || continue
+            pviol=$(printf '%s\n' "$phits" | sort -u | comm -23 - /tmp/baseline.txt || true)
+            if [ -n "$pviol" ]; then
+              echo "::error::Forbidden Tier 3 path(s) outside baseline:"
+              printf '%s\n' "$pviol"
+              fail=1
+            fi
+          done < .github/ip-guard-paths.txt
+
+          # --- Tier 3 content markers outside the baseline set
+          # (the guard's own .github/ip-guard-*.txt config contains the
+          # marker strings by design and is excluded from the scan)
+          hits=$(git grep -I -n -F -f .github/ip-guard-markers.txt -- . \
+            ':(exclude).github/ip-guard-markers.txt' \
+            ':(exclude).github/ip-guard-paths.txt' \
+            ':(exclude).github/ip-guard-baseline.txt' || true)
+          if [ -n "$hits" ]; then
+            viol=$(printf '%s\n' "$hits" | cut -d: -f1 | sort -u | comm -23 - /tmp/baseline.txt || true)
+            if [ -n "$viol" ]; then
+              echo "::error::Tier 3 IP markers outside grandfathered baseline files:"
+              printf '%s\n' "$viol" | while IFS= read -r f; do
+                printf '%s\n' "$hits" | grep -F "$f:" || true
+              done
+              fail=1
+            fi
+          fi
+
+          if [ "$fail" -eq 0 ]; then
+            echo "ip-guard: clean"
+          else
+            echo "ip-guard: VIOLATIONS — Tier 3 IP must not enter this repo. See IP-TIERS.yaml tier model."
+          fi
+          exit "$fail"
