@@ -73,6 +73,12 @@ Don't want to run the infrastructure yourself? The hosted workshop puts the same
 
 This repo is the self-hosted path — same software, your hardware, your responsibility. The hosted workshop is the same software, our hardware, our responsibility. Your code and memory export cleanly either way, so you're never locked in.
 
+## Two editions
+
+**Community Edition** — this repository. Open source (MIT), self-hosted, and free forever: the memory system, all 7 executors, the swarm orchestrator, and Verity verification. Maintained with security and install fixes.
+
+**Hosted Workshop** — the same core, running on a dedicated VPS we manage for you, plus the full governance and intelligence stack: the decision factory (every consequential action proposed, tiered, and recorded before it runs) and the intelligence plane. Those two components are hosted-only and are not part of this repository.
+
 ## How to get started
 
 **Easiest: ask Muse to set you up.** Muse hands you one command, you paste
