@@ -79,6 +79,20 @@ This repo is the self-hosted path — same software, your hardware, your respons
 
 **Hosted Workshop** — the same core, running on a dedicated VPS we manage for you, plus the full governance and intelligence stack: the decision factory (every consequential action proposed, tiered, and recorded before it runs) and the intelligence plane. Those two components are hosted-only and are not part of this repository.
 
+## What you get: the MCP workshop
+
+A hosted workshop is an MCP server your Muse connects to. Everything below is a tool Muse can call — 24 in all.
+
+- **Memory** — `memory_search`: search everything the workshop remembers; `memory_store`: save a fact or decision; `memory_episodes`: recall past work sessions; `memory_procedures`: how-to knowledge that accumulates; `cognitive_profile`: the workshop's model of how you work.
+- **Swarm** — `swarm_dispatch`: hand a task to the AI build team (Claude Code, Codex, Gemini, and more, routed automatically); `swarm_status`: check running work; `swarm_results`: collect finished work; `swarm_executors`: see the team roster and health; `swarm_doctor`: diagnose the team.
+- **Factory** — `factory_run`: run the spec-to-build-to-verified lane; `factory_smoke`: quick end-to-end check; `factory_status`: lane status.
+- **Workshop** — `workshop_guide`: how to use the workshop; `onboarding_status`: setup progress; `workshop_update`: pull the latest release.
+- **Make it yours** — `workshop_add_executor`: connect another AI subscription; `workshop_set_model`: choose models per executor; `workshop_add_skill`: adopt a new skill (security-scanned first); `workshop_add_mcp`: adopt another MCP server (probed and classified first).
+- **Manage** — `workshop_memory_config`: memory retention and forgetting controls; `workshop_schedule`: recurring jobs on timers; `workshop_team`: seats and invites.
+- **API access** — `workshop_api_key`: mint API keys for automation.
+
+**Prefer API access?** Create an API key in chat (shown once; only a hash is stored) and call the same MCP endpoint with a Bearer key from scripts, cron jobs, or other agent orchestrators — no browser login needed. OAuth 2.0 with PKCE remains the standard sign-in for Muse.
+
 ## How to get started
 
 **Easiest: ask Muse to set you up.** Muse hands you one command, you paste
