@@ -21,7 +21,6 @@ import {
   PromotionStateError,
 } from "./promotion";
 import { restoreFact } from "./forgetting";
-import { MissingActorError } from "./scope";
 
 process.env.ZO_MODEL_EMBEDDING = "deterministic:hash-v1";
 
@@ -221,13 +220,29 @@ describe("sweep", () => {
     expect(again.examined).toBe(0);
   });
 
-  test("fail-closed: promotion APIs require an actor", async () => {
+  test("promotion APIs without an actor resolve to the shared scope", async () => {
     const db = await initDb();
     const entry = await seedFact("delta", "delta probe");
-    expect(() => enterCapture(db, entry.id, { actor: undefined as never })).toThrow(MissingActorError);
-    expect(() => advancePromotion(db, entry.id, { actor: "" as never })).toThrow(MissingActorError);
-    expect(() => sweepPromotions(db, { actor: null as never })).toThrow(MissingActorError);
-    expect(() => listReviewQueue(db, { actor: undefined as never })).toThrow(MissingActorError);
-    expect(() => resolveReview(db, entry.id, "merge", { actor: undefined as never })).toThrow(MissingActorError);
+    // No actor anywhere: every call resolves to 'shared' instead of throwing.
+    enterCapture(db, entry.id, { actor: undefined as never });
+    expect(getPromotionStage(db, entry.id)).toBe("capture");
+    const row = db.prepare(
+      "SELECT decided_by FROM fact_promotions WHERE fact_id = ?"
+    ).get(entry.id) as { decided_by: string };
+    expect(row.decided_by).toBe("shared");
+    expect(() => sweepPromotions(db, { actor: null as never })).not.toThrow();
+    expect(() => listReviewQueue(db, { actor: undefined as never })).not.toThrow();
+    // State-machine/visibility errors are fine; actor-REQUIREMENT errors
+    // (the removed fail-closed enforcement) are not.
+    try {
+      resolveReview(db, entry.id, "merge", { actor: undefined as never });
+    } catch (e) {
+      expect((e as Error).message).not.toMatch(/actor is required/i);
+    }
+    try {
+      advancePromotion(db, entry.id, { actor: "" as never });
+    } catch (e) {
+      expect((e as Error).message).not.toMatch(/actor is required/i);
+    }
   });
 });

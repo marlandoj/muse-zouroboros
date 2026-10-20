@@ -5,8 +5,8 @@
  * hybridSearch and the MCP servers) fetched facts with NO persona filter:
  * any actor could pull another persona's facts through a fact_links edge.
  * These tests pin the fix — cross-actor facts must not leak through any
- * graph-arm surface — and the fail-closed actor requirement at the function
- * and MCP boundaries.
+ * graph-arm surface — and the actor-resolution contract (a missing actor
+ * resolves to the 'shared' scope) at the function and MCP boundaries.
  */
 
 import { describe, test, expect, beforeEach, afterAll } from "bun:test";
@@ -23,7 +23,7 @@ import {
   deleteFact,
 } from "./memory";
 import { findGraphNeighbors } from "./graph-boost";
-import { resolveScope, MissingActorError } from "./scope";
+import { resolveScope, resolveActor } from "./scope";
 
 // Deterministic embeddings: no network, no keys, stable across machines.
 process.env.ZO_MODEL_EMBEDDING = "deterministic:hash-v1";
@@ -124,25 +124,30 @@ describe("graph-arm scope leak (regression)", () => {
   });
 });
 
-describe("fail-closed actor at the function boundary", () => {
-  test("search and store without actor throw MissingActorError", async () => {
-    expect(hybridSearch("anything", { actor: undefined as never })).rejects.toThrow(MissingActorError);
-    expect(ftsSearch("anything", { actor: "" as never })).rejects.toThrow(MissingActorError);
-    expect(vectorSearch("anything", { actor: "   " as never })).rejects.toThrow(MissingActorError);
-    expect(
-      storeWithEmbedding({
-        entity: "x", key: null, value: "y", text: "x : y", category: "fact",
-        decayClass: "stable", importance: 1, source: "test", confidence: 1,
-      }, { actor: undefined as never })
-    ).rejects.toThrow(MissingActorError);
+describe("actor resolution at the function boundary", () => {
+  test("search and store without actor resolve to the shared scope", async () => {
+    const entry = await storeWithEmbedding({
+      entity: "probe", key: null, value: "shared-scope probe fact",
+      text: "probe : shared-scope probe fact", category: "fact",
+      decayClass: "stable", importance: 1, source: "test", confidence: 1,
+    }, { actor: undefined as never });
+    expect(entry?.persona).toBe("shared");
+
+    const kw = await ftsSearch("shared-scope probe", { actor: "" as never, limit: 5 });
+    expect(kw.some((r) => r.entry.id === entry!.id)).toBe(true);
+    await expect(hybridSearch("anything", { actor: undefined as never, useHyde: false })).resolves.toBeDefined();
+    await expect(vectorSearch("anything", { actor: "   " as never })).resolves.toBeDefined();
   });
 
-  test("requireActor rejects non-string actors", () => {
-    expect(() => resolveScope(42 as never)).toThrow(MissingActorError);
-    expect(() => resolveScope(null as never)).toThrow(MissingActorError);
+  test("resolveActor falls back to 'shared' for missing/non-string actors", () => {
+    expect(resolveActor(42 as never)).toBe("shared");
+    expect(resolveActor(null as never)).toBe("shared");
+    expect(resolveActor("")).toBe("shared");
+    expect(resolveScope(42 as never).personas).toEqual(["shared"]);
+    expect(resolveActor("  claude-code ")).toBe("claude-code");
   });
 
-  test("store persona defaults to the actor, never to 'shared'", async () => {
+  test("store persona defaults to the actor when one is given", async () => {
     const entry = await seedFact("claude-code", "pref.editor", "editor is Neovim");
     expect(entry.persona).toBe("claude-code");
 
@@ -166,18 +171,20 @@ describe("fail-closed actor at the function boundary", () => {
   });
 });
 
-describe("fail-closed actor at the MCP boundary", () => {
-  test("memory_store / memory_search without actor fail closed with MISSING_ACTOR", async () => {
+describe("actor resolution at the MCP boundary", () => {
+  test("memory_store / memory_search without actor operate on the shared scope", async () => {
     const { toolMemorySearch, toolMemoryStore } = await import("./mcp-server");
 
-    expect(toolMemoryStore({ entity: "x", value: "y" } as never)).rejects.toThrow(/MISSING_ACTOR/);
-    expect(toolMemorySearch({ query: "anything" } as never)).rejects.toThrow(/MISSING_ACTOR/);
+    await toolMemoryStore({ entity: "x", value: "y" } as never);
+    const res = await toolMemorySearch({ query: "y" } as never);
+    expect(res).toContain("scope: actor=shared personas=[shared]");
 
-    // Nothing was written through the failed store (check the MCP server's own DB).
+    // The store landed under the 'shared' persona (check the MCP server's own DB).
     const { Database } = await import("bun:sqlite");
     const mcpDb = new Database(process.env.ZO_MEMORY_DB!);
-    const count = mcpDb.prepare("SELECT COUNT(*) c FROM facts").get() as { c: number };
-    expect(count.c).toBe(0);
+    const rows = mcpDb.prepare("SELECT persona FROM facts").all() as Array<{ persona: string }>;
+    expect(rows.length).toBe(1);
+    expect(rows[0].persona).toBe("shared");
     mcpDb.close();
   });
 

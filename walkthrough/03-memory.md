@@ -20,10 +20,9 @@ bun $M store --actor claude-code --persona shared --entity "workshop" --key "smo
 bun $M hybrid "memory alive" --actor claude-code
 ```
 
-Every fact read/write requires `--actor <identity>` (your persona/seat —
-fail-closed; a missing actor is a `MISSING_ACTOR` error, never a silent
-default). The stored persona defaults to the actor; `--persona shared` makes
-the fact deliberately cross-harness.
+Fact reads/writes accept `--actor <identity>` (your persona/seat). When
+omitted, the call operates on the `shared` pool. The stored persona defaults
+to the actor; `--persona shared` makes the fact deliberately cross-harness.
 
 You should see the fact you just stored come back in the hybrid results. If
 `OPENAI_API_KEY` isn't set, you'll see a note that it's running FTS5-only —
@@ -52,10 +51,9 @@ same):
 }
 ```
 
-**Actor cutover (breaking, 2026-10-14):** `memory_store` and `memory_search`
-require an `actor` argument naming the calling harness/persona (e.g.
-`"claude-code"`). Old clients that omit it fail closed with `MISSING_ACTOR`
-— correct behavior, not a bug. Tell each harness to pass its identity, e.g.:
+**Actor scoping:** `memory_store` and `memory_search` accept an optional
+`actor` argument naming the calling harness/persona; when omitted, the call
+operates on the `shared` pool. Tell each harness to pass its identity, e.g.:
 
 ```json
 { "name": "memory_store", "arguments": { "actor": "claude-code", "entity": "workshop", "value": "wired up", "persona": "shared" } }

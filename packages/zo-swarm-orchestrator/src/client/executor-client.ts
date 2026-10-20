@@ -18,7 +18,6 @@ import { CircuitBreaker } from '../circuit/breaker.js';
 import { loadRegistry, findExecutor } from '../registry/loader.js';
 import { createTransport } from '../transport/factory.js';
 import { enrichTaskWithRAG, shouldEnrichWithRAG } from '../rag/enrichment.js';
-import { appendDecisionRow } from '../ledger/decision-ledger.js';
 import type { ExecutorTransport, SessionUpdate } from '../transport/types.js';
 import type { ExecutorRegistryEntry, Task, TaskResult } from '../types.js';
 
@@ -31,10 +30,6 @@ export interface ExecutorClientOptions {
   seat?: string;
   /** Skip RAG enrichment entirely, even when keywords/forceRAG would trigger it. Unset = unchanged. */
   skipRAG?: boolean;
-  /** Append one seat-keyed decision row per run to this JSONL ledger (G2). Also via env ZOUROBOROS_DECISION_LEDGER. Append failure throws (fail closed). */
-  ledgerPath?: string;
-  /** Correlation id for the ledger row. Default: the generated taskId. */
-  traceId?: string;
   /** Force RAG enrichment even when keywords don't trigger it. Default: false */
   forceRAG?: boolean;
   /** Override RAG collections. Defaults to all 5 local collections. */
@@ -194,23 +189,6 @@ export class ExecutorClient {
     });
 
     const durationMs = Date.now() - start;
-
-    // G2: one ledger, written on the production path. When a ledger is
-    // configured, persisting is part of the call — an append failure throws
-    // rather than letting a decision vanish silently.
-    const ledgerPath = opts.ledgerPath ?? process.env.ZOUROBOROS_DECISION_LEDGER;
-    if (ledgerPath) {
-      appendDecisionRow(ledgerPath, {
-        traceId: opts.traceId ?? taskId,
-        ...(opts.seat ? { seat: opts.seat } : {}),
-        personaId: persona,
-        harness: this.executorId,
-        ...(opts.model ? { modelId: opts.model } : {}),
-        status: result.success ? 'success' : 'failure',
-        latencyMs: durationMs,
-        seatDispatch,
-      });
-    }
 
     return {
       output: result.output ?? '',

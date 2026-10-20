@@ -40,7 +40,7 @@ import {
   newCallId,
   notForgottenSql,
   recordAudit,
-  requireActor,
+  resolveActor,
   resolveScope,
   scopeSql,
 } from "./scope";
@@ -364,11 +364,11 @@ function cosineSimilarity(a: number[], b: number[]): number {
 
 export interface StoreOptions {
   /**
-   * REQUIRED caller identity (fail-closed, Track 1): there is no silent
-   * default persona. The fact's persona defaults to the actor; pass
-   * entry.persona explicitly (e.g. 'shared') to store elsewhere in scope.
+   * Caller identity (optional): defaults to 'shared'. The fact's persona
+   * defaults to the actor; pass entry.persona explicitly (e.g. 'shared')
+   * to store elsewhere in scope.
    */
-  actor: string;
+  actor?: string;
   skipWikilinkEnforcement?: boolean;
 }
 
@@ -376,7 +376,7 @@ export async function storeWithEmbedding(
   entry: Omit<MemoryEntry, "id" | "createdAt" | "expiresAt" | "lastAccessed" | "persona"> & { persona?: string },
   options: StoreOptions
 ): Promise<MemoryEntry | null> {
-  const actor = requireActor(options?.actor, "storeWithEmbedding");
+  const actor = resolveActor(options?.actor, "storeWithEmbedding");
   const persona = entry.persona || actor;
   const db = await initDb();
   const id = randomUUID();
@@ -496,7 +496,7 @@ export async function storeWithEmbedding(
 // --- Hybrid Search ---
 export async function hybridSearch(
   query: string,
-  options: { actor: string; persona?: string; limit?: number; useHyde?: boolean; useGraph?: boolean }
+  options: { actor?: string; persona?: string; limit?: number; useHyde?: boolean; useGraph?: boolean }
 ): Promise<Array<{ entry: MemoryEntry; score: number; sources: string[] }>> {
   const scope = resolveScope(options?.actor, "hybridSearch");
   const db = await initDb();
@@ -722,7 +722,7 @@ export async function hybridSearch(
 }
 
 // --- FTS-only Search (v1 compatible) ---
-export async function ftsSearch(query: string, options: { actor: string; persona?: string; limit?: number; entity?: string }): Promise<Array<{ entry: MemoryEntry; score: number }>> {
+export async function ftsSearch(query: string, options: { actor?: string; persona?: string; limit?: number; entity?: string }): Promise<Array<{ entry: MemoryEntry; score: number }>> {
   const scope = resolveScope(options?.actor, "ftsSearch");
   const db = await initDb();
   const { persona, limit = 5, entity } = options;
@@ -771,7 +771,7 @@ export async function ftsSearch(query: string, options: { actor: string; persona
 // --- Vector-only Search (per-signal ablation arm; Track 3) ---
 export async function vectorSearch(
   query: string,
-  options: { actor: string; persona?: string; limit?: number; minSimilarity?: number }
+  options: { actor?: string; persona?: string; limit?: number; minSimilarity?: number }
 ): Promise<Array<{ entry: MemoryEntry; score: number }>> {
   const scope = resolveScope(options?.actor, "vectorSearch");
   const db = await initDb();
@@ -891,9 +891,9 @@ async function createEpisode(episode: Omit<Episode, "id" | "createdAt">): Promis
 
 export async function continuationSearch(
   query: string,
-  options: { actor: string; persona?: string; limit?: number; windowDays?: number; useHyde?: boolean }
+  options: { actor?: string; persona?: string; limit?: number; windowDays?: number; useHyde?: boolean }
 ): Promise<{ items: Array<{ kind: string; score: number; summary: string; title: string }>; context: string; detection: ReturnType<typeof detectContinuation> }> {
-  const actor = requireActor(options?.actor, "continuationSearch");
+  const actor = resolveActor(options?.actor, "continuationSearch");
   const db = await initDb();
   const limit = options.limit || 6;
   const windowDays = options.windowDays || 14;
@@ -1371,7 +1371,7 @@ async function autoCreateProcedureFromEpisodes(
 }
 
 // --- Delete & Prune ---
-export async function deleteFact(factId: string, options: { actor: string }): Promise<boolean> {
+export async function deleteFact(factId: string, options: { actor?: string }): Promise<boolean> {
   const scope = resolveScope(options?.actor, "deleteFact");
   const db = await initDb();
   const scoped = scopeSql(scope);
@@ -1496,11 +1496,11 @@ Usage:
 
 Commands:
   init      Initialize/verify database schema
-  store     Store a new fact with embedding (requires --actor)
+  store     Store a new fact with embedding
   search    FTS-only search (v1 compatible; requires --actor)
   hybrid    Hybrid search (FTS + vectors + HyDE; requires --actor)
-  vector    Vector-only search (requires --actor)
-  continuation  Blended continuation recall across facts, episodes, and open loops (requires --actor)
+  vector    Vector-only search
+  continuation  Blended continuation recall across facts, episodes, and open loops
   open-loops    List open loops
   resolve-loop  Resolve matching open loops from text
   index     Backfill embeddings for existing facts
@@ -1509,24 +1509,23 @@ Commands:
   episodes  List/query episodic memory (--create to add)
   procedures  List/manage workflow procedures (--create, --show, --evolve, --auto, --feedback)
   trends    Show velocity trends for an entity
-  delete    Delete a specific fact by ID (requires --actor; scope-checked; cascades)
-  prune     Garbage-collect expired facts and/or low-activation facts (requires --actor; scoped)
+  delete    Delete a specific fact by ID (scope-checked; cascades)
+  prune     Garbage-collect expired facts and/or low-activation facts (scoped)
   defense   Dry-run the Memory Defense secret/PII scanner (scan|patterns)
-  forget    Reversibly forget a fact: hidden from retrieval, restorable (requires --actor)
-  restore   Restore a reversibly-forgotten fact (requires --actor)
-  forgotten List reversibly-forgotten facts in scope (requires --actor)
-  purge-forgotten  Hard-delete facts forgotten longer than the retention window (requires --actor)
-  decay-sweep      Reversibly forget low-retention / expired facts on the canonical decay vocabulary (requires --actor)
-  promote-sweep    Run the rules-based promotion pipeline: capture -> extraction -> review|promotion (requires --actor)
-  review-queue     List facts awaiting human review (contradictions only; requires --actor)
-  resolve-review   Resolve a review item: --id <fact> --decision supersede|merge|flag (requires --actor)
+  forget    Reversibly forget a fact: hidden from retrieval, restorable
+  restore   Restore a reversibly-forgotten fact
+  forgotten List reversibly-forgotten facts in scope
+  purge-forgotten  Hard-delete facts forgotten longer than the retention window
+  decay-sweep      Reversibly forget low-retention / expired facts on the canonical decay vocabulary
+  promote-sweep    Run the rules-based promotion pipeline: capture -> extraction -> review|promotion
+  review-queue     List facts awaiting human review (contradictions only)
+  resolve-review   Resolve a review item: --id <fact> --decision supersede|merge|flag
 
-Actor scoping (Track 1, fail-closed):
-  Every fact read/write requires --actor <identity> (persona/seat). There is
-  no silent default: a missing actor is an error (MISSING_ACTOR), never a
-  fallback to 'shared'. Visibility = own persona + the shared pool. Use
-  --actor shared (deliberately) for cross-harness facts. Every access is
-  recorded in the memory_audit table.
+Actor scoping:
+  --actor <identity> (persona/seat) is optional: when omitted, the call
+  operates on the 'shared' pool. Visibility = own persona + the shared
+  pool. Use --actor shared (deliberately) for cross-harness facts. Every
+  access is recorded in the memory_audit table.
 
 
 Delete options:
@@ -1538,7 +1537,7 @@ Prune options:
   --dry-run            Preview what would be pruned without deleting
 
 Store options:
-  --actor <identity>   REQUIRED caller identity; fact persona defaults to it
+  --actor <identity>   Caller identity (optional; default 'shared'); fact persona defaults to it
   --entity <name>      Entity name (required)
   --key <name>         Key/attribute (optional)
   --value <text>       Value (required)
@@ -1548,7 +1547,7 @@ Store options:
   --persona <name>     Store under this persona instead of the actor (e.g. shared)
 
 Search options:
-  --actor <identity>   REQUIRED caller identity; results scoped to actor + shared
+  --actor <identity>   Caller identity (optional; default 'shared'); results scoped to actor + shared
   --persona <name>     Narrow results to one persona within scope
   --limit <n>          Max results (default: 5/6)
   --no-hyde            Disable HyDE expansion
@@ -1652,10 +1651,6 @@ async function main() {
     }
 
     case "store": {
-      if (!flags.actor) {
-        console.error("Error: --actor is required (fail-closed; no default persona). Use --actor shared for deliberately cross-harness facts.");
-        process.exit(1);
-      }
       if (!flags.entity || !flags.value) {
         console.error("Error: --entity and --value are required");
         process.exit(1);
@@ -1706,7 +1701,7 @@ async function main() {
         process.exit(1);
       }
 
-      const batchActor = requireActor(flags.actor, "batch-store (--actor)");
+      const batchActor = resolveActor(flags.actor, "batch-store (--actor)");
       const batchCallId = newCallId();
       const db = await initDb();
       const noEmbed = flags["no-embed"] === "true";
@@ -1818,7 +1813,7 @@ async function main() {
         console.error("Error: search query required");
         process.exit(1);
       }
-      const searchOpts: { actor: string; persona?: string; limit?: number; entity?: string } = {
+      const searchOpts: { actor?: string; persona?: string; limit?: number; entity?: string } = {
         actor: flags.actor,
         persona: flags.persona,
         limit: parseInt(flags.limit) || 5,

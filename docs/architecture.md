@@ -40,8 +40,7 @@ between them:
 
 Multi-model DAG execution. You describe tasks and dependencies; the
 orchestrator routes each task to the best healthy executor, with circuit
-breakers, fallback chains, a budget governor, and a hash-chained decision
-ledger so every routing choice is auditable.
+breakers, fallback chains, and a budget governor.
 
 Entry point: `bun scripts/orchestrate-v5.ts` (`doctor`, `status` subcommands
 for health and state). Also exposes an MCP server (`mcp` / `mcp-http` scripts)
@@ -141,7 +140,7 @@ Three bridges, in order of adoption:
   notifications, no second personal memory. Every duplicate is maintenance
   paid twice.
 - **Don't rebuild Zouroboros inside Muse.** The workshop keeps its unfair
-  advantages: your paid subscriptions, the decision ledger, the verify gate.
+  advantages: your paid subscriptions and the verify gate.
 - **Cost routing, explicitly.** Heavy token work (builds, reviews, sweeps)
   goes to the workshop on subscriptions you already pay for. Chat usage stays
   for orchestration, conversation, and connectors.

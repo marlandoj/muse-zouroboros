@@ -70,8 +70,8 @@ One SQLite database, `~/.zo/memory/shared-facts.db`, is the well that Claude Cod
 | `SourceChunk` / `Topic` | Cited source text and topical grouping of facts | `chunk_md5`, `cited_text`; `slug`, `fact_count` | `schema.sql` |
 | `CaptureLog` | Record of one transcript-to-facts extraction | `facts_extracted`, `facts_skipped`, `contradictions`, `model` | `schema.sql` |
 | `MemoryGate` | Decides at prompt time whether background memory is needed | exit 0 found, 2 not needed, 3 needed but missing, 1 error; methods include `continuation`, `keyword_heuristic`, `llm_classifier` | `memory-gate.ts` |
-| `MemoryMcpServer` | stdio server `zo-memory-system` v3.2.0 | tools `memory_search`, `memory_store` (both REQUIRE `actor`; fail closed with `MISSING_ACTOR`), `memory_episodes`, `memory_procedures`, `cognitive_profile`; HTTP variant adds `memory_delete`, `memory_prune` (also actor-required) | `mcp-server.ts` |
-| `Scope` | Actor-resolved visibility (own persona + shared pool); the single choke point for every persona predicate | `actor`, `personas`; `MISSING_ACTOR` on absent identity | `scope.ts` |
+| `MemoryMcpServer` | stdio server `zo-memory-system` v3.2.0 | tools `memory_search`, `memory_store` (both accept an optional `actor`; default `shared`), `memory_episodes`, `memory_procedures`, `cognitive_profile`; HTTP variant adds `memory_delete`, `memory_prune` (also actor-optional) | `mcp-server.ts` |
+| `Scope` | Actor-resolved visibility (own persona + shared pool); the single choke point for every persona predicate | `actor`, `personas`; absent identity resolves to `shared` | `scope.ts` |
 | `MemoryAudit` | One row per scoped memory access | `actor`, `scope`, `action` (`store`, `search`, `search_vector`, `get`, `delete`, `forget`, `restore`, `purge`, `promotion_stage`, `review_decision`), `call_id` | `scope.ts` |
 | `FactPromotion` | Append-only promotion ledger; a fact's stage is its latest row | `stage` (`capture`, `extraction`, `review`, `promotion`), `decided_by`, `contradiction_of` | `promotion.ts` |
 | `FactForgotten` | Reversible-forgetting marker hiding a fact from all retrieval | `forgotten_by`, `reason`, `retention_score`; removal = restore; hard delete only via retention-window purge | `forgetting.ts` |
@@ -91,10 +91,8 @@ The swarm spreads a campaign's tasks across seven AI coding harnesses the user a
 | `Role` | A job seeded onto an executor with SOP fields | `senior-architect` → claude-code, `backend-developer` → codex, `ui-developer` → gemini, `researcher` → hermes, and three more | `src/db/schema.ts` (`swarm_roles`) |
 | `RouteDecision` | The chosen executor for a task | `compositeScore`, `breakdown`, `method` (`composite`, `fallback`) | `src/routing/engine.ts` |
 | `RoutingSignal` | One scored routing input | six: `capability`, `health`, `complexityFit`, `history`, `procedure`, `temporal`; eight adds `budget`, `role` | `src/routing/engine.ts` |
-| `SwarmDecisionGate` | Decides whether a request warrants a swarm | `SWARM` (score above 0.45), `SUGGEST` (0.30 to 0.45), `DIRECT` (below 0.30) | `src/routing/swarm-decision-gate.ts` |
 | `CircuitBreaker` | Per-executor health | `CLOSED`, `OPEN`, `HALF_OPEN`; 30 s base cooldown doubling to a 300 s cap | `src/circuit/breaker.ts` |
 | `Budget` | Spend envelope for a swarm | `total_budget_usd`, alert at 80 %, `hard_cap_action` (`pause`, `abort`, `downgrade`; default `downgrade`) | `src/budget/governor.ts` |
-| `DecisionRow` | Hash-chained JSONL record of one dispatch or review seat | `traceId`, `personaId`, `harness`, `modelId`, `status`, `prevHash`, `hash` | `src/ledger/decision-ledger.ts` |
 | `SwarmMcpServer` | `zo-swarm-orchestrator` v4.6.0 over stdio and HTTP (port 48401) | `swarm_execute`, `swarm_status`, `swarm_results`, `swarm_benchmark`, `swarm_list` | `mcp-server.ts`, `mcp-server-http.ts` |
 
 ## Prompt-time hooks
@@ -172,7 +170,6 @@ These object properties connect the classes above; cardinality is what the code 
 | `Executor` | `hasBreaker` | `CircuitBreaker` | exactly 1 | `src/circuit/breaker.ts` |
 | `Role` | `boundTo` | `Executor` | exactly 1 | `src/db/schema.ts` |
 | `RoutingSignal` (`procedure`) | `reads` | `Procedure` | read-only | `src/routing/signals.ts` |
-| `DecisionRow` | `chainsTo` | `DecisionRow` | exactly 1 predecessor | `decision-ledger.ts` |
 | `Hook` | `bindsTo` | harness event | 1..n per harness | `packages/wayfinder/engine/adapters.py` |
 | `IntakeTicket` | `satisfies` | `TicketContract` | must, or goes to `needs-triage` | `ticket-contract.ts` |
 | `IntakeTicket` | `declares` | `Archetype` | exactly 1 | `ticket-contract.ts` |
@@ -200,7 +197,6 @@ The repo's one philosophy, observation before enforcement, shows up as defaults:
 | A5 | `Sift` never prunes failures, the first 2 calls or the last 8 messages, and refuses `live` outside opencode, pi and hermes. | `sift/core.py`, `sift.py` |
 | A6 | An `Executor` with an `OPEN` breaker is excluded from fallback; the only hard swarm failure is having no healthy executor. | `src/circuit/breaker.ts`, `docs/swarm.md` |
 | A7 | Over budget, running tasks finish; the default hard-cap action is `downgrade`, with an alert at 80 %. | `src/budget/governor.ts` |
-| A8 | The `DecisionRow` ledger has one writer, appends with fsync, and configuring it never changes enforcement. | `decision-ledger.ts` |
 | A9 | An `IntakeTicket` missing any of the five contract fields is rejected with a comment and moved to `needs-triage`, never dropped silently. | `ticket-contract.ts` |
 | A10 | A `ReviewPanel` result blocks only in `enforce` mode, and an execution advances to `verified` only when the gate passes, review is substantiated and every required persona ran on a distinct model and vendor. | `factory-review-gate.ts` |
 | A11 | Operator approval or legacy consensus does not count as substantive review. | `factory-review-gate.ts` |

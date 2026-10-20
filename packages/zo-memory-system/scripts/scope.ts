@@ -2,22 +2,21 @@
 /**
  * scope.ts — Scope resolution: the single choke point for persona/actor scoping.
  *
- * Track 1 (intelligence plane): every fact retrieval and mutation path in
- * this package resolves its SQL visibility predicate HERE. No module
- * hand-rolls `persona = ?` / `persona IN (...)` anymore; they call
- * resolveScope() (or build a persona list through cross-persona pools) and
- * splice `scopeSql()` into their queries. This is the fix for the
- * definer-rights leak class: a path that forgets to scope now fails at the
- * call site (actor is a required parameter) instead of silently widening to
- * every persona's facts.
+ * Every fact retrieval and mutation path in this package resolves its SQL
+ * visibility predicate HERE. No module hand-rolls `persona = ?` /
+ * `persona IN (...)` anymore; they call resolveScope() (or build a persona
+ * list through cross-persona pools) and splice `scopeSql()` into their
+ * queries. This keeps the definer-rights leak class closed: a path that
+ * forgets to scope widens only to the resolved scope (the actor's own
+ * persona plus the shared pool), never to every persona's facts.
  *
- * Fail-closed contract (operator decision Q2, 2026-10-14):
+ * Actor contract:
  *  - `actor` is caller-declared identity (MCP tool arg / CLI --actor /
  *    function param).
- *  - requireActor() throws MissingActorError (code MISSING_ACTOR) on
- *    missing/empty/non-string — there is no silent default to 'shared'.
- *    Callers that want shared visibility declare actor 'shared' explicitly,
- *    which is itself a legitimate first-party actor for cross-harness facts.
+ *  - resolveActor() never throws: a missing/empty/non-string actor resolves
+ *    to 'shared', so callers that declare no identity operate on the
+ *    cross-harness shared pool only. Callers that want a private persona
+ *    declare their actor explicitly.
  *  - Misattribution is detectable, not preventable, at this trust boundary
  *    (every MCP client is a first-party local harness): the memory_audit
  *    trail records actor + scope for every access.
@@ -25,18 +24,6 @@
 
 import { Database } from "bun:sqlite";
 import { randomUUID } from "crypto";
-
-/** Error surfaced when a call arrives without a usable actor. */
-export class MissingActorError extends Error {
-  readonly code = "MISSING_ACTOR";
-  constructor(context?: string) {
-    super(
-      `MISSING_ACTOR: actor is required${context ? ` for ${context}` : ""}: ` +
-      `pass a non-empty actor identity (fail-closed; no default scope)`
-    );
-    this.name = "MissingActorError";
-  }
-}
 
 /**
  * The resolved visibility scope for one actor.
@@ -50,14 +37,14 @@ export interface ScopePredicate {
 }
 
 /**
- * Fail-closed actor validation. Throws MissingActorError unless `actor`
- * is a non-empty string after trimming. Returns the trimmed actor.
+ * Resolve a caller-declared actor identity. Returns the trimmed actor when
+ * it is a non-empty string; any missing/empty/non-string value resolves to
+ * the 'shared' pool. Never throws.
  */
-export function requireActor(actor: unknown, context?: string): string {
-  if (typeof actor !== "string") throw new MissingActorError(context);
+export function resolveActor(actor: unknown, _context?: string): string {
+  if (typeof actor !== "string") return "shared";
   const trimmed = actor.trim();
-  if (trimmed.length === 0) throw new MissingActorError(context);
-  return trimmed;
+  return trimmed.length > 0 ? trimmed : "shared";
 }
 
 /**
@@ -68,7 +55,7 @@ export function requireActor(actor: unknown, context?: string): string {
  * exactly one implementation.)
  */
 export function resolveScope(actor: unknown, context?: string): ScopePredicate {
-  const a = requireActor(actor, context);
+  const a = resolveActor(actor, context);
   const personas = a === "shared" ? ["shared"] : [a, "shared"];
   return { actor: a, personas, key: personas.join("||") };
 }
@@ -94,11 +81,11 @@ export function notForgottenSql(column = "id"): string {
 }
 
 // ---------------------------------------------------------------------------
-// Intelligence-plane schema (audit + promotion ledger + reversible forgetting)
+// Substrate schema (audit + promotion ledger + reversible forgetting)
 // ---------------------------------------------------------------------------
 
 /**
- * Idempotent DDL for the Track 1 tables. Called by every entry point that
+ * Idempotent DDL for the substrate tables. Called by every entry point that
  * audits or forgets, so a pre-v4 database upgrades in place (the same DDL
  * ships in schema.sql and migrate-v4.sql).
  */
@@ -196,8 +183,8 @@ export function newCallId(): string {
 
 /**
  * Record an audit row. Deliberately NOT best-effort: if the audit substrate
- * is broken the operation fails (fail closed), because an unauditable
- * memory plane is the exact failure mode Track 1 exists to prevent.
+ * is broken the operation fails, because an unauditable memory system is
+ * a failure mode this package refuses to run in.
  */
 export function recordAudit(db: Database, event: AuditEvent): void {
   ensureIntelligencePlaneSchema(db);

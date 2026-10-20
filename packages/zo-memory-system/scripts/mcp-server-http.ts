@@ -112,13 +112,13 @@ function parseRelativeTime(input: string): number {
 // ==========================================================================
 
 async function toolMemorySearch(args: {
-  actor: string;
+  actor?: string;
   query: string;
   category?: string;
   persona?: string;
   limit?: number;
 }): Promise<string> {
-  // Fail-closed (Track 1): no actor, no read.
+  // Reads resolve to the caller's scope (default 'shared').
   const scope = resolveScope(args?.actor, "memory_search");
   const db = getDb();
   const { query, category, persona, limit = 6 } = args;
@@ -212,7 +212,7 @@ async function toolMemorySearch(args: {
 }
 
 async function toolMemoryStore(args: {
-  actor: string;
+  actor?: string;
   entity: string;
   key?: string;
   value: string;
@@ -221,7 +221,7 @@ async function toolMemoryStore(args: {
   persona?: string;
   text?: string;
 }): Promise<string> {
-  // Fail-closed (Track 1): no actor, no write.
+  // Writes resolve to the caller's scope (default 'shared').
   const scope = resolveScope(args?.actor, "memory_store");
   const db = getDb();
   const id = randomUUID();
@@ -371,8 +371,8 @@ function toolMemoryProcedures(args: { name?: string }): string {
   return `Found ${results.length} procedures:\n\n${results.join("\n")}`;
 }
 
-function toolMemoryDelete(args: { actor: string; id: string }): string {
-  // Fail-closed (Track 1): no actor, no delete; only in-scope facts deletable.
+function toolMemoryDelete(args: { actor?: string; id: string }): string {
+  // Only in-scope facts are deletable; a missing actor resolves to 'shared'.
   const scope = resolveScope(args?.actor, "memory_delete");
   if (!args.id) return JSON.stringify({ error: "id is required" });
   const db = getDb();
@@ -387,8 +387,8 @@ function toolMemoryDelete(args: { actor: string; id: string }): string {
   return JSON.stringify({ deleted: true, id: args.id, scope: { actor: scope.actor, personas: scope.personas } });
 }
 
-function toolMemoryPrune(args: { actor: string; dry_run?: boolean }): string {
-  // Fail-closed (Track 1): no actor, no prune; only in-scope facts pruned.
+function toolMemoryPrune(args: { actor?: string; dry_run?: boolean }): string {
+  // Only in-scope facts are pruned; a missing actor resolves to 'shared'.
   const scope = resolveScope(args?.actor, "memory_prune");
   const db = getDb();
   const dryRun = args.dry_run ?? false;
@@ -458,35 +458,35 @@ function toolCognitiveProfile(args: { executor_id: string }): string {
 const TOOLS_DEFINITION = [
   {
     name: "memory_search",
-    description: "Search the memory system using hybrid FTS + vector search with RRF fusion. Requires a caller identity (actor); calls without one fail closed with MISSING_ACTOR. Results are scoped to the actor plus the shared pool.",
+    description: "Search the memory system using hybrid FTS + vector search with RRF fusion. Results are scoped to the caller's actor plus the shared pool; the actor is optional and defaults to 'shared'.",
     inputSchema: {
       type: "object" as const,
       properties: {
-        actor: { type: "string", description: "REQUIRED caller identity (persona/seat, e.g. 'claude-code'). Fail-closed: calls without an actor are rejected. Visibility = own persona + shared pool." },
+        actor: { type: "string", description: "Caller identity (persona/seat, e.g. 'claude-code'). Optional; defaults to 'shared'. Visibility = own persona + shared pool." },
         query: { type: "string", description: "Search query" },
         category: { type: "string", description: "Filter by category", enum: ["preference", "fact", "decision", "convention", "other", "reference", "project"] },
         persona: { type: "string", description: "Narrow results to one persona WITHIN the actor scope" },
         limit: { type: "number", description: "Max results (default: 6)" },
       },
-      required: ["actor", "query"],
+      required: ["query"],
     },
   },
   {
     name: "memory_store",
-    description: "Store a new fact in the memory system with automatic embedding generation. Requires a caller identity (actor); calls without one fail closed with MISSING_ACTOR.",
+    description: "Store a new fact in the memory system with automatic embedding generation. The optional actor defaults to 'shared'.",
     inputSchema: {
       type: "object" as const,
       properties: {
-        actor: { type: "string", description: "REQUIRED caller identity (persona/seat). Fail-closed: calls without an actor are rejected. Use 'shared' only for deliberately cross-persona facts." },
+        actor: { type: "string", description: "Caller identity (persona/seat). Optional; defaults to 'shared'. Use 'shared' only for deliberately cross-persona facts." },
         entity: { type: "string", description: "Entity name (e.g., 'user', 'project.ffb')" },
         key: { type: "string", description: "Key/attribute (optional)" },
         value: { type: "string", description: "Value to store" },
         category: { type: "string", description: "Category (default: fact)", enum: ["preference", "fact", "decision", "convention", "other", "reference", "project"] },
         decay_class: { type: "string", description: "Decay class (default: stable)", enum: ["permanent", "stable", "active", "session", "checkpoint"] },
-        persona: { type: "string", description: "Persona the fact is stored under (defaults to the actor, never silently 'shared')" },
+        persona: { type: "string", description: "Persona the fact is stored under (defaults to the actor, or 'shared' when no actor is given)" },
         text: { type: "string", description: "Full text for embedding (auto-generated if not provided)" },
       },
-      required: ["actor", "entity", "value"],
+      required: ["entity", "value"],
     },
   },
   {
@@ -526,26 +526,25 @@ const TOOLS_DEFINITION = [
   },
   {
     name: "memory_delete",
-    description: "Delete a specific fact by ID. Cascades to embeddings, links, and activation. Requires a caller identity (actor); only facts within the actor scope can be deleted.",
+    description: "Delete a specific fact by ID. Cascades to embeddings, links, and activation. Only facts within the caller's scope can be deleted; the optional actor defaults to 'shared'.",
     inputSchema: {
       type: "object" as const,
       properties: {
-        actor: { type: "string", description: "REQUIRED caller identity (persona/seat). Fail-closed: calls without an actor are rejected." },
+        actor: { type: "string", description: "Caller identity (persona/seat). Optional; defaults to 'shared'." },
         id: { type: "string", description: "The fact UUID to delete" },
       },
-      required: ["actor", "id"],
+      required: ["id"],
     },
   },
   {
     name: "memory_prune",
-    description: "Garbage-collect expired facts within the actor scope. Requires a caller identity (actor). Returns count of deleted facts.",
+    description: "Garbage-collect expired facts within the caller's scope (optional actor, default 'shared'). Returns count of deleted facts.",
     inputSchema: {
       type: "object" as const,
       properties: {
-        actor: { type: "string", description: "REQUIRED caller identity (persona/seat). Fail-closed: calls without an actor are rejected." },
+        actor: { type: "string", description: "Caller identity (persona/seat). Optional; defaults to 'shared'." },
         dry_run: { type: "boolean", description: "Preview what would be pruned without deleting (default false)" },
       },
-      required: ["actor"],
     },
   },
 ];
