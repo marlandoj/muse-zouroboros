@@ -7,9 +7,10 @@
 #   ./hermes-bridge.sh "Your prompt here" /path/to/workdir
 #
 # Environment:
-#   HERMES_PROJECT_DIR — path to hermes-agent project (default: updater-selected checkout, otherwise $HOME/workspace/repos/hermes-agent)
-#   HERMES_VENV        — path to venv activate script (default: $HERMES_PROJECT_DIR/.venv/bin/activate)
-#   HERMES_BIN         — Hermes launcher (default: resolved from the activated venv)
+#   HERMES_PROJECT_DIR — optional legacy override: hermes-agent checkout whose venv is activated (default: none — the launcher is used directly)
+#   HERMES_VENV        — optional legacy override: venv activate script (default: $HERMES_PROJECT_DIR/.venv/bin/activate)
+#   HERMES_BIN         — Hermes launcher (default: hermes on PATH / ~/.local/bin)
+#   SWARM_TASK_WORKSPACE — working directory when no workdir argument is given
 #   HERMES_TIMEOUT     — timeout in seconds (default: 300)
 
 set -euo pipefail
@@ -18,48 +19,70 @@ set -euo pipefail
 source "$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)/bridge-env.sh"
 
 PROMPT="${1:?Usage: hermes-bridge.sh \"prompt\" [workdir]}"
-WORKDIR="${2:-$WORKSPACE_DEFAULT}"
-# Follow the updater-selected checkout before activating a venv. Explicit
-# HERMES_PROJECT_DIR/HERMES_VENV overrides retain their existing behavior.
-DEFAULT_PROJECT_DIR="${HERMES_PROJECT_DIR:-$HOME/workspace/repos/hermes-agent}"
-SELECTED_HERMES="$(readlink -f "$HOME/.local/bin/hermes" 2>/dev/null || true)"
-case "$SELECTED_HERMES" in
-  "$HOME"/.local/share/harness-updater/releases/hermes/*/.venv/bin/hermes)
-    DEFAULT_PROJECT_DIR="${SELECTED_HERMES%/.venv/bin/hermes}" ;;
-esac
-PROJECT_DIR="${HERMES_PROJECT_DIR:-$DEFAULT_PROJECT_DIR}"
-VENV_ACTIVATE="${HERMES_VENV:-$PROJECT_DIR/.venv/bin/activate}"
+# Executor fix (F4): the campaign's task workspace is Hermes's working
+# directory (P0 ORCHESTRATOR_HOME / task-workspace split). It used to `cd` into
+# a hardcoded project checkout ($HOME/workspace/repos/hermes-agent) that no
+# longer exists on the VPS, so every hermes attempt died with "Hermes project
+# dir not found" (and, had it existed, would have worked outside the task
+# workspace). Resolution order:
+#   workdir  = $2 > SWARM_TASK_WORKSPACE > $HOME/workspace   (must exist)
+#   launcher = HERMES_BIN > hermes on PATH / ~/.local/bin    (self-contained
+#              harness-updater wrapper; no venv activation needed)
+#   legacy   = HERMES_PROJECT_DIR / HERMES_VENV, when explicitly set, are still
+#              honored (venv activated, launcher taken from it).
+# Any unresolvable piece exits 1 with a "not found" error, which fails the
+# bridge health probe and keeps hermes out of every candidate pool.
+WORKDIR="${2:-${SWARM_TASK_WORKSPACE:-$WORKSPACE_DEFAULT}}"
+if [ ! -d "$WORKDIR" ]; then
+  echo "ERROR: Hermes task workspace not found: $WORKDIR" >&2
+  exit 1
+fi
+if [ -n "${HERMES_PROJECT_DIR:-}" ] || [ -n "${HERMES_VENV:-}" ]; then
+  PROJECT_DIR="${HERMES_PROJECT_DIR:-$(dirname "$(dirname "$(dirname "${HERMES_VENV}")")")}"
+  VENV_ACTIVATE="${HERMES_VENV:-$PROJECT_DIR/.venv/bin/activate}"
+else
+  PROJECT_DIR=""
+  VENV_ACTIVATE=""
+fi
 
 # Priority: SWARM_RESOLVED_MODEL > LLM_MODEL
 RAW_MODEL="${SWARM_RESOLVED_MODEL:-${LLM_MODEL:-}}"
 TIER="${SWARM_TIER:-}"
 
 # --- Per-tier timeout resolution ---
+# P4 G1: the orchestrator threads the per-attempt timeout through HERMES_TIMEOUT
+# (+ SWARM_ATTEMPT_TIMEOUT_S); the tier table is only the standalone fallback.
 if [ -n "${HERMES_TIMEOUT:-}" ]; then
   TIMEOUT="$HERMES_TIMEOUT"
+elif [ -n "${SWARM_ATTEMPT_TIMEOUT_S:-}" ]; then
+  TIMEOUT="$SWARM_ATTEMPT_TIMEOUT_S"
 else
   case "${TIER:-}" in
     trivial|swarm-light)          TIMEOUT=120 ;;
     simple|moderate|swarm-mid)    TIMEOUT=300 ;;
-    complex|swarm-heavy)          TIMEOUT=600 ;;
+    complex|swarm-heavy)          TIMEOUT=2700 ;;
     *)                            TIMEOUT=300 ;;
   esac
 fi
 
 export LLM_MODEL="${RAW_MODEL:-}"
 
-if [ ! -d "$PROJECT_DIR" ]; then
-  echo "ERROR: Hermes project dir not found: $PROJECT_DIR" >&2
-  exit 1
+if [ -n "$PROJECT_DIR" ]; then
+  if [ ! -d "$PROJECT_DIR" ]; then
+    echo "ERROR: Hermes project dir not found: $PROJECT_DIR (HERMES_PROJECT_DIR/HERMES_VENV override)" >&2
+    exit 1
+  fi
+  if [ ! -f "$VENV_ACTIVATE" ]; then
+    echo "ERROR: Hermes venv not found: $VENV_ACTIVATE" >&2
+    exit 1
+  fi
+  # shellcheck disable=SC1090
+  source "$VENV_ACTIVATE"
 fi
 
-if [ ! -f "$VENV_ACTIVATE" ]; then
-  echo "ERROR: Hermes venv not found: $VENV_ACTIVATE" >&2
-  exit 1
-fi
-
-cd "$PROJECT_DIR"
-source "$VENV_ACTIVATE"
+cd "$WORKDIR"
+# Hermes's terminal/file tools follow TERMINAL_CWD (same as run-remote.sh).
+export TERMINAL_CWD="$WORKDIR"
 
 # Load shared secrets (OPENAI_API_KEY, QDRANT_URL, QDRANT_API_KEY, ...) so MCP
 # servers spawned by hermes inherit them. File is 0640 root:zouroboros; never printed.
@@ -74,9 +97,18 @@ if [ -r /etc/zouroboros/zouroboros.env ]; then
   set +a
 fi
 
-HERMES_BIN="${HERMES_BIN:-$(command -v hermes || true)}"
+if [ -n "${HERMES_BIN:-}" ] && [ -x "${HERMES_BIN}" ]; then
+  :
+elif [ -n "$PROJECT_DIR" ] && command -v hermes >/dev/null 2>&1; then
+  HERMES_BIN="$(command -v hermes)"
+elif ! HERMES_BIN="$(resolve_harness_bin HERMES_BIN hermes)"; then
+  HERMES_BIN=""
+fi
+if [ -n "$HERMES_BIN" ] && [ "${HERMES_BIN#/}" = "$HERMES_BIN" ]; then
+  HERMES_BIN="$(command -v "$HERMES_BIN" || true)"
+fi
 if [ -z "$HERMES_BIN" ] || [ ! -x "$HERMES_BIN" ]; then
-  echo "ERROR: Hermes launcher not found after activating: $VENV_ACTIVATE" >&2
+  echo "ERROR: Hermes launcher not found (checked HERMES_BIN, PATH, ~/workspace/.local/bin, ~/.local/bin, /usr/local/bin${VENV_ACTIVATE:+, $VENV_ACTIVATE})" >&2
   exit 1
 fi
 

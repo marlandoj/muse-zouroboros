@@ -31,13 +31,17 @@ _GEMINI_MODEL="${GEMINI_MODEL:-}"
 TIER="${SWARM_TIER:-}"
 
 # --- Per-tier timeout resolution ---
+# P4 G1: the orchestrator threads the per-attempt timeout through GEMINI_TIMEOUT
+# (+ SWARM_ATTEMPT_TIMEOUT_S); the tier table is only the standalone fallback.
 if [ -n "${GEMINI_TIMEOUT:-}" ]; then
   TIMEOUT="$GEMINI_TIMEOUT"
+elif [ -n "${SWARM_ATTEMPT_TIMEOUT_S:-}" ]; then
+  TIMEOUT="$SWARM_ATTEMPT_TIMEOUT_S"
 else
   case "${TIER:-}" in
     trivial|swarm-light)          TIMEOUT=120 ;;
     simple|moderate|swarm-mid)    TIMEOUT=300 ;;
-    complex|swarm-heavy)          TIMEOUT=600 ;;
+    complex|swarm-heavy)          TIMEOUT=2700 ;;
     *)                            TIMEOUT=300 ;;
   esac
 fi

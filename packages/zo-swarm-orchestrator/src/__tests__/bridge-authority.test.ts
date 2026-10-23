@@ -122,10 +122,12 @@ describe('bridge model contract', () => {
         const tier = model === 'swarm-heavy' || model === 'moderate';
         const defaults = { 'claude-code': 'claude-opus-5', codex: '', gemini: 'gemini-3.8-flash' };
         const mid = { 'claude-code': 'claude-opus-5', codex: 'gpt-5.6-terra', gemini: 'gemini-3.8-flash' };
-        const heavy = { 'claude-code': 'claude-fable-5-1', codex: 'gpt-6-astra', gemini: 'gemini-3.8-flash' };
+        const heavy = { 'claude-code': 'claude-fable-5-1', codex: 'gpt-5.6-terra', gemini: 'gemini-3.8-flash' };
         expect(actual).toBe(!model ? defaults[id] : tier ? (model === 'moderate' ? mid[id] : heavy[id]) : model);
         expect(result.stderr.includes('BRIDGE_WARN')).toBe(false);
-        expect(readFileSync(data.env.TIMEOUT_LOG, 'utf8')).toBe('600');
+        // P4 G1: the complex-tier fallback is 2700 s (was the hardcoded 600 behind
+        // the Driveway Hero timeouts); the orchestrator normally threads the value.
+        expect(readFileSync(data.env.TIMEOUT_LOG, 'utf8')).toBe('2700');
         const structured = JSON.parse(readFileSync(data.env.RESULT_PATH, 'utf8'));
         expect(structured.status).toBe('success');
         if (id === 'claude-code') {
