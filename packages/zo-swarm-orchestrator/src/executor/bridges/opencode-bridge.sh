@@ -19,7 +19,9 @@ fi
 
 PROMPT="${1:?Usage: opencode-bridge.sh \"prompt\" [workdir]}"
 WORKDIR="${2:-$WORKSPACE_DEFAULT}"
-TIMEOUT="${OPENCODE_TIMEOUT:-600}"
+# P4 G1: per-attempt timeout from the orchestrator (OPENCODE_TIMEOUT / SWARM_ATTEMPT_TIMEOUT_S);
+# standalone fallback = the complex-tier value (was a flat 600).
+TIMEOUT="${OPENCODE_TIMEOUT:-${SWARM_ATTEMPT_TIMEOUT_S:-2700}}"
 
 cd "$WORKDIR"
 MODEL_ARGS=()

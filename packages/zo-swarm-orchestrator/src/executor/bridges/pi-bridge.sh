@@ -3,7 +3,9 @@ set -euo pipefail
 
 PROMPT="${1:?Usage: pi-bridge.sh \"prompt\" [workdir]}"
 WORKDIR="${2:-${HOME}/workspace}"
-TIMEOUT="${PI_TIMEOUT:-600}"
+# P4 G1: per-attempt timeout from the orchestrator (PI_TIMEOUT / SWARM_ATTEMPT_TIMEOUT_S);
+# standalone fallback = the complex-tier value (was a flat 600).
+TIMEOUT="${PI_TIMEOUT:-${SWARM_ATTEMPT_TIMEOUT_S:-2700}}"
 MODEL="${SWARM_RESOLVED_MODEL:-${PI_MODEL:-openrouter/moonshotai/kimi-k3}}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 WORKSPACE_ROOT="$(cd "$SCRIPT_DIR/../../../../.." && pwd)"

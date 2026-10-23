@@ -40,14 +40,18 @@ case "$RAW_MODEL" in
 esac
 
 # --- T3: Per-tier timeout resolution ---
-# swarm-light/trivial=120s, swarm-mid/simple/moderate=300s, swarm-heavy/complex=600s
+# swarm-light/trivial=120s, swarm-mid/simple/moderate=300s, swarm-heavy/complex=2700s
+# P4 G1: the orchestrator threads the per-attempt timeout through CLAUDE_CODE_TIMEOUT
+# (+ SWARM_ATTEMPT_TIMEOUT_S); the tier table is only the standalone fallback.
 if [ -n "${CLAUDE_CODE_TIMEOUT:-}" ]; then
   TIMEOUT="$CLAUDE_CODE_TIMEOUT"
+elif [ -n "${SWARM_ATTEMPT_TIMEOUT_S:-}" ]; then
+  TIMEOUT="$SWARM_ATTEMPT_TIMEOUT_S"
 else
   case "${TIER:-}" in
     trivial|swarm-light)          TIMEOUT=120 ;;
     simple|moderate|swarm-mid)    TIMEOUT=300 ;;
-    complex|swarm-heavy)          TIMEOUT=600 ;;
+    complex|swarm-heavy)          TIMEOUT=2700 ;;
     *)                            TIMEOUT=300 ;;
   esac
 fi
