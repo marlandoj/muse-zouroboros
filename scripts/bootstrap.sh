@@ -7,13 +7,19 @@ REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 ZCFG="$HOME/.config/zouroboros"
 ZMEM="$HOME/.zo/memory"
 
+# Optional machine-readable status for callers (quickstart.sh sets this).
+STATUS_FILE="${ZO_BOOTSTRAP_STATUS:-/dev/null}"
+status() { printf '%s\n' "$1" >> "$STATUS_FILE" 2>/dev/null || true; }
+
 pass() { printf '  \033[0;32m✔\033[0m %s\n' "$1"; }
-fail() { printf '  \033[0;31m✘\033[0m %s\n' "$1"; MISSING=1; }
+fail() { printf '  \033[0;31m✘\033[0m %s\n' "$1"; MISSING=1; status "missing: $1"; }
+warn() { printf '  \033[0;31m✘\033[0m %s\n' "$1"; status "warn: $1"; }
 info() { printf '%s\n' "$1"; }
 
 MISSING=0
 info "1/5 — Checking prerequisites"
-command -v bun >/dev/null && pass "bun $(bun --version)" || fail "bun not found"
+command -v bun >/dev/null && pass "bun $(bun --version)" \
+  || fail "bun not found — install it: curl -fsSL https://bun.sh/install | bash  (then open a new shell)"
 if command -v node >/dev/null; then
   NODEV=$(node --version | sed 's/v//;s/\..*//')
   [ "$NODEV" -ge 22 ] && pass "node $(node --version)" || fail "node < 22"
@@ -24,7 +30,7 @@ if command -v python3 >/dev/null; then
     && pass "python3 $(python3 --version 2>&1)" || fail "python3 < 3.11"
 else fail "python3 not found"; fi
 for c in git jq timeout; do command -v $c >/dev/null && pass "$c" || fail "$c not found"; done
-[ "$MISSING" -eq 1 ] && { info "Fix the missing prerequisites, then re-run."; exit 1; }
+[ "$MISSING" -eq 1 ] && { info "Fix the missing prerequisites, then re-run."; status "result: failed (prerequisites)"; exit 1; }
 
 info "2/5 — Creating directories (owner-only)"
 mkdir -p "$ZMEM" "$ZCFG" "$HOME/.wayfinder" "$HOME/.cache/wayfinder"
@@ -48,16 +54,59 @@ export SWARM_EXECUTOR_REGISTRY="$REPO/packages/zo-swarm-executors/registry/execu
 export SWARM_WORKSPACE="$REPO"
 EOF
 chmod 600 "$ZCFG/workshop.env"
-for rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
-  [ -f "$rc" ] || continue
-  grep -q 'zouroboros/workshop.env' "$rc" || echo 'source ~/.config/zouroboros/workshop.env' >> "$rc"
+# Wire every existing interactive rc file, plus a login profile. If the user
+# has none (minimal images, containers), create the one their shell reads —
+# never report "sourced" without the line actually being there.
+SRC_LINE='[ -f ~/.config/zouroboros/workshop.env ] && . ~/.config/zouroboros/workshop.env'
+RCS=()
+for rc in "$HOME/.bashrc" "$HOME/.zshrc"; do [ -f "$rc" ] && RCS+=("$rc"); done
+if [ "${#RCS[@]}" -eq 0 ]; then
+  case "$(basename "${SHELL:-bash}")" in zsh) RCS+=("$HOME/.zshrc") ;; *) RCS+=("$HOME/.bashrc") ;; esac
+fi
+# bash login shells read only the first of these; .profile is the portable one.
+LOGIN=""
+for p in "$HOME/.bash_profile" "$HOME/.bash_login" "$HOME/.profile"; do
+  [ -f "$p" ] && { LOGIN="$p"; break; }
 done
-pass "workshop.env written; sourced from shell profile"
+RCS+=("${LOGIN:-$HOME/.profile}")
+WIRED=""
+for rc in "${RCS[@]}"; do
+  if [ -f "$rc" ] && grep -q 'zouroboros/workshop.env' "$rc"; then
+    WIRED="$WIRED ${rc/#"$HOME"/\~}(already)"
+  elif printf '\n# Zouroboros workshop paths (added by bootstrap.sh)\n%s\n' "$SRC_LINE" >> "$rc"; then
+    WIRED="$WIRED ${rc/#"$HOME"/\~}"
+  fi
+done
+pass "workshop.env written: ${ZCFG/#"$HOME"/\~}/workshop.env"
+# Prove it: a brand-new login shell must see ZO_MEMORY_DB.
+EXPECT_DB="$HOME/.zo/memory/shared-facts.db"
+GOT_DB="$(env -i HOME="$HOME" PATH="$PATH" SHELL="${SHELL:-/bin/bash}" bash -lc 'printf %s "${ZO_MEMORY_DB:-}"' 2>/dev/null || true)"
+if [ "$GOT_DB" = "$EXPECT_DB" ]; then
+  pass "sourced from:$WIRED — verified in a new shell"
+  status "shell_env: ok"
+else
+  warn "profile wiring added to:$WIRED but a new shell does not see ZO_MEMORY_DB — add this line to your shell profile: $SRC_LINE"
+  status "shell_env: unverified"
+fi
 
 info "5/5 — Installing package dependencies"
-(cd "$REPO/packages/zo-memory-system" && bun install --silent 2>/dev/null) && pass "zo-memory deps" || info "  (zo-memory bun install skipped)"
-(cd "$REPO/packages/zo-swarm-orchestrator" && bun install --silent 2>/dev/null) && pass "orchestrator deps" || info "  (orchestrator bun install skipped)"
-(cd "$REPO/packages/zo-swarm-executors" && bun install --silent 2>/dev/null) && pass "executors deps" || true
+# One workspace install covers packages/* and factory/lane (root package.json).
+DEPS_OK=1
+if (cd "$REPO" && bun install --silent >/dev/null 2>&1); then
+  pass "workspace deps (bun install)"
+else
+  DEPS_OK=0
+  warn "bun install failed — run: cd $REPO && bun install"
+fi
+# Don't trust the install: prove the memory MCP server answers initialize.
+if [ "$DEPS_OK" = "1" ] && MCP_MSG="$(ZO_MEMORY_DB="$EXPECT_DB" timeout 60 bun "$REPO/scripts/mcp-check.mjs" "$REPO/packages/zo-memory-system" bun scripts/mcp-server.ts 2>&1)"; then
+  pass "zo-memory MCP server starts ($MCP_MSG)"
+  status "memory_mcp: ok"
+else
+  warn "zo-memory MCP server does not start — run: cd $REPO/packages/zo-memory-system && bun scripts/mcp-server.ts"
+  [ -n "${MCP_MSG:-}" ] && printf '%s\n' "$MCP_MSG" | sed 's/^/      /'
+  status "memory_mcp: failed"
+fi
 if [ -f "$REPO/packages/wayfinder/requirements.txt" ]; then
   python3 -m pip install --user -q -r "$REPO/packages/wayfinder/requirements.txt" 2>/dev/null && pass "wayfinder python deps" || info "  (wayfinder pip install skipped — run manually)"
 fi
@@ -165,6 +214,7 @@ if [ "$HEALTHY" = "0" ]; then
   fi
 fi
 
+status "result: ok"
 info ""
 info "Done. Still manual (by design — they deserve your attention):"
 info "  - Put OPENAI_API_KEY in $ZCFG/apis.env (mode 600)"

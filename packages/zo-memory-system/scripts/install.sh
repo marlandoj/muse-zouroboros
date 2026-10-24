@@ -1,116 +1,66 @@
-#!/bin/bash
-# Install zo-memory-system skill into workspace
-# Usage: ./install.sh
+#!/usr/bin/env bash
+# Install zo-memory-system for the current user.
+# Usage: bash scripts/install.sh
+#
+# Everything lands under your home directory (override with ZO_MEMORY_DIR /
+# ZO_MEMORY_DB). Scripts run in place from this package — nothing is copied
+# out of the repo, so the CLI and MCP server always match your checkout.
 
-set -e
+set -euo pipefail
 
 echo "════════════════════════════════════════════════════════════"
 echo "  Zo Memory System v3.x - Installation"
 echo "════════════════════════════════════════════════════════════"
 echo
 
-SKILL_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-WORKSPACE_DIR="/home/workspace"
-MEMORY_DIR="$WORKSPACE_DIR/.zo/memory"
+PKG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+[ -f "$HOME/.config/zouroboros/workshop.env" ] && source "$HOME/.config/zouroboros/workshop.env"
+MEMORY_DIR="${ZO_MEMORY_DIR:-$HOME/.zo/memory}"
+export ZO_MEMORY_DB="${ZO_MEMORY_DB:-$MEMORY_DIR/shared-facts.db}"
+
+if ! command -v bun >/dev/null 2>&1; then
+  echo "✘ bun not found. Install it (curl -fsSL https://bun.sh/install | bash), open a new shell, and re-run."
+  exit 1
+fi
 
 # Check for OpenAI key
 echo "🔍 Checking model provider configuration..."
 if [ -z "${OPENAI_API_KEY:-}" ]; then
-  echo "  ⚠️  OPENAI_API_KEY not set. OpenAI-backed gate/extraction/embedding calls will fail."
-  echo "  Add it in Zo Secrets or the service env_vars before enabling the memory services."
+  echo "  ⚠️  OPENAI_API_KEY not set — memory runs FTS5-only (exact search)."
+  echo "  For semantic search, put it in ~/.config/zouroboros/apis.env (mode 600)."
 else
   echo "  ✓ OPENAI_API_KEY detected"
 fi
 
 echo
-echo "📁 Setting up directories..."
-mkdir -p "$MEMORY_DIR"/{personas,checkpoints,scripts}
+echo "📁 Setting up $MEMORY_DIR ..."
+mkdir -p "$MEMORY_DIR"/{personas,checkpoints}
+chmod 700 "$MEMORY_DIR"
 
-echo "📋 Installing scripts..."
-cp "$SKILL_DIR/scripts/memory.ts" "$MEMORY_DIR/scripts/"
-cp "$SKILL_DIR/scripts/continuation.ts" "$MEMORY_DIR/scripts/"
-cp "$SKILL_DIR/scripts/schema.sql" "$MEMORY_DIR/scripts/"
-cp "$SKILL_DIR/scripts/migrate-v3.sql" "$MEMORY_DIR/scripts/"
-cp "$SKILL_DIR/scripts/rollback-v3.sql" "$MEMORY_DIR/scripts/"
-cp "$SKILL_DIR/scripts/add-persona.sh" "$MEMORY_DIR/scripts/"
-cp "$SKILL_DIR/scripts/demo.ts" "$MEMORY_DIR/scripts/"
-chmod +x "$MEMORY_DIR/scripts/add-persona.sh"
-
-echo "📚 Installing examples..."
-for file in "$SKILL_DIR/assets/examples"/*.md; do
-  if [ -f "$file" ]; then
+echo "📚 Installing example personas..."
+for file in "$PKG_DIR/assets/examples"/*.md; do
+  [ -f "$file" ] || continue
+  if [ -f "$MEMORY_DIR/personas/$(basename "$file")" ]; then
+    echo "  = $(basename "$file") (kept existing)"
+  else
     cp "$file" "$MEMORY_DIR/personas/"
     echo "  ✓ $(basename "$file")"
   fi
 done
 
-echo "⚙️  Initializing database..."
-cd "$WORKSPACE_DIR"
-if [ ! -f "$MEMORY_DIR/shared-facts.db" ]; then
-  bun "$MEMORY_DIR/scripts/memory.ts" init 2>/dev/null || echo "  Database will be created on first use"
-fi
-
-echo "📝 Creating workspace AGENTS.md..."
-if [ ! -f "$WORKSPACE_DIR/AGENTS.md" ]; then
-  cat > "$WORKSPACE_DIR/AGENTS.md" << 'EOF'
-# Zo Computer Workspace Memory
-
-## Memory System Reference
-
-This workspace uses a **hybrid SQLite + Vector memory system** (v2.1) for persona continuity.
-
-### Quick Commands
-
-```bash
-# Store a fact
-bun .zo/memory/scripts/memory.ts store \
-  --entity "user" --key "preference" --value "value" --decay permanent
-
-# Hybrid search (semantic + exact)
-bun .zo/memory/scripts/memory.ts hybrid "query"
-
-# Fast exact search
-bun .zo/memory/scripts/memory.ts search "query" --no-hyde
-
-# View stats
-bun .zo/memory/scripts/memory.ts stats
-```
-
-### Decay Tiers
-
-| Tier | TTL | Use Case |
-|------|-----|----------|
-| `permanent` | Never | Core user facts, preferences |
-| `stable` | 90 days | Preferences, recurring decisions |
-| `active` | 14 days | Current projects, tasks |
-| `session` | 24 hours | Temporary context |
-| `checkpoint` | 4 hours | Task state snapshots |
-
-### Persona Memory Files
-
-Critical facts for each persona are stored in:
-- `file '.zo/memory/personas/[persona-name].md'`
-
-These are lean (20-30 facts) and always loaded with the persona.
-
-### Shared Memory Database
-
-All other facts go into SQLite at `file '.zo/memory/shared-facts.db'`:
-- Cross-persona facts use `--persona shared`
-- Persona-specific facts use `--persona [name]`
-EOF
-  echo "  ✓ Created AGENTS.md"
-fi
+echo "⚙️  Initializing database at $ZO_MEMORY_DB ..."
+(cd "$PKG_DIR" && bun scripts/memory.ts init >/dev/null)
+[ -f "$ZO_MEMORY_DB" ] || { echo "✘ database was not created at $ZO_MEMORY_DB"; exit 1; }
+echo "  ✓ database ready"
 
 echo
 echo "════════════════════════════════════════════════════════════"
 echo "  ✅ Installation Complete"
 echo "════════════════════════════════════════════════════════════"
 echo
-echo "Quick start:"
-echo "  bun .zo/memory/scripts/memory.ts stats"
-echo "  bun .zo/memory/scripts/memory.ts hybrid \"your query\""
+echo "Quick start (from $PKG_DIR):"
+echo "  bun scripts/memory.ts stats"
+echo "  bun scripts/memory.ts search \"your query\""
 echo
-echo "Documentation:"
-echo "  file 'Skills/zo-memory-system/SKILL.md'"
+echo "Documentation: $PKG_DIR/README.md"
 echo

@@ -56,7 +56,7 @@ import {
 import { sweepPromotions, listReviewQueue, resolveReview, type ReviewDecision } from "./promotion";
 
 // --- Configuration ---
-const DB_PATH = process.env.ZO_MEMORY_DB || "/home/workspace/.zo/memory/shared-facts.db";
+const DB_PATH = process.env.ZO_MEMORY_DB || join(process.env.HOME || "/tmp", ".zo", "memory", "shared-facts.db");
 // Model config now handled by model-client.ts; this is kept for status display and SQL defaults
 const EMBEDDING_MODEL = process.env.ZO_EMBEDDING_MODEL || "text-embedding-3-small";
 

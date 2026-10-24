@@ -13,7 +13,7 @@ if [ -z "$PERSONA_NAME" ]; then
     exit 1
 fi
 
-MEMORY_DIR="/home/workspace/.zo/memory/personas"
+MEMORY_DIR="${ZO_MEMORY_DIR:-$HOME/.zo/memory}/personas"
 PERSONA_FILE="$MEMORY_DIR/$PERSONA_NAME.md"
 
 # Create directory if needed

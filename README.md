@@ -98,9 +98,12 @@ A hosted workshop is an MCP server your Muse connects to. Everything below is a 
 
 **Easiest: ask Muse to set you up.** Muse hands you one command, you paste
 it into a terminal, then paste the result back — Muse walks you through
-the rest in chat:
+the rest in chat. You need [Bun](https://bun.sh) first (the installer
+stops and tells you if it's missing), plus Node 22+, Python 3.11+, `git`,
+`jq` — [full list](walkthrough/01-prerequisites.md):
 
 ```bash
+curl -fsSL https://bun.sh/install | bash   # once, then open a new shell
 npx -y muse-zouroboros@latest
 ```
 
@@ -110,7 +113,7 @@ npx -y muse-zouroboros@latest
 [walkthrough/00-quickstart.md](walkthrough/00-quickstart.md) — install,
 prove it's alive, and get your first three wins in about half an hour:
 Muse remembering something for you, your first build request from chat,
-and a health check at a glance. The one real prerequisite: an AI coding
+and a health check at a glance. Beyond Bun and the runtimes above, the one real prerequisite: an AI coding
 tool you already pay for, installed and logged in — **or** the free tier
 the installer offers (a personal Google account, ~1000 free requests a day,
 no credit card). The workshop can only build with tools you have.

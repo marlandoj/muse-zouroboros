@@ -12,6 +12,15 @@ Install Bun (memory system, swarm, factory lane), Node 22+ (hooks, verity's
 engine), and Python 3.11+ (wayfinder engine). Also needed: `git`, `jq`,
 `bash`, GNU `timeout`.
 
+Bun is not in most distro package managers; the official installer puts it
+in `~/.bun/bin` (open a new shell afterwards so it is on `PATH`):
+
+```bash
+curl -fsSL https://bun.sh/install | bash
+```
+
+Check them all:
+
 ```bash
 bun --version
 node --version     # want v22+
