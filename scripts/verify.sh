@@ -15,7 +15,7 @@ head() { printf '\n\033[1m%s\033[0m\n' "$1"; }
 
 head "memory"
 if [ -f "${ZO_MEMORY_DB:-$HOME/.zo/memory/shared-facts.db}" ]; then
-  ok "database exists: $ZO_MEMORY_DB"
+  ok "database exists: ${ZO_MEMORY_DB:-$HOME/.zo/memory/shared-facts.db}"
   if (cd "$REPO/packages/zo-memory-system" && timeout 30 bun scripts/memory.ts stats >/dev/null 2>&1); then
     ok "memory CLI round-trip works"
   else bad "memory CLI failed — run: cd packages/zo-memory-system && bun scripts/memory.ts stats"; fi
