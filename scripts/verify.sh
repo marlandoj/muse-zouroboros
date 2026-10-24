@@ -20,6 +20,9 @@ if [ -f "${ZO_MEMORY_DB:-$HOME/.zo/memory/shared-facts.db}" ]; then
     ok "memory CLI round-trip works"
   else bad "memory CLI failed — run: cd packages/zo-memory-system && bun scripts/memory.ts stats"; fi
 else bad "no database — run walkthrough step 03"; fi
+if (timeout 60 bun "$REPO/scripts/mcp-check.mjs" "$REPO/packages/zo-memory-system" bun scripts/mcp-server.ts >/dev/null 2>&1); then
+  ok "zo-memory MCP server answers initialize"
+else bad "zo-memory MCP server does not start — run: cd packages/zo-memory-system && bun scripts/mcp-server.ts"; fi
 
 head "swarm executors"
 if (cd "$REPO/packages/zo-swarm-executors" && timeout 120 bun scripts/doctor.ts 2>/dev/null | grep -qiE 'healthy|ok'); then

@@ -30,13 +30,39 @@ import { createHash, randomUUID } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, rmdirSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join } from 'node:path';
 import type { McpServer } from '@agentclientprotocol/sdk';
-import { FileCassetteRecorder } from 'zouroboros-selfheal';
+import * as selfheal from 'zouroboros-selfheal';
 import {
   prepareFilesystemContainedSpawn,
   type AdapterSpawnSpec,
 } from './agent-containment.js';
 import { readManagedFactoryBoundary, prepareManagedFactorySpawn } from './factory-systemd-containment.js';
 const managedAdapters = new WeakSet<ChildProcess>();
+
+// Trace cassette recording is optional. Published zouroboros-selfheal
+// (<= 2.1.1) does not export FileCassetteRecorder; a named import would make
+// this module (and everything that re-exports ACPTransport) fail to load.
+// Feature-detect it instead and skip recording when it is absent.
+interface TraceToolRecorder {
+  recordTool(input: {
+    name: string;
+    arguments?: unknown;
+    result?: unknown;
+    error?: unknown;
+    durationMs?: number;
+    metadata?: Record<string, unknown>;
+  }): void;
+}
+type TraceToolRecorderCtor = new (options: {
+  mode: 'record';
+  path: string;
+  traceId: string;
+  source: string;
+  metadata?: Record<string, unknown>;
+}) => TraceToolRecorder;
+const FileCassetteRecorder = (selfheal as Record<string, unknown>).FileCassetteRecorder as
+  | TraceToolRecorderCtor
+  | undefined;
+let warnedNoCassetteRecorder = false;
 
 // Env vars to strip before spawning the ACP adapter (session detection suppression)
 const SCRUBBED_ENV_VARS = [
@@ -503,7 +529,7 @@ class SwarmClient implements Client {
   constructor(
     queue: SessionUpdate[] & { _notify?: () => void },
     onUpdate?: (update: SessionUpdate) => void,
-    private recorder?: FileCassetteRecorder,
+    private recorder?: TraceToolRecorder,
     private onActivity?: () => void,
   ) {
     this.updateQueue = queue;
@@ -1523,7 +1549,12 @@ export class ACPTransport implements ExecutorTransport {
     const output = Readable.toWeb(adapter.stdout!) as unknown as ReadableStream<Uint8Array>;
     const stream = ndJsonStream(input, output);
 
-    const traceRecording = traceId && process.env.ZOUROBOROS_TRACE_RECORD !== '0';
+    const traceRecordingRequested = traceId && process.env.ZOUROBOROS_TRACE_RECORD !== '0';
+    if (traceRecordingRequested && !FileCassetteRecorder && !warnedNoCassetteRecorder) {
+      warnedNoCassetteRecorder = true;
+      console.warn('[acp-transport] trace recording skipped: installed zouroboros-selfheal has no FileCassetteRecorder');
+    }
+    const traceRecording = traceRecordingRequested && FileCassetteRecorder;
     const replayRoot = process.env.ZOUROBOROS_REPLAY_ROOT
       ?? join(process.env.HOME ?? '/tmp', '.zouroboros', 'replay');
     const recorder = traceRecording

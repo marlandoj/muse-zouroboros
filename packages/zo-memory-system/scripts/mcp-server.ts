@@ -43,7 +43,7 @@ import {
 } from "./session-observer";
 
 // --- Config ---
-const DB_PATH = process.env.ZO_MEMORY_DB || "/home/workspace/.zo/memory/shared-facts.db";
+const DB_PATH = process.env.ZO_MEMORY_DB || join(process.env.HOME || "/tmp", ".zo", "memory", "shared-facts.db");
 const EMBEDDING_MODEL = process.env.ZO_EMBEDDING_MODEL || "text-embedding-3-small";
 const HISTORY_PATH = join(process.env.HOME || "/tmp", ".swarm", "executor-history.json");
 

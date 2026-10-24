@@ -37,13 +37,27 @@ say ""
 
 # 2. Bootstrap (interactive; prompts read from /dev/tty so piping works)
 say "-- running bootstrap (it will ask you a question or two)"
-bash "$TARGET/scripts/bootstrap.sh"
+STATUS_FILE="$(mktemp "${TMPDIR:-/tmp}/zo-bootstrap.XXXXXX")"
+trap 'rm -f "$STATUS_FILE"' EXIT
+ZO_BOOTSTRAP_STATUS="$STATUS_FILE" bash "$TARGET/scripts/bootstrap.sh"
+BOOTSTRAP_RC=$?
 say ""
+if [ "$BOOTSTRAP_RC" -eq 0 ]; then
+  BOOTSTRAP="ok"
+else
+  BOOTSTRAP="FAILED (exit $BOOTSTRAP_RC)"
+fi
+# Prerequisites/warnings bootstrap reported, one line each, for the handoff.
+BOOTSTRAP_NOTES="$(grep -E '^(missing|warn):' "$STATUS_FILE" 2>/dev/null | tr '\n' ';' || true)"
 
-# 3. Verify
-say "-- verifying"
-VERIFY_OUT="$(bash "$TARGET/scripts/verify.sh" 2>&1 || true)"
-printf '%s\n' "$VERIFY_OUT"
+# 3. Verify (pointless without a completed bootstrap)
+if [ "$BOOTSTRAP_RC" -eq 0 ]; then
+  say "-- verifying"
+  VERIFY_OUT="$(bash "$TARGET/scripts/verify.sh" 2>&1 || true)"
+  printf '%s\n' "$VERIFY_OUT"
+else
+  VERIFY_OUT=""
+fi
 say ""
 
 # 4. Concierge handoff block
@@ -63,6 +77,7 @@ FREE_TIER="no"
 
 # Compact verify summary: one line per section with its marks
 SUMMARY="$(printf '%s' "$VERIFY_OUT" | grep -E '✔|✘' | sed 's/\x1b\[[0-9;]*m//g' | sed 's/^ *//' | tr '\n' ';' )"
+[ "$BOOTSTRAP_RC" -eq 0 ] || SUMMARY="skipped (bootstrap failed)"
 
 cat <<EOF
 
@@ -75,11 +90,28 @@ repo: $TARGET
 commit: $COMMIT
 date: $DATE
 os: $OS
+bootstrap: $BOOTSTRAP
+bootstrap_notes: ${BOOTSTRAP_NOTES:-none}
 free_tier: $FREE_TIER
 cli_present:$CLIS
 verify: $SUMMARY
 --- END HANDOFF ---
 ================================================================
+EOF
+
+if [ "$BOOTSTRAP_RC" -ne 0 ]; then
+  cat <<EOF
+
+What just happened: the workshop is NOT installed — bootstrap stopped
+(exit $BOOTSTRAP_RC). Fix what it marked ✘ above (most often: install bun with
+  curl -fsSL https://bun.sh/install | bash
+then open a new shell), and re-run this installer. Paste the handoff to
+Muse if you want help with the fix.
+EOF
+  exit "$BOOTSTRAP_RC"
+fi
+
+cat <<EOF
 
 What just happened: the workshop is installed. Paste the handoff to
 Muse — Muse reads what's green and red, and guides you through your
