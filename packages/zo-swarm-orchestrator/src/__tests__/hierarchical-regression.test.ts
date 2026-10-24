@@ -252,8 +252,9 @@ describe("hierarchical delegation regressions", () => {
   it("prefers an explicit task executor over persona during first-attempt execution", async () => {
     const scriptPath = join(import.meta.dir, "..", "..", "scripts", "orchestrate-v5.ts");
     const text = await Bun.file(scriptPath).text();
-    expect(text).toContain('if (task.executor && retries === 0 && reroutes === 0)');
-    expect(text).toContain('} else if (task.persona && task.persona !== "auto" && retries === 0 && reroutes === 0)');
+    // F4: a pin to an executor excluded for a missing bridge is routed instead.
+    expect(text).toContain('if (task.executor && retries === 0 && reroutes === 0 && !excludedPin)');
+    expect(text).toContain('} else if (task.persona && task.persona !== "auto" && retries === 0 && reroutes === 0 && !excludedPin)');
   });
 
   it("aligns episode persistence with the current episodes schema", async () => {

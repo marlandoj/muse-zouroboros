@@ -711,7 +711,8 @@
         "envVar": "OPENCODE_ACP_ENABLED",
         "equals": "0",
         "transport": "bridge"
-      }
+      },
+      "bridge": "packages/zo-swarm-orchestrator/src/executor/bridges/opencode-bridge.sh"
     },
     {
       "id": "kimi",
