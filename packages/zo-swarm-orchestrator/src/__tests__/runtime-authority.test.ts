@@ -46,7 +46,11 @@ describe('registry authority', () => {
     expect(registry.executors.map((entry: any) => entry.id).sort())
       .toEqual(['claude-code', 'codex', 'gemini', 'hermes', 'kimi', 'opencode', 'pi']);
     expect(registry.services.map((entry: any) => entry.id)).toEqual(['mimir']);
-    expect(registry.executors.find((entry: any) => entry.id === 'opencode').bridge).toBeUndefined();
+    // F4: opencode stays ACP-first for the client transport, but orchestrate-v5
+    // dispatches through bridges (and the ACP entry falls back to its bridge),
+    // so the entry must name opencode-bridge.sh like every other executor.
+    expect(registry.executors.find((entry: any) => entry.id === 'opencode').bridge)
+      .toBe('packages/zo-swarm-orchestrator/src/executor/bridges/opencode-bridge.sh');
     const loaded = loadRegistry(join(root, canonicalRegistry));
     expect(loaded.executors.find(entry => entry.id === 'pi')?.bestFor.length).toBeGreaterThan(0);
   });

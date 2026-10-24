@@ -47,6 +47,7 @@ import type { SwarmPlanGateConfig, ExecutorRegistryEntry } from "../src/types";
 // shared model router instead of emitting tier labels for bridges to translate.
 import { resolveModelForExecutor } from "../src/routing/model-router";
 import { EXECUTOR_REGISTRY_RELATIVE, resolveExecutorRegistryPath } from "../src/registry/loader";
+import { auditRegistryBridges, describeExclusion, notRegisteredExclusion, type BridgeExclusion } from "../src/executor/bridge-resolution";
 import { bridgeOutputFailure } from "../src/executor/bridge-output";
 import { captureOutcome } from "../src/standalone/trace-outcome";
 import { syncEpisodeDocument } from "../src/episode-document";
@@ -1633,6 +1634,12 @@ class SwarmOrchestrator {
   private completedOutputs: Array<{ persona: string; category: string; summary: string }> = [];
   private logger: NdjsonLogger;
   private executors: Record<string, ExecutorCapability> = {};
+  /**
+   * F4: executors left out because their bridge does not resolve (registry
+   * entry without a bridge, bridge not on disk, or a pin to an unregistered
+   * id). Never routable, never fatal: reported in plain language.
+   */
+  private bridgeExclusions: BridgeExclusion[] = [];
   private localExecutors: Map<string, LocalExecutor> = new Map();
   private progressFile: string;
   private runStartTime: number = 0;
@@ -1686,6 +1693,10 @@ class SwarmOrchestrator {
       }
     } catch {}
 
+    // F4: registry entries whose bridge does not resolve are not routable
+    // (loadExecutors() already left them out); record why, for the operator.
+    const audit = auditRegistryBridges({ orchestratorHome: WORKSPACE, registryPath: REGISTRY, personaRegistryPath: PERSONA_REGISTRY });
+    this.bridgeExclusions = audit.excluded.filter(x => !(x.executor in this.executors));
     console.log(`  Local executors: ${[...this.localExecutors.keys()].join(", ") || "none"}`);
   }
 
@@ -1800,14 +1811,34 @@ class SwarmOrchestrator {
       errors.push(`Duplicate task IDs: ${[...new Set(dupes)].join(", ")}`);
     }
 
-    // Verify executor bridges
+    // Verify executor bridges. F4: an executor whose bridge does not resolve
+    // is EXCLUDED (it was never in the candidate pool) — never a campaign
+    // failure. Its pinned tasks are routed to a working executor instead.
+    const affected = new Map<string, string[]>();
     for (const task of tasks) {
       const effectiveExec = getEffectiveExecutor(task);
       if (!effectiveExec) continue;
-      const bridge = getBridge(effectiveExec, this.executors);
-      if (!bridge) {
-        errors.push(`No bridge found for executor: ${effectiveExec}`);
+      if (effectiveExec in this.executors && getBridge(effectiveExec, this.executors)) continue;
+      affected.set(effectiveExec, [...(affected.get(effectiveExec) ?? []), task.id]);
+    }
+    for (const [id, taskIds] of affected) {
+      let x = this.bridgeExclusions.find(e => e.executor === id);
+      if (!x) {
+        x = notRegisteredExclusion(id, REGISTRY, WORKSPACE, Object.keys(this.executors));
+        this.bridgeExclusions.push(x);
       }
+      x.tasks = taskIds;
+      delete this.executors[id];
+      this.localExecutors.delete(id);
+    }
+    for (const x of this.bridgeExclusions) {
+      console.log(`   ⚠️  ${describeExclusion(x)}`);
+    }
+    if (this.bridgeExclusions.length) {
+      this.logger.log("executor_excluded", { executors: this.bridgeExclusions });
+    }
+    if (Object.keys(this.executors).length === 0) {
+      errors.push(`No runnable executors: ${this.bridgeExclusions.map(describeExclusion).join(" ") || "no local executors resolved from the executor/persona registries"}`);
     }
 
     // Verify DAG dependencies
@@ -2171,9 +2202,16 @@ class SwarmOrchestrator {
     while (retries <= this.config.maxRetries) {
       // Route to executor — with fallback chain awareness
       let exid: string;
-      if (task.executor && retries === 0 && reroutes === 0) {
+      // F4: a pin to an excluded (bridgeless / unregistered) executor is
+      // routed instead of dispatched to something that cannot start.
+      const pinned = retries === 0 && reroutes === 0 ? getEffectiveExecutor(task) : "";
+      const excludedPin = pinned ? this.bridgeExclusions.find(x => x.executor === pinned) : undefined;
+      if (excludedPin) {
+        console.log(`  🔄 [${task.id}] Pinned executor ${pinned} is left out of this swarm (${excludedPin.reason}) — routing to a working executor`);
+      }
+      if (task.executor && retries === 0 && reroutes === 0 && !excludedPin) {
         exid = task.executor;
-      } else if (task.persona && task.persona !== "auto" && retries === 0 && reroutes === 0) {
+      } else if (task.persona && task.persona !== "auto" && retries === 0 && reroutes === 0 && !excludedPin) {
         exid = task.persona;
       } else {
         const decision = route(
@@ -2659,6 +2697,11 @@ Consider approaching this as a "${stagnation.suggestedPersona}" would.
       delegatedTasks,
       childTaskCount,
       elapsedMs: totalDurationMs,
+      // F4: executors left out because their bridge does not resolve (plain-language reason + fix).
+      ...(this.bridgeExclusions.length ? {
+        excludedExecutors: this.bridgeExclusions,
+        exclusionNotes: this.bridgeExclusions.map(describeExclusion),
+      } : {}),
       results: this.results,
     };
 
@@ -2780,6 +2823,9 @@ Consider approaching this as a "${stagnation.suggestedPersona}" would.
     console.log(`   Artifacts:   ${telemetry.artifactCount}`);
     console.log(`   Reroutes:    ${telemetry.reroutedTasks}`);
     console.log(`   Executors:   ${telemetry.effectiveExecutors.join(", ") || "n/a"}`);
+    for (const x of this.bridgeExclusions) {
+      console.log(`   Left out:    ${describeExclusion(x)}`);
+    }
     console.log(`   Results:     ${join(RESULTS_DIR, `${this.swarmId}.json`)}`);
     console.log("=".repeat(60));
   }

@@ -60,6 +60,10 @@ function cmdValidate(): void {
 
     if ((e.transport ?? "bridge") === "bridge" && !e.bridge) {
       errors.push(`${e.id}: bridge transport requires a bridge path`);
+    } else if (!e.bridge) {
+      // F4: orchestrate-v5 starts every executor through its bridge (ACP
+      // entries fall back to it too); without one the executor is unroutable.
+      errors.push(`${e.id}: missing bridge path (orchestrate-v5 dispatches through bridges; an entry without one is unroutable)`);
     }
     if (e.transport === "acp" && !e.acp?.adapterBin) {
       errors.push(`${e.id}: ACP transport requires acp.adapterBin`);
