@@ -6,6 +6,8 @@
 
 Coding agents say "done" before anything has been run. Verity stops that across four harnesses at once: Claude Code, Codex CLI, Kimi Code and Gemini CLI. Every edit and every check the agent runs is recorded. When the agent tries to finish after changing code with no passing test, build, lint or type-check since, Verity can refuse the finish and tell the agent what's missing. It also catches secrets written into files, deleted or skipped tests, and piped test commands (`npm test | tail`) that hide a failure.
 
+Hooks are one surface. The other is a **supervising CLI**: `verity run` launches any harness — including OpenCode, Pi and Hermes, which have no hook that can refuse a finish — snapshots the workspace first, and gates the result on the diff when the process exits, running the project's check itself. `verity gate` gives the same verdict mid-flight, and a push guard the wrapper injects into the session's git environment scans what is about to leave the machine. Both surfaces share one rule core, and the hook path records a diff verdict beside its own on every finish (dual-run), so the two are continuously compared. The CLI ships in shadow; see *Supervising wrapper* below.
+
 It installs in **shadow mode**: every verdict is logged and nothing is blocked. One command switches it to **live**, for all harnesses or one, and for all checks or only the ones you trust.
 
 ## How it works
@@ -18,6 +20,8 @@ It installs in **shadow mode**: every verdict is logged and nothing is blocked. 
    - in **live**, returns the verdict in the harness's own format (translated back for Kimi and Gemini);
    - in **live**, if the analyzer can't answer (missing, crashed, timed out, malformed output), refuses the finish or the tool call instead of silently passing — a dead gate fails closed, and the outage is logged.
 
+Alongside the event ledger, the engine keeps a **diff ledger**: a snapshot of the working tree at session start, compared at finish by the shared diff rules (secrets on added lines, deleted or skipped tests, code changed with no passing check). The hook path records that diff verdict as a second opinion; the swarm gate and the CLI judge by it directly.
+
 The Verity engine runs with no model in both modes: the API key is stripped and the endpoint points at a dead port, so no text leaves the host. If anything fails (analyzer missing, a timeout, malformed output), Verity fails closed in live mode — it refuses the finish or the tool call rather than silently passing — and answers `{}` in shadow mode, where the gate only observes.
 
 | Harness | Config written | Scope | Translation |
@@ -27,7 +31,7 @@ The Verity engine runs with no model in both modes: the API key is stripped and 
 | Kimi Code | `~/.kimi-code/config.toml` | every Kimi session | `adapter.mjs kimi` / `--out kimi` |
 | Gemini CLI | `~/.gemini/settings.json` | every Gemini session | `adapter.mjs gemini` / `--out gemini` |
 
-OpenCode, Pi and Hermes are not supported: none has a hook that can refuse a finish.
+OpenCode, Pi and Hermes have no hook support: none offers a hook that can refuse a finish. They are covered by the supervising wrapper instead — `verity run` needs no hook — and orchestrated runs on any harness are covered by the swarm gate.
 
 ## Install
 
@@ -40,6 +44,8 @@ bash scripts/install.sh --dry-run                                   # preview th
 ```
 
 The installer backs up every config file to `~/.verity/backups/` first, and adds one hook group per event. Existing hooks are kept, re-running changes nothing, and entries from the earlier `canny-shadow` name are repointed.
+
+The CLI surface needs no install: `verity run` works from this checkout (see *Supervising wrapper* below). `bash scripts/install.sh --print-aliases` prints suggested shell aliases for it and edits nothing.
 
 ## Shadow and live
 
