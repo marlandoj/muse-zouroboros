@@ -119,10 +119,80 @@ Kimi and Gemini input shapes were captured from live sessions (Kimi Code 0.41.0,
 
 Kimi and Gemini ledgers are named `claude-kimi-<id>` / `claude-gemini-<id>` because the engine parses them as Claude events.
 
+## Swarm gate (orchestrator-run)
+
+The hooks above gate an interactive session from inside the harness. The swarm
+(`packages/zo-swarm-orchestrator/scripts/orchestrate-v5.ts`) cannot rely on
+them: executors run as detached bridges, three harnesses have no hook at all,
+and an agent's own report of "tests pass" is not evidence. So the orchestrator
+runs Verity itself, in two phases, with the workspace diff as the ledger:
+
+```bash
+node engine/cli.js snapshot --cwd <workspace> --out <base.json> [--max-depth 3] [--exclude <abs-path>]...
+node engine/cli.js verify   --cwd <workspace> --base <base.json> --json
+                            [--check <cmd>] [--check-source task|policy|verity-json-base] [--waived]
+                            [--check-cwd <rel>] [--check-timeout <s, default 900>] [--check-log <file>]
+                            [--policy <operator-policy.json>] [--require-check]
+                            [--allow-test-deletion] [--allow-secrets] [--allow-check-edits]
+                            [--ignore <glob>]... [--exclude <abs-path>]...
+```
+
+- **snapshot** records, for every git repo in the workspace (depth ≤ 3,
+  `node_modules` skipped), the tree of its *current working state* written
+  through a temporary index copy (tracked, staged, unstaged and untracked
+  files; `.gitignore` and `info/exclude` honoured; the real index is never
+  touched), plus a sha256 of `info/exclude`. A workspace root that is not a
+  repo gets a path/size/sha256 manifest of its loose files (`run.log`,
+  `TASK.md`, `.verity/` and the orchestrator's own output files excluded).
+  The base record lives *outside* the workspace; the orchestrator keeps its
+  hash in memory and treats a mismatch as an error.
+- **verify** builds the post tree the same way and diffs base → post
+  (`git diff -M --name-status` plus `--unified=0` for added lines). A repo
+  that appeared during the run (the factory `./repo` clone) is judged against
+  its upstream merge-base, else the remote default branch, else the empty
+  tree. Loose files are scanned for secrets only — never counted as code.
+- **Rules** reuse the engine's primitives: code change = `isCodeFile` minus
+  ignore globs (lockfiles by default, plus policy / base `.verity.json`
+  `ignore`); test deletion = status `D`, or `R` away from a test path, on
+  `looksLikeTestFile`; secrets = `findSecrets` over added lines (every
+  match); `check_definition_changed` when the diff touches the check's own
+  definition (`package.json` script, Makefile when the command uses make,
+  jest/vitest/pytest config, `.verity.json`); "no passing check" via
+  `decideStop` with the orchestrator-run check's real exit code (so a passing
+  test runner in a repo with no test files is still a hollow pass).
+- **The trusted check** is resolved highest-source-first: the task's
+  dispatcher-written `verify` (`--check` / `--waived`), the operator policy
+  file's entry for the repo's remote (`--policy`), then `check` in
+  `.verity.json` **at the base revision** (the working-tree copy and
+  `~/.verity/trusted.json` are ignored — the executor can write both). The
+  command must own its exit status: `||`, `;`, a trailing `&`, `--help`, or a
+  pipe without `set -o pipefail` is a usage error (exit 64). It runs as
+  `bash -o pipefail -c` in its own process group, with a timeout, with
+  secret-looking variables stripped from the environment. Its output goes to
+  `--check-log`; the verdict carries only its sha256 and byte count.
+- **Exit codes:** `0` pass · `1` fail (a rule was violated) · `2`
+  unverifiable (code changed, no check, `--require-check` off, or an explicit
+  waiver) · `64` usage · `70` internal (the gate cannot answer). The
+  orchestrator treats 64, 70, any other code, a timeout, unparseable stdout
+  or a missing CLI as `error` and fails closed in live mode.
+- **Verdict (`verity.swarm.verdict/1`, stdout):** decision, base trees and
+  their sources, changed code paths, deleted tests, untracked code,
+  findings as `{rule, path, label, fingerprint}`, the check record
+  (command, source, cwd, exit code, duration, output hash) and the message.
+  Never file contents, never command output, never the text of a detected
+  credential.
+
+Orchestrator side (mode resolution, shadow/live, retry semantics, the
+operator policy file, rollout): `packages/zo-swarm-orchestrator/docs/verity-swarm-gate.md`.
+
 ## Tests
 
 ```bash
-bash test/run.sh
+bash test/run.sh                                 # hook / adapter / installer suite
+bash test/engine-parity.sh "$PWD/engine/cli.js"  # golden fixture corpus (6 known-stale: 3 testdel fixtures expect `ask`, the 2026-10-14 governance change made it `deny`; secret-near-miss / secret-nested-path / secret-ts-string expect a deny for AWS's documented AKIAIOSFODNN7EXAMPLE, which the 2026-10-25 seeded-value rule now allows)
+bash test/swarm-verify.sh                        # the swarm gate: snapshot/verify over scratch git fixtures
 ```
 
-Hermetic: a fake engine CLI and a temporary `HOME`, project and Verity home. Covers translation in both directions, shadow mode for every harness, the Jev key never reaching the engine, the kill switch, the mode CLI, live mode per harness and per check, environment precedence, failing closed on bad output in live mode (including the Kimi/Gemini translated refusal), and the installer's merge, preservation, migration and idempotency.
+`run.sh` is hermetic: a fake engine CLI and a temporary `HOME`, project and Verity home. Covers translation in both directions, shadow mode for every harness, the Jev key never reaching the engine, the kill switch, the mode CLI, live mode per harness and per check, environment precedence, failing closed on bad output in live mode (including the Kimi/Gemini translated refusal), and the installer's merge, preservation, migration and idempotency.
+
+`swarm-verify.sh` covers the Stage 2 acceptance list at the engine level: no check → unverifiable / fail under `--require-check`, passing and failing checks, masked commands (64), deleted and renamed tests (including `test_x.py` / `x_test.go`), a planted GitHub token with a no-token-text-in-any-output grep, untracked new code, docs-only with the check provably not run, hollow pass, check-definition tampering and base-revision-only `.verity.json`, the factory shape (non-git root plus a nested clone judged against the upstream merge-base), a `git init` repo, missing base tree (70), policy by remote, `info/exclude` hiding, and the two engine fixes from Stage 1 (#3 trusted-pattern masking, #4 every credential match).

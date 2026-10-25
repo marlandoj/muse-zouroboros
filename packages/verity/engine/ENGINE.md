@@ -25,3 +25,22 @@ Verity previously obtained by cloning `qkal/Canny` at install time.
   mode when the engine cannot answer (see `scripts/verity-hook.sh`), and
   ledgers keep provenance only — paths, commands, and outcomes, never
   file contents.
+- **Verity×Swarm Stage 2 (2026-10-25).** `swarm.js` adds the
+  orchestrator-run gate (`cli.js snapshot` / `cli.js verify`): the ledger is
+  the workspace's git diff between a pre-task base and the post-task state,
+  the trusted check runs as a child of the caller, and the verdict is
+  `verity.swarm.verdict/1` (paths, labels, fingerprints, command, exit codes,
+  hashes — never contents, output or credential text). It reuses
+  `isCodeFile`, `looksLikeTestFile` (now exported; `isTestPath` alone misses
+  `test_x.py`, `x_test.go`, `*_spec.rb`), `findSecrets`, `repoHasTestFiles`,
+  `isVerify` and `rules.decideStop`. Two engine fixes from the Stage 1
+  review landed with it, both in `checks.js`: (#3) a trusted `.verity.json`
+  pattern no longer short-circuits the masking analysis — it must prefix a
+  command segment of the last `;` segment, so `bun test | tail`,
+  `bun test; echo ok` and `echo bun test` are not checks once `bun test` is
+  trusted; (#4) the hardcoded-credential check tests every
+  credential-shaped assignment, not only the first, so a benign
+  `password = "changeme"` can no longer hide a real token behind it. Tests:
+  `test/swarm-verify.sh`. Not changed here: the interactive hook path's
+  Codex `apply_patch` blindness (#1), shell-edit blindness (#2) and the
+  malformed-input `{}` answer (#5), all deferred with a documented plan.
