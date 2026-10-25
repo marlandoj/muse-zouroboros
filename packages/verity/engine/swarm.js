@@ -76,11 +76,23 @@ function sha256(buf) {
   return createHash("sha256").update(buf).digest("hex");
 }
 
+/**
+ * Shadow-git work trees (Phase 2, `verity run` on a non-git workspace): the
+ * absolute work-tree root → its git dir under the Verity home. Every git call
+ * on that root runs with GIT_DIR / GIT_WORK_TREE pointed there, so the
+ * workspace itself never gains a .git.
+ */
+const SHADOW_GIT = new Map();
+export function registerShadowGit(workTree, gitDir) {
+  SHADOW_GIT.set(path.resolve(workTree), path.resolve(gitDir));
+}
+
 function git(repo, args, opts = {}) {
+  const shadow = SHADOW_GIT.get(path.resolve(repo));
   const r = spawnSync("git", ["-C", repo, ...args], {
     encoding: opts.binary ? "buffer" : "utf8",
     maxBuffer: opts.maxBuffer ?? 32 * 1024 * 1024,
-    env: { ...process.env, GIT_OPTIONAL_LOCKS: "0", GIT_TERMINAL_PROMPT: "0", ...(opts.env || {}) },
+    env: { ...process.env, GIT_OPTIONAL_LOCKS: "0", GIT_TERMINAL_PROMPT: "0", ...(shadow ? { GIT_DIR: shadow, GIT_WORK_TREE: path.resolve(repo) } : {}), ...(opts.env || {}) },
     timeout: opts.timeoutMs ?? 120_000,
     stdio: ["ignore", "pipe", "pipe"],
   });
@@ -285,17 +297,92 @@ export function looseManifest(root, { repos = [], exclude = [], maxDepth = 8 } =
 }
 
 // ---------------------------------------------------------------------------
+// shadow git (non-git workspace root under `verity run`)
+// ---------------------------------------------------------------------------
+
+/** Directories a shadow-git work tree never records (build output, dependency stores, caches). */
+export const SHADOW_HEAVY_DIRS = ["node_modules", ".venv", "venv", "__pycache__", ".tox", ".mypy_cache", ".pytest_cache", "dist", "build", "target", ".next", ".nuxt", ".turbo", ".cache", ".gradle", "coverage", ".verity"];
+/** Shadow-git caps: the loose-file count cap and the diff byte cap, the same numbers the gate already applies. */
+export const SHADOW_MAX_FILES = MAX_LOOSE_FILES;
+export const SHADOW_MAX_BYTES = MAX_DIFF_BYTES;
+
+/**
+ * Create (or reuse) the shadow git dir for `root` and register it. The
+ * exclude file holds the heavy directories, the dispatcher artefacts the
+ * loose manifest skips, nested repositories (judged on their own) and any
+ * extra workspace-relative paths.
+ */
+export function initShadowGit(root, gitDir, { nested = [], exclude = [] } = {}) {
+  const abs = path.resolve(root);
+  const dir = path.resolve(gitDir);
+  if (!fs.existsSync(path.join(dir, "HEAD"))) {
+    fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+    const r = spawnSync("git", ["init", "-q", "--bare", dir], { encoding: "utf8", stdio: ["ignore", "pipe", "pipe"], env: { ...process.env, GIT_TERMINAL_PROMPT: "0" } });
+    if (r.status !== 0) throw new GateError(`shadow git init failed at ${dir}: ${String(r.stderr || "").trim()}`);
+    spawnSync("git", ["--git-dir", dir, "config", "core.bare", "false"], { stdio: "ignore" });
+  }
+  registerShadowGit(abs, dir);
+  const lines = [
+    "# Verity shadow git: never recorded",
+    ...SHADOW_HEAVY_DIRS.map((d) => `${d}/`),
+    ...[...LOOSE_EXCLUDE_NAMES].map((n) => `/${n}`),
+    ...nested.filter((n) => n && n !== ".").map((n) => `/${n}/`),
+    ...exclude.map((p) => path.relative(abs, path.resolve(abs, p))).filter((p) => p && !p.startsWith("..")).map((p) => `/${p}`),
+  ];
+  fs.mkdirSync(path.join(dir, "info"), { recursive: true, mode: 0o700 });
+  fs.writeFileSync(path.join(dir, "info", "exclude"), lines.join("\n") + "\n", { mode: 0o600 });
+  return dir;
+}
+
+/** null when the shadow work tree is within the caps, else { reason, files, bytes }. */
+export function shadowCaps(root) {
+  const raw = gitTry(root, ["ls-files", "--others", "--exclude-standard", "-z"], { maxBuffer: MAX_DIFF_BYTES });
+  if (raw === null) return { reason: "untracked_unlisted", files: null, bytes: null };
+  const files = raw.split("\0").filter(Boolean);
+  if (files.length > SHADOW_MAX_FILES) return { reason: "files_over_cap", files: files.length, bytes: null };
+  let bytes = 0;
+  for (const f of files) {
+    try {
+      bytes += fs.lstatSync(path.join(root, f)).size;
+    } catch {
+      // vanished between listing and stat
+    }
+    if (bytes > SHADOW_MAX_BYTES) return { reason: "bytes_over_cap", files: files.length, bytes };
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // snapshot
 // ---------------------------------------------------------------------------
 
 /**
  * Pre-task base record for a workspace. Lives OUTSIDE the workspace (the
  * orchestrator keeps it in its own state dir and its sha256 in memory).
+ *
+ * `shadowGitDir` (verity run): when the root is not a repository, record it
+ * through a shadow git dir instead of the loose manifest, so code changes in
+ * a non-git workspace are judged like any other. Above the caps the root
+ * repo record is `unavailable` with the reason and the verdict will be
+ * unverifiable (truncated), never a pass.
  */
-export function snapshot({ cwd, maxDepth = DEFAULT_MAX_DEPTH, exclude = [] }) {
+export function snapshot({ cwd, maxDepth = DEFAULT_MAX_DEPTH, exclude = [], shadowGitDir = null }) {
   const root = path.resolve(String(cwd || ""));
   if (!cwd || !isDir(root)) throw new UsageError(`snapshot: --cwd is not a directory: ${cwd}`);
-  const repos = discoverRepos(root, maxDepth).map((rel) => {
+  const discovered = discoverRepos(root, maxDepth);
+  if (shadowGitDir && !discovered.includes(".")) {
+    initShadowGit(root, shadowGitDir, { nested: discovered, exclude });
+    const caps = shadowCaps(root);
+    const shadowRepo = caps
+      ? { path: ".", shadowGitDir: path.resolve(shadowGitDir), unavailable: caps.reason, files: caps.files, bytes: caps.bytes, baseSource: "pre-task" }
+      : { path: ".", shadowGitDir: path.resolve(shadowGitDir), baseTree: writeWorkingTree(root), baseSource: "pre-task", head: null, remote: null, exclude: excludeRecord(root) };
+    const nestedRepos = discovered.map((rel) => {
+      const abs = path.join(root, rel);
+      return { path: rel, baseTree: writeWorkingTree(abs), baseSource: "pre-task", head: gitTry(abs, ["rev-parse", "--verify", "-q", "HEAD"]), remote: normalizeRemote(gitTry(abs, ["remote", "get-url", "origin"])), exclude: excludeRecord(abs) };
+    });
+    return { schema: BASE_SCHEMA, createdAt: new Date().toISOString(), cwd: root, maxDepth, exclude: [...exclude], repos: [shadowRepo, ...nestedRepos], loose: null };
+  }
+  const repos = discovered.map((rel) => {
     const abs = rel === "." ? root : path.join(root, rel);
     return {
       path: rel,
@@ -779,6 +866,17 @@ export async function verify(opts) {
   for (const rel of [...new Set([...base.repos.map((r) => r.path), ...nowRels])]) {
     const abs = rel === "." ? root : path.join(root, rel);
     const b = baseByPath.get(rel);
+    if (b && b.shadowGitDir) {
+      // Shadow-git root (verity run, non-git workspace): judged through its own git dir.
+      registerShadowGit(abs, b.shadowGitDir);
+      if (b.unavailable) {
+        repos.push({ path: rel, abs, baseSource: b.baseSource, shadow: true, unavailable: b.unavailable, files: b.files ?? null, bytes: b.bytes ?? null });
+        continue;
+      }
+      if (!fs.existsSync(path.join(b.shadowGitDir, "HEAD")) || !treeExists(abs, b.baseTree)) throw new GateError(`verify: base tree ${b.baseTree} for the shadow-git workspace is missing (the shadow store at ${b.shadowGitDir} was pruned or replaced)`);
+      repos.push({ path: rel, abs, baseTree: b.baseTree, baseSource: b.baseSource, shadow: true, remote: null, baseExclude: b.exclude || null });
+      continue;
+    }
     const exists = nowRels.includes(rel);
     if (b && !exists) {
       findings.push({ rule: "repo_removed", path: rel });
@@ -812,8 +910,17 @@ export async function verify(opts) {
   let truncated = false;
   let excludeChanged = false;
   const codeRepos = new Set();
+  let shadowTruncated = null;
   for (const r of repos) {
     if (r.removed) continue;
+    if (r.shadow) {
+      const caps = r.unavailable ? { reason: r.unavailable, files: r.files, bytes: r.bytes, atBase: true } : shadowCaps(r.abs);
+      if (caps) {
+        shadowTruncated = caps;
+        truncated = true;
+        continue;
+      }
+    }
     r.postTree = writeWorkingTree(r.abs);
     // info/exclude edited during the run: files it newly hides are reported (info) even when the trees match.
     if (r.baseExclude && r.baseExclude.sha256 !== excludeRecord(r.abs).sha256) {
@@ -824,6 +931,13 @@ export async function verify(opts) {
     }
     if (r.postTree === r.baseTree) continue;
     const d = diffRepo(r.abs, r.baseTree, r.postTree);
+    if (r.shadow) {
+      // Nested repositories are judged on their own; their gitlinks in the shadow tree are not changes.
+      const nested = repos.filter((x) => x !== r).map((x) => x.path).concat(nowRels.filter((x) => x !== "."));
+      const inNested = (p) => nested.some((n) => p === n || p.startsWith(n + "/"));
+      d.entries = d.entries.filter((e) => !inNested(e.path));
+      for (const p of [...d.added.keys()]) if (inNested(p)) d.added.delete(p);
+    }
     if (d.truncated) truncated = true;
     const dr = diffRules({ repoPath: r.path, abs: r.abs, entries: d.entries, added: d.added, untracked: d.untracked, baseTree: r.baseTree, postTree: r.postTree, ignoreGlobs, allowSecrets, allowTestDeletion, allowCheckEdits, command });
     findings.push(...dr.findings);
@@ -886,6 +1000,12 @@ export async function verify(opts) {
   if (blocking.length > 0) {
     decision = "fail";
     if (command) check = { command, source: resolved.source, cwd: checkCwdRel, skipped: "blocking_findings" };
+  } else if (shadowTruncated) {
+    decision = "unverifiable";
+    const t = shadowTruncated;
+    const size = t.reason === "files_over_cap" ? `${t.files} files, cap ${SHADOW_MAX_FILES}` : t.reason === "bytes_over_cap" ? `over ${SHADOW_MAX_BYTES} bytes across ${t.files} files` : "the file list could not be read";
+    uniqMessages.push(`Verity: the workspace is above the shadow-git caps ${t.atBase ? "at the base" : "now"} (${size}), so the diff was truncated and the change is unverifiable, not passed.`);
+    check = { command: null, source: resolved.source, skipped: "truncated" };
   } else if (code.length === 0) {
     decision = "pass";
     uniqMessages.push(`Verity: no code changed (${nonCodeCount} non-code change${nonCodeCount === 1 ? "" : "s"}); no check required.`);
@@ -932,10 +1052,10 @@ export async function verify(opts) {
     ...(waived ? { waived: true } : {}),
     cwd: root,
     base: {
-      repos: repos.map((r) => ({ path: r.path, baseTree: r.baseTree, baseSource: r.baseSource, ...(r.baseRef ? { baseRef: r.baseRef } : {}), ...(r.postTree ? { postTree: r.postTree } : {}), ...(r.remote ? { remote: r.remote } : {}), ...(r.removed ? { removed: true } : {}), ...(r.appeared ? { appeared: true } : {}) })),
+      repos: repos.map((r) => ({ path: r.path, baseTree: r.baseTree, baseSource: r.baseSource, ...(r.baseRef ? { baseRef: r.baseRef } : {}), ...(r.postTree ? { postTree: r.postTree } : {}), ...(r.remote ? { remote: r.remote } : {}), ...(r.removed ? { removed: true } : {}), ...(r.appeared ? { appeared: true } : {}), ...(r.shadow ? { shadowGit: true } : {}), ...(r.unavailable ? { unavailable: r.unavailable } : {}) })),
       loose: loose ? { files: loose.files, changed: loose.changed, scanned: loose.scanned } : null,
     },
-    changes: { code, nonCodeCount, deletedTests, untrackedCode, checkDefinitionChanged: checkDefinitionChanged.length > 0, excludeChanged, truncated: truncated || (loose ? loose.truncated : false) },
+    changes: { code, nonCodeCount, deletedTests, untrackedCode, checkDefinitionChanged: checkDefinitionChanged.length > 0, excludeChanged, truncated: truncated || (loose ? loose.truncated : false), ...(shadowTruncated ? { truncatedReason: shadowTruncated.reason } : {}) },
     findings,
     check,
     allow: { secrets: allowSecrets, testDeletion: allowTestDeletion, checkEdits: allowCheckEdits },

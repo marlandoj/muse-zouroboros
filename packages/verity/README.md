@@ -191,6 +191,135 @@ node engine/cli.js verify   --cwd <workspace> --base <base.json> --json
 Orchestrator side (mode resolution, shadow/live, retry semantics, the
 operator policy file, rollout): `packages/zo-swarm-orchestrator/docs/verity-swarm-gate.md`.
 
+## Supervising wrapper: `verity run`, `verity gate`, the push guard (hybrid Phase 2, shadow)
+
+Phase 2 adds a CLI surface that gates a whole session from outside the harness,
+with the same snapshot / verify machinery and diff core the swarm gate uses (no
+second rules engine). **It ships in shadow:** verdicts are recorded and reported,
+nothing is blocked, and no relaunch happens on its own. Promotion is Phase 3.
+
+```bash
+node engine/cli.js run [--harness H] [--session ID] [--tui|--headless] -- <command> [args...]
+node engine/cli.js gate [--run ID | --base FILE] [--cwd DIR]
+node engine/cli.js feedback --verdict FILE [--check-log FILE] [--out FILE] [--plain]
+bash scripts/verity.sh run|gate|feedback ...          # the same, through the control script
+bash scripts/install.sh --print-aliases               # suggested shell aliases; prints only, edits nothing
+```
+
+**`verity run`** composes snapshot → spawn → verify → feedback → record:
+
+- A run id (`r-<utc>-<hex>`); the base goes to `$VERITY_HOME/runs/<run-id>/base.json`,
+  outside the workspace, and its sha256 is held in the wrapper's memory and
+  re-checked before verify (a changed base record is an `error` verdict).
+- The child inherits stdio (TUIs keep working) and every INT / TERM / HUP / QUIT
+  the wrapper receives. Its environment carries `VERITY_RUN_ID`, `VERITY_RUN_DIR`,
+  `VERITY_RUN_MODE` and the git guard (below).
+- On child exit: verify against the base, append the verdict to the verdict
+  store, write `runs/<run-id>/verdict.json` and `feedback.md`, then relaunch or
+  exit per the exit contract.
+- Workspace: the enclosing repository's top level, else the directory itself.
+  A **non-git** workspace is recorded through a shadow git dir at
+  `$VERITY_HOME/shadow-git/<sha256(root)[:16]>` (work tree = the directory; heavy
+  directories such as `node_modules`, `.venv`, `dist`, `build`, `target`, caches
+  excluded; nested repositories judged on their own). The gate's existing caps
+  apply (5,000 files, 128 MiB): above them the verdict is `unverifiable` with
+  `truncated: true` and the reason, never a pass. The shadow store is removed
+  when the last run on that directory completes.
+- Concurrent runs on one directory: run locks in `$VERITY_HOME/locks/<key>/`
+  mark the tree shared. Both runs record `attribution: "shared"`, and a live
+  posture drops to shadow (`downgraded: "shared_workspace"`), as in the
+  orchestrator's shared-workspace rule.
+- Check and allowances come from the **trusted project config only**: `check`,
+  `allow: ["secrets"]` and `ignore` in a `.verity.json` bound with `verity trust`,
+  read once before the child starts; failing that, `check` in `.verity.json` at
+  the base revision. No flag, environment variable or file the supervised
+  process can write supplies one.
+
+**`verity gate`** verifies the tree now against the active run's base (`VERITY_RUN_ID`
+in a session, else the newest live run on this workspace, else `--run`) or a named
+`--base`: the operator's checkpoint and the agent's sanctioned self-check. It takes
+**no allowance input**: `--check`, `--check-source`, `--check-cwd`, `--check-timeout`,
+`--check-log`, `--waived`, `--allow-test-deletion`, `--allow-secrets`,
+`--allow-check-edits`, `--ignore`, `--exclude`, `--policy`, `--require-check` and
+`--max-depth` (and their `--flag=value` forms) are usage errors (64), and so are they
+on `verity run` (kill criterion K7, tested in `test/run-wrapper.sh`). Gate verdicts are
+recorded (`event: "gate"`) and never applied.
+
+**Exit codes** (no new ones):
+
+| Command / case | Exit |
+|---|---|
+| `verify`, `gate` | `0` pass · `1` fail · `2` unverifiable · `64` usage · `70` internal |
+| `run`, live | the gate's code for the final verdict; a non-zero child exit with a passing workspace is `0`, the child's code recorded in the verdict (`childExit`) |
+| `run`, shadow | the child's own exit code (a child killed by signal N: `128+N`) |
+| `run`, INT or TERM delivered to the wrapper | verify and record, never relaunch, `128 + signal number` (130 / 143), both modes |
+
+**Posture.** `engine/mode.js` (`engine/cli.js mode`) is the single source, as for the
+hooks. Phase 2 honours a resolved `live` only when the Verity config also carries
+`run.promoted: true`, which is the Phase 3 switch: this phase sets it nowhere and
+it is not an operator step yet. Without it the run is shadow and records
+`requestedMode: "live", downgraded: "not_promoted"`.
+
+**Feedback and relaunch.** `verity feedback` renders the block a relaunched or
+resumed session reads, with wording owned by the engine (`engine/feedback.js`): the verdict
+message, then for a verdict that did not pass and whose check ran, a "Last 40 lines of the
+trusted check (command, exit N):" header and the log tail. That is the orchestrator's wording,
+with any credential-shaped value in the tail replaced by `[redacted: <label>]`. Relaunch
+templates come from the Verity config, `run.relaunch.<harness>` (a string with
+`{feedbackFile}` and `{session}`, substituted shell-quoted), and the budget from
+`run.relaunchBudget` (default 1). Presets ship only where the resume invocation was
+checked against the installed harness's `--help`: claude 2.1.306, codex-cli 0.160.0,
+kimi 0.43.1, opencode 1.18.31, pi 0.85.1 and Hermes 0.22.2. **Gemini 0.59.0 has no
+preset**, because its `--resume` takes `latest` or an index, not a session id. Relaunch
+happens only in live (promoted), headless, with a `--session`, within budget, and never
+after INT or TERM. A TUI child (both stdin and stdout are terminals, or `--tui`) is never
+relaunched automatically: the verdict and the suggested resume command are printed and
+the human decides. In shadow the command is only suggested.
+
+**Git guard and `verity prepush`.** The wrapper appends one entry to the child's
+`GIT_CONFIG_COUNT` / `GIT_CONFIG_KEY_<n>` / `GIT_CONFIG_VALUE_<n>` (any entries the
+parent already set are kept), so `core.hooksPath` resolves to `runs/<run-id>/hooks` for
+the session. The user's repository, its config and its hooks directory are untouched. Every
+client-side hook name there is a dispatcher. It resolves the repository's own hooks
+path exactly as git would without the session entry (`git rev-parse --git-path hooks`:
+`core.hooksPath` from husky and its kin, else `.git/hooks`), then runs the repo's hook of
+that name with git's arguments and stdin. A non-executable hook is ignored as git ignores
+it, and the repo hook's exit status is the hook's status, so a repo hook failure behaves
+exactly as it would unwrapped. For `pre-push` it then runs `engine/cli.js prepush` over the
+outgoing range of every pushed ref: test deletion and skip markers over the net diff, and
+the secret scan over **every** outgoing commit, since a credential added and removed inside
+the range is still in the pushed history. The result is recorded as a verdict
+(`event: "prepush"`, with `chain` and `repoHookExit`). In shadow it only logs. Layout
+the guard cannot chain: when the repo's hooks path resolves to the guard dir itself, or
+cannot be resolved at all, the guard runs without chaining and records
+`chain: "unverifiable:<reason>"` on the verdict, with a warning on stderr. The repo's hooks
+are not skipped silently, and the guard is not dropped.
+
+**Deliberate bypass is out of the threat model.** `git push --no-verify`,
+`git -c core.hooksPath=… push` (command-line config outranks the session's env entry),
+unsetting `GIT_CONFIG_COUNT`, editing the trusted `.verity.json` or the Verity home: these
+are subversion, not premature "done", and are documented here, not chased. Verity is a
+done-gate for honest mistakes, not a sandbox.
+
+**Records.** Run, gate and prepush verdicts go to the hooks' verdict store
+(`$VERITY_LOG`, else `$VERITY_HOME/verdicts.jsonl`) in the line shape `report.sh` reads,
+with `surface: "cli"`, `event: run|gate|prepush`, `session: <run-id>`, `ms` = the gate's
+own overhead (wall time minus the check's `checkMs`), and kind mapped as the memo
+specified: a secret or test-deletion finding is `deny`, no passing check (including an
+unverifiable change) is `done`, a pass is `none`, and a gate that could not answer is
+`error`. Provenance only: rule, path and label per finding, the trusted command and exit
+codes, never a fingerprint, value, file content or check output. `report.sh` adds a "by
+surface" section (lines that predate the field count as `hook`) and, for the CLI
+surface, per-event counts, the gate overhead with the check excluded, and the **K5 measure**:
+`cli run unverifiable (K5): U/N (P%)`, the share of wrapper verdicts that are
+unverifiable. The same number straight from the store:
+
+```bash
+jq -s '[.[] | select(.surface == "cli" and .event == "run")]
+       | {runs: length, unverifiable: map(select(.verdict.decision == "unverifiable")) | length,
+          truncated: map(select(.verdict.truncated == true)) | length}' ~/.verity/verdicts.jsonl
+```
+
 ## Tests
 
 ```bash
@@ -198,6 +327,7 @@ bash test/run.sh                                 # hook / adapter / installer su
 bash test/engine-parity.sh "$PWD/engine/cli.js"  # golden fixture corpus (all 45 assert current behaviour: mv-testdel / testdel-ask / testdel-deny-codex expect `deny` since the 2026-10-14 governance change; secret-near-miss / secret-nested-path / secret-ts-string expect AWS's documented AKIAIOSFODNN7EXAMPLE to be allowed under the 2026-10-25 seeded-value rule; refreshed 2026-10-25)
 bash test/swarm-verify.sh                        # the swarm gate: snapshot/verify over scratch git fixtures
 bash test/hook-diff.sh                           # hybrid Phase 1: the diff ledger under the hook path (record-only)
+bash test/run-wrapper.sh                         # hybrid Phase 2: verity run / gate / push guard / feedback (shadow)
 ```
 
 `run.sh` is hermetic: a fake engine CLI and a temporary `HOME`, project and Verity home. Covers translation in both directions, shadow mode for every harness, the Jev key never reaching the engine, the kill switch, the mode CLI, live mode per harness and per check, environment precedence, failing closed on bad output in live mode (including the Kimi/Gemini translated refusal), and the installer's merge, preservation, migration and idempotency.
@@ -205,3 +335,5 @@ bash test/hook-diff.sh                           # hybrid Phase 1: the diff ledg
 `swarm-verify.sh` covers the Stage 2 acceptance list at the engine level: no check → unverifiable / fail under `--require-check`, passing and failing checks, masked commands (64), deleted and renamed tests (including `test_x.py` / `x_test.go`), a planted GitHub token with a no-token-text-in-any-output grep, untracked new code, docs-only with the check provably not run, hollow pass, check-definition tampering and base-revision-only `.verity.json`, the factory shape (non-git root plus a nested clone judged against the upstream merge-base), a `git init` repo, missing base tree (70), policy by remote, `info/exclude` hiding, and the two engine fixes from Stage 1 (#3 trusted-pattern masking, #4 every credential match).
 
 `hook-diff.sh` covers hybrid Phase 1 through the real engine over scratch repos: work the event ledger cannot see (`git apply`, a heredoc write, `sed -i`, a test removed by a non-`rm` command, a human edit after the agent's passing check), the skip-marker rule and its near-misses, secrets on added lines with no value in any record, the non-repo / over-cap / unwritable-home / diff-error fallbacks, live mode answering from the event verdict alone, replay, and the K2 disagreement recipe (`scripts/diff-disagreements.sh`).
+
+`run-wrapper.sh` covers hybrid Phase 2 end to end, with fake harness children (shell scripts) over scratch repos. The children edit code, delete a test, plant a secret, fail the check, crash, get INT and TERM, and push to a local bare remote. It covers the exit-code table in shadow and promoted live; relaunch with the feedback file and session, the budget, TUI and shadow inertness; the preset list; K7 (gate and run reject every allowance-shaped flag, and a child that rewrites `.verity.json` to allow secrets still fails); the push guard on a secret, on a secret added and removed inside the range, and on a clean push; chaining to a husky-style hooks path, including a failing repo hook compared against the same push unwrapped, a non-executable hook, and the unchainable self layout; a non-git workspace through the shadow git, including its file cap; a shared-cwd second run; shadow-store pruning; report grouping, the K5 read, a pre-field store; and the installer's print-only alias flag.
