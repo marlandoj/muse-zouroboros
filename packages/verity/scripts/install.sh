@@ -4,9 +4,11 @@
 # pre-rename canny-shadow hook entries are repointed at verity-hook.sh.
 #
 # Usage: install.sh [--harness claude,codex,kimi,gemini] [--project DIR]
-#                   [--backup-dir DIR] [--dry-run]
+#                   [--backup-dir DIR] [--dry-run] [--print-aliases]
 #   --project     directory whose .claude/settings.json and .codex/hooks.json get the hooks
 #                 (default: current directory). Kimi and Gemini configs are user-global.
+#   --print-aliases  print suggested shell aliases that start each harness under `verity run`
+#                 (Phase 2, shadow), then exit. Prints only; edits no file.
 set -euo pipefail
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -22,16 +24,29 @@ while [ $# -gt 0 ]; do
     --project) PROJECT="$(cd "$2" && pwd)"; shift 2 ;;
     --backup-dir) BACKUP_DIR="$2"; shift 2 ;;
     --dry-run) DRY=1; shift ;;
-    -h|--help) sed -n 2,10p "$0"; exit 0 ;;
+    --print-aliases) PRINT_ALIASES=1; shift ;;
+    -h|--help) sed -n 2,12p "$0"; exit 0 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
+
+# Phase 2: suggested aliases for the supervising wrapper. Printed, never written anywhere.
+if [ "${PRINT_ALIASES:-0}" = 1 ]; then
+  cli="$(cd "$DIR/../engine" && pwd)/cli.js"
+  echo "# Verity run aliases (shadow in Phase 2: verdicts are recorded and reported, nothing is blocked)."
+  echo "# Add the ones you want to your shell rc yourself; this installer edits nothing."
+  for h in claude codex gemini kimi opencode pi hermes; do
+    printf "alias v%s='node %s run --harness %s -- %s'\n" "$h" "$cli" "$h" "$h"
+  done
+  echo "# Checkpoint from any shell (or from inside the session): node $cli gate"
+  exit 0
+fi
 
 for bin in node jq git; do
   command -v "$bin" >/dev/null || { echo "missing dependency: $bin" >&2; exit 1; }
 done
 node -e 'process.exit(Number(process.versions.node.split(".")[0]) >= 22 ? 0 : 1)' \
-  || { echo "Canny needs Node 22 or newer" >&2; exit 1; }
+  || { echo "Verity needs Node 22 or newer" >&2; exit 1; }
 
 STAMP="$(date -u +%Y%m%dT%H%M%SZ)"
 run() { if [ "$DRY" = 1 ]; then echo "[dry-run] $*"; else "$@"; fi; }

@@ -91,6 +91,19 @@ export function loadEffectiveConfig(home, cwd) {
   return out;
 }
 
+/**
+ * The trusted project config for cwd, parsed, with its path: the .verity.json
+ * found by walking up, only when its trust binding still matches. Null
+ * otherwise. `verity run` and `verity gate` take their check and allowances
+ * from here and nowhere else.
+ */
+export function loadTrustedConfig(home, cwd) {
+  const file = findConfigFile(cwd);
+  if (!file) return null;
+  const cfg = loadIfTrusted(loadTrusted(home), file);
+  return cfg && typeof cfg === "object" ? { file, cfg } : null;
+}
+
 /** `trust` subcommand: bind the cwd's .verity.json by content hash. */
 export function trustCwd(home, cwd) {
   const file = findConfigFile(cwd);

@@ -66,3 +66,20 @@ Verity previously obtained by cloning `qkal/Canny` at install time.
   disagreement count: `scripts/diff-disagreements.sh [engine-home]`.
   Tests: `test/hook-diff.sh`.
 
+- **Hybrid Phase 2 (2026-10-25): `run`, `gate`, `feedback`, `prepush`,
+  shadow-only.** `run.js` composes snapshot → spawn → verify → feedback →
+  record over the existing `snapshot` / `verify` (no second rules engine);
+  `gate` is verify with no allowance input (every allowance / waiver / check
+  flag is a usage error, K7) and the trusted project config
+  (`config.loadTrustedConfig`) as the only allowance source; `feedback.js`
+  owns the relaunch wording (the orchestrator's 40-line tail, credentials
+  redacted to their label); `prepush.js` applies `diffRules` to the outgoing
+  range under a Verity-owned `core.hooksPath` that chains to the repo's own
+  hooks; `record.js` appends `surface: "cli"` lines to the hooks' verdict
+  store. `swarm.js` gains the shadow-git model for a non-git root under
+  `run` (`snapshot({ shadowGitDir })`: GIT_DIR / GIT_WORK_TREE per call,
+  heavy dirs excluded, the loose-file / diff-byte caps → `unverifiable`
+  with `truncatedReason`, never a pass); without `shadowGitDir` snapshot and
+  verify are unchanged (the orchestrator never passes it). A resolved
+  `live` applies to `run` only with `run.promoted: true` (the Phase 3
+  switch, set nowhere). Tests: `test/run-wrapper.sh`.

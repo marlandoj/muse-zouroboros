@@ -31,6 +31,12 @@ Failure handling (VERITY-ADOPTED amendment, 2026-09-29): **shadow** answers `{}`
 
 The interactive hooks above gate a *session*. The swarm path is gated differently: `scripts/orchestrate-v5.ts` runs `engine/cli.js snapshot` before a task's first attempt and `engine/cli.js verify` after a declared success, diffing the workspace (committed, staged, unstaged and untracked work) and running the trusted check itself. No harness hook is involved, so it covers Hermes, Pi and OpenCode too. See `README.md` → "Swarm gate" and `packages/zo-swarm-orchestrator/docs/verity-swarm-gate.md`.
 
+## Supervising wrapper (hybrid Phase 2, shadow)
+
+`engine/cli.js run -- <harness command>` supervises a whole session from outside the harness. It snapshots the workspace (a shadow git dir under `$VERITY_HOME/shadow-git/` for a non-git directory, pruned when the run completes), spawns the child with inherited stdio, verifies on exit with the swarm gate's machinery, writes `$VERITY_HOME/runs/<run-id>/feedback.md`, and records the verdict (`surface: "cli"`) in `~/.verity/verdicts.jsonl`. `engine/cli.js gate` is the read-only checkpoint against the active run's base, and it takes **no** allowance, waiver or check flag (usage error 64; K7). Checks and allowances come from the trusted `.verity.json` only. The session's git sees a Verity-owned `core.hooksPath` through `GIT_CONFIG_COUNT/KEY/VALUE`. Its hooks chain to the repo's own hooks (husky and the rest), with the repo hook's exit status, and its `pre-push` records secrets, test deletion and skip markers over the outgoing range. A layout it cannot chain is recorded as `chain: "unverifiable:<reason>"`. `--no-verify`, `git -c core.hooksPath=…` and the like are deliberate bypass, out of the threat model.
+
+**This phase ships shadow-only:** the wrapper records and reports and never blocks; relaunch stays inert. Exit codes: verify and gate `0/1/2/64/70`; run in shadow = the child's code; run in live = the gate's code (a passing workspace is 0 whatever the child exited, and the child's code is recorded); INT or TERM to the wrapper = verify, record, no relaunch, `128+n`. A resolved `live` applies to `run` only with `run.promoted: true` in the Verity config. That is the Phase 3 switch, which this phase does not set; do not set it without that ruling. Relaunch presets (verified against the installed `--help`): claude, codex, kimi, opencode, pi, hermes. Gemini has none. `install.sh --print-aliases` prints suggested aliases and edits nothing. Unverifiable rate for wrapper verdicts (K5): `report.sh` → `cli run unverifiable (K5)`. Details: `README.md` → "Supervising wrapper".
+
 ## Mode
 
 This file does not know the deployment's posture; read it with `verity.sh status` (or `node engine/cli.js mode --harness NAME` for one harness as JSON) before relying on it. Switching to live, or back, is an operator decision; do not do it on your own.
@@ -67,7 +73,9 @@ Config: `$VERITY_HOME/config.json` (default `~/.verity/config.json`), read on ev
 ```bash
 bash Skills/verity/scripts/install.sh --project /home/workspace   # wire hooks (idempotent, backs up, migrates canny-shadow entries)
 bash Skills/verity/test/run.sh                                  # hermetic tests (46)
-bash Skills/verity/scripts/report.sh                            # verdicts, applied count, latency, crashes
+bash Skills/verity/scripts/report.sh                            # verdicts, applied count, latency, by surface, K5, crashes
+node Skills/verity/engine/cli.js run -- claude                   # Phase 2: supervise a session (shadow)
+node Skills/verity/engine/cli.js gate                            # Phase 2: checkpoint against the active run's base
 node Integrations/canny/dist/cli.js status                        # latest session ledger
 ```
 

@@ -6,6 +6,9 @@
 #   verity.sh mode shadow|live [--harness claude|codex|kimi|gemini] [--checks all|done,deny,ask,rewrite,note,warn]
 #   verity.sh reset [--harness NAME]      drop a per-harness override (or everything) back to shadow
 #   verity.sh report
+#   verity.sh run [--harness H] [--session ID] [--tui|--headless] -- CMD...   supervise a session (Phase 2, shadow)
+#   verity.sh gate [--run ID | --base FILE]                                  read-only checkpoint, no allowance input
+#   verity.sh feedback --verdict FILE                                       render the relaunch block
 #
 # Checks: done = refuse a finish with no passing check, deny = block a tool call (secrets, test
 # deletion), ask = ask before a tool call, rewrite = add pipefail to piped test commands,
@@ -18,7 +21,7 @@ VERITY_HOME="${VERITY_HOME:-$HOME/.verity}"
 CFG="$VERITY_HOME/config.json"
 KINDS="all done deny ask rewrite note warn"
 
-usage() { sed -n 2,14p "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+usage() { sed -n 2,17p "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 load() { [ -f "$CFG" ] && cat "$CFG" || echo '{"mode":"shadow","checks":["all"]}'; }
 save() { mkdir -p -m 700 "$VERITY_HOME"; local t; t="$(mktemp "$VERITY_HOME/.cfg.XXXX")"; cat > "$t"; mv "$t" "$CFG"; }
 
@@ -47,6 +50,7 @@ cmd="${1:-status}"; shift || true
 case "$cmd" in
   status) status ;;
   report) exec bash "$DIR/report.sh" ;;
+  run|gate|feedback) exec node "$DIR/../engine/cli.js" "$cmd" "$@" ;;
   mode)
     m="${1:-}"; shift || true
     [ "$m" = shadow ] || [ "$m" = live ] || usage 2

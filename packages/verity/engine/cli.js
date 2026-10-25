@@ -10,6 +10,14 @@
 //   engine/cli.js snapshot --cwd D --out F    Verity×Swarm: record a workspace's pre-task base
 //   engine/cli.js verify --cwd D --base F     Verity×Swarm: judge the workspace against its base
 //   engine/cli.js mode [--harness H]          the hook's resolved mode / checks for a harness, as JSON
+//   engine/cli.js run [--harness H] [--session ID] [--tui|--headless] -- CMD...
+//                                             Phase 2: supervise a session (snapshot, spawn, verify, feedback, record)
+//   engine/cli.js gate [--run ID | --base F] [--cwd D]
+//                                             Phase 2: read-only checkpoint against a run's base (no allowance input)
+//   engine/cli.js feedback --verdict F [--check-log L] [--out F] [--plain]
+//                                             Phase 2: render the relaunch block for a verdict
+//   engine/cli.js prepush --remote R --url U --stdin-file F --chain C --repo-hook-exit N
+//                                             Phase 2: the push guard's check (called by the run's pre-push hook)
 //
 // Home: $VERITY_ENGINE_HOME, else ~/.verity/engine.
 // Existing ~/.canny sessions migrate automatically.
@@ -22,6 +30,8 @@ import { parseJsonLines } from "./util.js";
 import { migrateIfNeeded, resolveHome, sessionsDir } from "./home.js";
 import { trustCwd } from "./config.js";
 import { resolveMode } from "./mode.js";
+import { feedbackMain, gateMain, runMain } from "./run.js";
+import { prepushMain } from "./prepush.js";
 import { DEFAULT_CHECK_TIMEOUT_S, DEFAULT_MAX_DEPTH, EXIT, GateError, VERDICT_SCHEMA, engineFingerprint, exitCodeFor, snapshot, verify } from "./swarm.js";
 
 const HOME = resolveHome();
@@ -271,6 +281,32 @@ async function cmdVerify(args) {
   }
 }
 
+// Phase 2: run / gate / feedback / prepush. Usage errors exit 64, internal 70 (the swarm gate's codes).
+async function phase2(fn, args, { json = false } = {}) {
+  try {
+    process.exitCode = await fn(args);
+  } catch (err) {
+    const code = err instanceof GateError ? err.code : EXIT.INTERNAL;
+    if (json) swarmFailure(err);
+    else {
+      process.stderr.write(`verity: ${String(err && err.message ? err.message : err).slice(0, 2000)}\n`);
+      process.exitCode = code;
+    }
+  }
+}
+
+function cmdPrepush(args) {
+  const o = {};
+  for (let i = 0; i < args.length; i += 2) o[args[i].replace(/^--/, "")] = args[i + 1] ?? "";
+  let stdinText = "";
+  try {
+    stdinText = o["stdin-file"] ? fs.readFileSync(o["stdin-file"], "utf8") : "";
+  } catch {
+    stdinText = "";
+  }
+  return prepushMain({ cwd: process.cwd(), remote: o.remote || null, url: o.url || null, stdinText, chain: o.chain || null, repoHookExit: o["repo-hook-exit"] === undefined ? null : Number(o["repo-hook-exit"]) });
+}
+
 function help() {
   process.stdout.write(
     `verity-engine: a supervision layer for AI coding agents\n` +
@@ -285,6 +321,13 @@ function help() {
       `                                            swarm gate: judge the workspace against its base\n` +
       `                                            (exit 0 pass, 1 fail, 2 unverifiable, 64 usage, 70 internal)\n` +
       `  engine/cli.js mode [--harness H]          the hook's resolved mode / checks for a harness, as JSON\n` +
+      `  engine/cli.js run [--harness H] [--session ID] [--tui|--headless] -- CMD...\n` +
+      `                                            supervise a session: snapshot, spawn, verify, feedback, record\n` +
+      `                                            (shadow: the child's exit code; live: the gate's; INT/TERM: 128+n)\n` +
+      `  engine/cli.js gate [--run ID | --base F] [--cwd D]\n` +
+      `                                            read-only checkpoint; takes no allowance, waiver or check input\n` +
+      `  engine/cli.js feedback --verdict F [--check-log L] [--out F] [--plain]\n` +
+      `                                            render the relaunch block for a verdict\n` +
       `\n` +
       `Sessions live in ${HOME}/sessions. No model is ever consulted: only facts can block.\n`
   );
@@ -297,6 +340,23 @@ switch (cmd) {
     break;
   case "verify":
     await cmdVerify(rest);
+    break;
+  case "run":
+    await phase2(runMain, rest);
+    break;
+  case "gate":
+    await phase2(gateMain, rest, { json: true });
+    break;
+  case "feedback":
+    await phase2(feedbackMain, rest);
+    break;
+  case "prepush":
+    try {
+      process.exitCode = cmdPrepush(rest);
+    } catch (err) {
+      process.stderr.write(`verity: pre-push check failed: ${String(err && err.message ? err.message : err).slice(0, 500)}\n`);
+      process.exitCode = 0;
+    }
     break;
   case "hook": {
     const ai = rest.indexOf("--agent");
