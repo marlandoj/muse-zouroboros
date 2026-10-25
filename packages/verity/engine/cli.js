@@ -7,6 +7,8 @@
 //   engine/cli.js sessions                    list recorded sessions
 //   engine/cli.js replay [session-file]       re-derive every Stop verdict from the ledger
 //   engine/cli.js trust                       let this project's .verity.json turn checks off
+//   engine/cli.js snapshot --cwd D --out F    Verity×Swarm: record a workspace's pre-task base
+//   engine/cli.js verify --cwd D --base F     Verity×Swarm: judge the workspace against its base
 //
 // Home: $VERITY_ENGINE_HOME, else ~/.verity/engine.
 // Existing ~/.canny sessions migrate automatically.
@@ -18,6 +20,7 @@ import { listSessions, sessionFile } from "./ledger.js";
 import { parseJsonLines } from "./util.js";
 import { migrateIfNeeded, resolveHome, sessionsDir } from "./home.js";
 import { trustCwd } from "./config.js";
+import { DEFAULT_CHECK_TIMEOUT_S, DEFAULT_MAX_DEPTH, EXIT, GateError, VERDICT_SCHEMA, engineFingerprint, exitCodeFor, snapshot, verify } from "./swarm.js";
 
 const HOME = resolveHome();
 migrateIfNeeded(HOME);
@@ -184,6 +187,88 @@ function cmdTrust() {
   if (!r.ok) process.exitCode = 1;
 }
 
+// ---------------------------------------------------------------------------
+// Verity×Swarm: snapshot / verify (the orchestrator-run gate). Argv contract:
+//   snapshot --cwd <workspace> --out <base.json> [--max-depth 3] [--exclude <path>]...
+//   verify   --cwd <workspace> --base <base.json> --json
+//            [--check <cmd>] [--check-source task|policy|verity-json-base] [--waived]
+//            [--check-cwd <rel>] [--check-timeout <s>] [--check-log <file>]
+//            [--require-check] [--allow-test-deletion] [--allow-secrets] [--allow-check-edits]
+//            [--ignore <glob>]... [--exclude <path>]... [--policy <file>] [--max-depth N]
+// Exit: 0 pass, 1 fail, 2 unverifiable, 64 usage, 70 internal (see swarm.js).
+// ---------------------------------------------------------------------------
+
+function parseSwarmArgs(args) {
+  const o = { ignore: [], exclude: [], json: false, requireCheck: false, allowTestDeletion: false, allowSecrets: false, allowCheckEdits: false, waived: false };
+  const need = (i, flag) => {
+    if (i + 1 >= args.length) throw new GateError(`${flag} needs a value`, EXIT.USAGE);
+    return args[i + 1];
+  };
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    switch (a) {
+      case "--cwd": o.cwd = need(i, a); i++; break;
+      case "--out": o.out = need(i, a); i++; break;
+      case "--base": o.base = need(i, a); i++; break;
+      case "--max-depth": o.maxDepth = Number(need(i, a)); i++; break;
+      case "--check": o.check = need(i, a); i++; break;
+      case "--check-source": o.checkSource = need(i, a); i++; break;
+      case "--check-cwd": o.checkCwd = need(i, a); i++; break;
+      case "--check-timeout": o.checkTimeoutS = Number(need(i, a)); i++; break;
+      case "--check-log": o.checkLog = need(i, a); i++; break;
+      case "--policy": o.policy = need(i, a); i++; break;
+      case "--ignore": o.ignore.push(need(i, a)); i++; break;
+      case "--exclude": o.exclude.push(need(i, a)); i++; break;
+      case "--json": o.json = true; break;
+      case "--waived": o.waived = true; break;
+      case "--require-check": o.requireCheck = true; break;
+      case "--allow-test-deletion": o.allowTestDeletion = true; break;
+      case "--allow-secrets": o.allowSecrets = true; break;
+      case "--allow-check-edits": o.allowCheckEdits = true; break;
+      default:
+        throw new GateError(`unknown option ${a}`, EXIT.USAGE);
+    }
+  }
+  if (o.maxDepth !== undefined && !(Number.isInteger(o.maxDepth) && o.maxDepth >= 0)) throw new GateError("--max-depth must be a non-negative integer", EXIT.USAGE);
+  if (o.checkTimeoutS !== undefined && !(o.checkTimeoutS > 0)) throw new GateError("--check-timeout must be a positive number of seconds", EXIT.USAGE);
+  if (o.checkSource !== undefined && !["task", "policy", "verity-json-base"].includes(o.checkSource)) throw new GateError("--check-source must be task|policy|verity-json-base", EXIT.USAGE);
+  return o;
+}
+
+function swarmFailure(err) {
+  const code = err instanceof GateError ? err.code : EXIT.INTERNAL;
+  const out = { schema: VERDICT_SCHEMA, decision: "error", errorKind: code === EXIT.USAGE ? "usage" : "internal", exitCode: code, error: String(err && err.message ? err.message : err).slice(0, 2000) };
+  process.stdout.write(JSON.stringify(out) + "\n");
+  process.exitCode = code;
+}
+
+function cmdSnapshot(args) {
+  let o;
+  try {
+    o = parseSwarmArgs(args);
+    if (!o.cwd || !o.out) throw new GateError("snapshot needs --cwd and --out", EXIT.USAGE);
+    const base = snapshot({ cwd: o.cwd, maxDepth: o.maxDepth ?? DEFAULT_MAX_DEPTH, exclude: o.exclude });
+    fs.mkdirSync(path.dirname(path.resolve(o.out)), { recursive: true, mode: 0o700 });
+    fs.writeFileSync(o.out, JSON.stringify(base, null, 2) + "\n", { mode: 0o600 });
+    process.stdout.write(JSON.stringify({ schema: base.schema, out: o.out, repos: base.repos.map((r) => ({ path: r.path, baseTree: r.baseTree })), loose: base.loose ? base.loose.files.length : null }) + "\n");
+  } catch (err) {
+    swarmFailure(err);
+  }
+}
+
+async function cmdVerify(args) {
+  try {
+    const o = parseSwarmArgs(args);
+    if (!o.cwd || !o.base) throw new GateError("verify needs --cwd and --base", EXIT.USAGE);
+    const verdict = await verify({ ...o, checkTimeoutS: o.checkTimeoutS ?? DEFAULT_CHECK_TIMEOUT_S });
+    verdict.engine = engineFingerprint();
+    process.stdout.write(JSON.stringify(verdict) + (o.json ? "\n" : "\n"));
+    process.exitCode = exitCodeFor(verdict.decision);
+  } catch (err) {
+    swarmFailure(err);
+  }
+}
+
 function help() {
   process.stdout.write(
     `verity-engine: a supervision layer for AI coding agents\n` +
@@ -193,6 +278,10 @@ function help() {
       `  engine/cli.js sessions                    list recorded sessions\n` +
       `  engine/cli.js replay [session-file]       re-derive every Stop verdict from the ledger\n` +
       `  engine/cli.js trust                       let this project's .verity.json turn checks off\n` +
+      `  engine/cli.js snapshot --cwd D --out F    swarm gate: record a workspace's pre-task base\n` +
+      `  engine/cli.js verify --cwd D --base F --json [--check CMD ...]\n` +
+      `                                            swarm gate: judge the workspace against its base\n` +
+      `                                            (exit 0 pass, 1 fail, 2 unverifiable, 64 usage, 70 internal)\n` +
       `\n` +
       `Sessions live in ${HOME}/sessions. No model is ever consulted: only facts can block.\n`
   );
@@ -200,6 +289,12 @@ function help() {
 
 const [, , cmd, ...rest] = process.argv;
 switch (cmd) {
+  case "snapshot":
+    cmdSnapshot(rest);
+    break;
+  case "verify":
+    await cmdVerify(rest);
+    break;
   case "hook": {
     const ai = rest.indexOf("--agent");
     cmdHook(ai === -1 ? "claude" : rest[ai + 1]);

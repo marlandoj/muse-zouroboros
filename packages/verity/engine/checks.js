@@ -35,7 +35,7 @@ function hasCheckWord(s) {
  * `!` that isn't at a command position (a leading `!` is rejected before
  * this runs). `command` is notably NOT stripped.
  */
-function stripModifiers(s) {
+export function stripModifiers(s) {
   const toks = String(s).trim().split(/\s+/);
   let i = 0;
   while (i < toks.length) {
@@ -105,16 +105,74 @@ function runFormCheck(part, pipefailSeen) {
 }
 
 /**
+ * Stage 1 finding #3 (2026-10-24): a trusted pattern used to short-circuit
+ * the masking analysis, so `bun test | tail`, `bun test; echo ok` and
+ * `echo bun test` all counted as checks once `bun test` was trusted. Now a
+ * pattern counts only where it PREFIXES a command segment of the last `;`
+ * segment (word-boundaried), after the `||` / `&` / `;` / pipe analysis
+ * has run on that segment like for any other check.
+ */
+function trustedPrefix(part, patterns, pipefailSeen) {
+  if (!patterns || patterns.length === 0) return false;
+  let body = String(part);
+  if (body.includes("|")) {
+    if (!pipefailSeen) return false; // a pipe hides the exit status
+    body = body.split("|")[0];
+  }
+  body = body.trim();
+  return patterns.some((p) => {
+    const pat = String(p ?? "").trim();
+    if (!pat || !body.startsWith(pat)) return false;
+    const next = body.charAt(pat.length);
+    return next === "" || /\s/.test(next);
+  });
+}
+
+/**
+ * 2026-10-25 block adjudication (false positive): a headless Godot run of
+ * the project's own test runner (`/abs/path/godot --headless --path . -s
+ * res://tests/run_tests.gd`) matched no check pattern. It counts now, but
+ * only when the binary's basename starts with `godot`, `--headless` is
+ * passed, and the `-s` / `--script` path signals a test run (a test(s)
+ * path segment, or a basename containing test or check). A plain game or
+ * scene script never counts. Runs per && part, after the same `||` / `&` /
+ * `;` analysis as every other check; a pipe masks unless pipefail is set.
+ */
+function isTestScriptPath(p) {
+  const segs = String(p).split("/").filter((x) => x !== "");
+  const base = segs.pop() || "";
+  return segs.some((x) => /^tests?$/i.test(x)) || /test|check/i.test(base);
+}
+
+function godotTestRun(part, pipefailSeen) {
+  let body = String(part);
+  if (body.includes("|")) {
+    if (!pipefailSeen) return false; // a pipe hides the exit status
+    body = body.split("|")[0];
+  }
+  const toks = body.trim().split(/\s+/);
+  const prog = (toks[0] || "").split("/").pop().toLowerCase();
+  if (!prog.startsWith("godot")) return false;
+  if (!toks.includes("--headless")) return false;
+  for (let i = 1; i < toks.length; i++) {
+    let script = null;
+    if (toks[i] === "-s" || toks[i] === "--script") script = toks[i + 1] ?? null;
+    else if (toks[i].startsWith("--script=")) script = toks[i].slice("--script=".length);
+    if (script && isTestScriptPath(script)) return true;
+  }
+  return false;
+}
+
+/**
  * True when the command counts as a check: a recognized check invocation
  * whose own exit status is the result. `extraPatterns` are trusted
- * substring patterns from the project config.
+ * command prefixes from the project config (see trustedPrefix).
  */
 export function isVerify(command, extraPatterns = []) {
   const s = stripQuotesAndComments(command);
   if (/\|\|/.test(s)) return false; // || masks the status
   if (/&\s*$/.test(s) && !/&&\s*$/.test(s)) return false; // backgrounded
   if (/\s--(version|help)\b/.test(s)) return false; // not a check run
-  if (extraPatterns.some((p) => p && s.includes(p))) return true;
   // `;` chains: the exit status is the last segment's, so only the last
   // non-empty segment can be the check (`npm test; true` hides the status).
   const segs = s.split(";").map((x) => x.trim()).filter((x) => x !== "");
@@ -130,6 +188,8 @@ export function isVerify(command, extraPatterns = []) {
     if (/^!/.test(p)) return false;
     p = stripModifiers(p);
     if (/set\s+-o\s+pipefail/.test(p)) pipefailSeen = true;
+    if (trustedPrefix(p, extraPatterns, pipefailSeen)) return true;
+    if (godotTestRun(p, pipefailSeen)) return true;
     const runForm = runFormCheck(p, pipefailSeen);
     if (runForm === true) return true;
     if (runForm === false) continue;
@@ -178,21 +238,44 @@ const CRED_NAMES = [
   "token", "password", "passwd", "secret",
   "api_key", "apikey", "access_token", "client_secret",
 ];
-const CRED_RE = new RegExp(
-  `\\b(?:${CRED_NAMES.join("|")})\\b\\s*[:=]\\s*"([^"]*)"`
-);
+const CRED_RE_SOURCE = `\\b(?:${CRED_NAMES.join("|")})\\b\\s*[:=]\\s*"([^"]*)"`;
 
 /**
- * True when the text assigns a high-entropy string to a credential-named
- * variable: `token = "..."`, `password: "..."`, etc. Observed boundary:
- * value length >= 16 with both a letter and a digit; single quotes,
- * backticks, and low-entropy values do not count.
+ * Every high-entropy credential value assigned to a credential-named
+ * variable in the text: `token = "..."`, `password: "..."`, etc. Observed
+ * boundary: value length >= 16 with both a letter and a digit; single
+ * quotes, backticks, and low-entropy values do not count.
+ *
+ * Stage 1 finding #4 (2026-10-24): the check used to test only the FIRST
+ * credential-shaped assignment, so a benign `password = "changeme"` ahead of
+ * a real token hid the token. Every match is tested now (a fresh global
+ * regex per call, so no lastIndex state leaks between calls).
  */
-function isHardcodedCredential(text) {
-  const m = String(text).match(CRED_RE);
-  if (!m) return false;
-  const v = m[1];
-  return v.length >= 16 && /[A-Za-z]/.test(v) && /[0-9]/.test(v);
+function credentialValues(text) {
+  const out = [];
+  const re = new RegExp(CRED_RE_SOURCE, "g");
+  for (const m of String(text).matchAll(re)) {
+    const v = m[1];
+    if (v.length >= 16 && /[A-Za-z]/.test(v) && /[0-9]/.test(v)) out.push(v);
+  }
+  return out;
+}
+
+/**
+ * Every secret-shaped match in the text as { label, value }: token patterns
+ * (all matches, not just the first) plus hardcoded credential values. Used by
+ * the swarm verify gate, which records only the label and a fingerprint of
+ * the value — never the value itself.
+ */
+export function findSecrets(text) {
+  const s = String(text ?? "");
+  const out = [];
+  for (const p of SECRET_PATTERNS) {
+    const re = new RegExp(p.re.source, "g");
+    for (const m of s.matchAll(re)) out.push({ label: p.label, value: m[0] });
+  }
+  for (const v of credentialValues(s)) out.push({ label: "a hardcoded credential", value: v });
+  return out;
 }
 
 // Extensions that never count as code for the done-gate (behaviorally
@@ -212,19 +295,60 @@ export function isCodeFile(relPath) {
 }
 
 /**
+ * 2026-10-25 block adjudication (false positive): a sanitizer test fixture
+ * whose every credential-shaped value carried a fake marker (FAKE,
+ * fakeseed) was denied. A value is "seeded" when its own body carries an
+ * explicit fake-data marker (case-insensitive, embedded or delimited).
+ * Only the value is examined — never the rest of the file or its name.
+ */
+const SEED_MARKER_RE = /fake|seed|example|dummy|placeholder|sample|test|redacted/i;
+
+function isSeededValue(v) {
+  return SEED_MARKER_RE.test(String(v));
+}
+
+/**
+ * Every value a token pattern matches, widened to the whole surrounding
+ * token ([A-Za-z0-9_-] run) so a fixed-length pattern like AKIA+16 still
+ * sees a marker that sits just past the matched span.
+ */
+function tokenValues(text, re) {
+  const out = [];
+  const g = new RegExp(re.source, "g");
+  for (const m of text.matchAll(g)) {
+    let start = m.index;
+    let end = m.index + m[0].length;
+    while (start > 0 && /[A-Za-z0-9_-]/.test(text[start - 1])) start--;
+    while (end < text.length && /[A-Za-z0-9_-]/.test(text[end])) end++;
+    out.push(text.slice(start, end));
+  }
+  return out;
+}
+
+/**
  * Returns the deny message when content looks like it contains a secret,
  * or null. `allowSecrets` comes from trusted project config. Multiple
  * findings are joined ("a GitHub token and a hardcoded credential").
  * The path is shown cwd-relative, matching the ledger's display form.
+ * Outside env files, content whose every matched value is seeded (see
+ * isSeededValue) is not denied; one unmarked value denies as before.
  */
 export function detectSecret(filePath, content, cwd, allowSecrets = false) {
   if (allowSecrets) return null;
   const text = String(content ?? "");
   const labels = [];
+  let unmarked = false;
   for (const p of SECRET_PATTERNS) {
-    if (p.re.test(text)) labels.push(p.label);
+    const vals = tokenValues(text, p.re);
+    if (vals.length === 0) continue;
+    labels.push(p.label);
+    if (!vals.every(isSeededValue)) unmarked = true;
   }
-  if (isHardcodedCredential(text)) labels.push("a hardcoded credential");
+  const creds = credentialValues(text);
+  if (creds.length > 0) {
+    labels.push("a hardcoded credential");
+    if (!creds.every(isSeededValue)) unmarked = true;
+  }
   if (labels.length === 0) return null;
   const disp = relPath(cwd, filePath);
   const base = disp.split("/").pop();
@@ -235,6 +359,7 @@ export function detectSecret(filePath, content, cwd, allowSecrets = false) {
       `An env file is only the place for it once git ignores the file, and a committed template never is.`
     );
   }
+  if (!unmarked) return null;
   return (
     `Verity: ${disp} would contain what looks like ${label}. ` +
     `Read the value from the environment or a git-ignored env file instead of writing it into the file.`
@@ -359,7 +484,8 @@ export function commandCodeFiles(command, cwd) {
  *  x_test.go, FooTest.java, and test(s)/__tests__ directories. */
 const TEST_BASENAME_RE = /(^test_.*|(^|[._])test\.[a-z0-9]+$|(^|[._])spec\.[a-z0-9]+$)/i;
 
-function looksLikeTestFile(p) {
+/** Exported for the swarm verify gate: isTestPath alone misses test_x.py, x_test.go and x_spec.rb. */
+export function looksLikeTestFile(p) {
   const q = String(p).replace(/^\.\//, "");
   if (isTestPath(q)) return true;
   const base = q.split("/").pop();

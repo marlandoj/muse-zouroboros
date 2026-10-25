@@ -104,11 +104,85 @@ T2='{"hook_event_name":"PostToolUse","session_id":"'$SID2'","cwd":"/p","tool_nam
 S2='{"hook_event_name":"Stop","session_id":"'$SID2'","cwd":"/p","last_assistant_message":"done"}'
 ehook claude "$W2" >/dev/null; ehook claude "$T2" >/dev/null
 check "engine stop after passing check allows" "$(ehook claude "$S2")" "{}"
-SECRET='{"hook_event_name":"PreToolUse","session_id":"'$SID2'","cwd":"/p","tool_name":"Write","tool_input":{"file_path":"/p/k.ts","content":"x = AKIAIOSFODNN7EXAMPLE"}}'
+# Unmarked value (AWS's documented AKIAIOSFODNN7EXAMPLE carries the
+# `example` seed marker and is allowed since the 2026-10-25 seed fix).
+SECRET='{"hook_event_name":"PreToolUse","session_id":"'$SID2'","cwd":"/p","tool_name":"Write","tool_input":{"file_path":"/p/k.ts","content":"x = AKIA''ABCDEFGHIJKLMNOP"}}'
 check "engine secret denied" "$(ehook claude "$SECRET" | jq -r .hookSpecificOutput.permissionDecision)" "deny"
 NOTE='{"hook_event_name":"SessionStart","session_id":"'$SID2'","cwd":"/p"}'
 check "engine session note" "$(ehook claude "$NOTE" | jq -r .hookSpecificOutput.hookEventName)" "SessionStart"
 check "engine ledger written" "$(ls "$T/eh/sessions" | wc -l | tr -d ' ')" "2"
+
+# 2026-10-25 FP fix 1: headless Godot test-runner runs count as checks.
+isv() { node --input-type=module -e 'import { isVerify } from "'"$ROOT"'/engine/checks.js"; process.stdout.write(String(isVerify(process.argv[1], JSON.parse(process.argv[2]))));' "$1" "${2:-[]}"; }
+GD="/home/u/.local/share/godot/bin/godot --headless --path /g/proj"
+check "godot test runner counts" "$(isv "$GD -s res://tests/run_tests.gd")" "true"
+check "godot --script= form counts" "$(isv "$GD --script=res://tests/run_tests.gd")" "true"
+check "godot check script counts" "$(isv "$GD -s res://tools/check_scenes.gd")" "true"
+check "godot game script not a check" "$(isv "$GD -s res://scripts/main.gd")" "false"
+check "godot non-headless not a check" "$(isv "godot --path /g/proj -s res://tests/run_tests.gd")" "false"
+check "godot piped into tail masked" "$(isv "$GD -s res://tests/run_tests.gd | tail -20")" "false"
+check "godot || true masked" "$(isv "$GD -s res://tests/run_tests.gd || true")" "false"
+check "godot ; echo masked" "$(isv "$GD -s res://tests/run_tests.gd; echo ok")" "false"
+check "godot pipefail counts" "$(isv "set -o pipefail && $GD -s res://tests/run_tests.gd | tail -20")" "true"
+check "trusted prefix still counts" "$(isv "mycheck --all" '["mycheck"]')" "true"
+check "trusted prefix piped still masked" "$(isv "mycheck | tail" '["mycheck"]')" "false"
+gd_session() { # $1 = command, $2 = exit code -> Stop verdict decision (or "allow")
+  local sid="gd-$RANDOM-$RANDOM"
+  ehook codex "$(jq -nc --arg s "$sid" '{hook_event_name:"PostToolUse",session_id:$s,cwd:"/g/proj",tool_name:"Write",tool_input:{file_path:"/g/proj/scripts/player.gd"},tool_response:{stdout:"",exit_code:0}}')" >/dev/null
+  ehook codex "$(jq -nc --arg s "$sid" --arg c "$1" --argjson e "$2" '{hook_event_name:"PostToolUse",session_id:$s,cwd:"/g/proj",tool_name:"Bash",tool_input:{command:$c},tool_response:{stdout:"All tests passed",exit_code:$e}}')" >/dev/null
+  local out; out="$(ehook codex "$(jq -nc --arg s "$sid" '{hook_event_name:"Stop",session_id:$s,cwd:"/g/proj",last_assistant_message:"done"}')")"
+  [ "$out" = "{}" ] && echo allow || jq -r .decision <<<"$out"
+}
+check "e2e godot test runner allows stop" "$(gd_session "$GD -s res://tests/run_tests.gd" 0)" "allow"
+check "e2e godot failing runner blocks" "$(gd_session "$GD -s res://tests/run_tests.gd" 1)" "block"
+check "e2e godot game script blocks" "$(gd_session "$GD -s res://scripts/main.gd" 0)" "block"
+check "e2e godot | tail blocks" "$(gd_session "$GD -s res://tests/run_tests.gd | tail -5" 0)" "block"
+mkdir -p "$T/tp"; printf '%s' '{"verify":["mycheck"]}' > "$T/tp/.verity.json"
+(cd "$T/tp" && node "$ROOT/engine/cli.js" trust >/dev/null 2>&1)
+TS="tp-$RANDOM"
+ehook claude "$(jq -nc --arg s "$TS" --arg d "$T/tp" '{hook_event_name:"PostToolUse",session_id:$s,cwd:$d,tool_name:"Write",tool_input:{file_path:($d+"/a.ts")},tool_response:{stdout:"",exit_code:0}}')" >/dev/null
+ehook claude "$(jq -nc --arg s "$TS" --arg d "$T/tp" '{hook_event_name:"PostToolUse",session_id:$s,cwd:$d,tool_name:"Bash",tool_input:{command:"mycheck --all"},tool_response:{stdout:"ok",exit_code:0}}')" >/dev/null
+check "e2e trusted verifyPatterns still allows" "$(ehook claude "$(jq -nc --arg s "$TS" --arg d "$T/tp" '{hook_event_name:"Stop",session_id:$s,cwd:$d,last_assistant_message:"done"}')")" "{}"
+
+# 2026-10-25 FP fix 2: seeded fixture values (fake markers inside the value)
+# are not denied. Credential shapes are built by concatenation; every
+# unmarked one is an obviously synthetic alphabet run.
+ds() { node --input-type=module -e 'import { detectSecret } from "'"$ROOT"'/engine/checks.js"; const r = detectSecret(process.argv[1], process.argv[2], "/p"); process.stdout.write(r === null ? "allow" : r);' "$1" "$2"; }
+SEED_AWS="AKIA""FAKESEED00000000"; SEED_GH="ghp_""FAKEfakeseed""000000000000000000000000"
+SEED_SK="sk-ant-""FAKE-fakeseed-0000000000"; SEED_SL="xoxb-""fake-seed-000000000000"
+SEED_CRED='token = "fakeseed0123456789abcdef"'
+REAL_AWS="AKIA""ABCDEFGHIJKLMNOP"; REAL_GH="ghp_""Abcdefghijklmnopqrstuvwxyz0123456789"
+REAL_SK="sk-ant-""Q1w2E3r4Y5u6I7o8P9a0"; REAL_SL="xoxb-""1234567890-abcdefghij"
+REAL_CRED_A='token = "Zq9Xw8Vu7'
+REAL_CRED_B='Ny6Rq5Pn4"'
+REAL_CRED="$REAL_CRED_A$REAL_CRED_B"
+SEEDED="# sanitizer fixture: every value below is seeded fake data
+aws = $SEED_AWS
+gh = $SEED_GH
+ai = $SEED_SK
+slack = $SEED_SL
+$SEED_CRED"
+UNMARKED="aws = $REAL_AWS
+gh = $REAL_GH
+ai = $REAL_SK
+slack = $REAL_SL
+$REAL_CRED"
+check "seeded fixture allowed" "$(ds /p/mi/scratch/sanitizer_fixture.py "$SEEDED")" "allow"
+check "seed marker past AKIA span allowed" "$(ds /p/a.py "k = AKIA""0000000000000000_FAKE")" "allow"
+check "seeded REDACTED/example/test markers allowed" "$(ds /p/a.py "a = sk-ant-""REDACTED0000000000 b = ghp_""example""00000000000000000000000000000 c = AKIA""TEST000000000000")" "allow"
+check "unmarked shapes denied with all labels" "$(ds /p/mi/scratch/sanitizer_fixture.py "$UNMARKED")" "Verity: mi/scratch/sanitizer_fixture.py would contain what looks like a AWS access key and a GitHub token and a OpenAI or Anthropic key and a Slack token and a hardcoded credential. Read the value from the environment or a git-ignored env file instead of writing it into the file."
+check "mixed seeded + unmarked denied" "$(ds /p/a.py "$SEEDED
+other = $REAL_GH" | grep -c 'a GitHub token')" "1"
+check "mixed same pattern denied" "$(ds /p/a.py "a = $SEED_AWS b = $REAL_AWS" | grep -c '^Verity:')" "1"
+check "mixed hardcoded credential denied" "$(ds /p/a.py "$SEED_CRED
+$REAL_CRED" | grep -c 'a hardcoded credential')" "1"
+check "seeded value in env file still denied" "$(ds /p/.env "AWS_KEY=$SEED_AWS" | grep -c 'An env file is only the place')" "1"
+check "file name is not a marker" "$(ds /p/fake_test_fixture.py "k = $REAL_AWS" | grep -c '^Verity:')" "1"
+check "private key header never seeded" "$(ds /p/fake.pem "-----BEGIN RSA PRIVATE KEY-----
+FAKE" | grep -c 'a private key')" "1"
+check "e2e seeded fixture write not denied" "$(ehook claude "$(jq -nc --arg c "$SEEDED" '{hook_event_name:"PreToolUse",session_id:"seed-e2e",cwd:"/p",tool_name:"Write",tool_input:{file_path:"/p/mi/scratch/sanitizer_fixture.py",content:$c}}')" | jq -r '.hookSpecificOutput.permissionDecision // "none"')" "none"
+check "e2e mixed fixture write denied" "$(ehook claude "$(jq -nc --arg c "$SEEDED
+k = $REAL_AWS" '{hook_event_name:"PreToolUse",session_id:"seed-e2e",cwd:"/p",tool_name:"Write",tool_input:{file_path:"/p/mi/scratch/sanitizer_fixture.py",content:$c}}')" | jq -r .hookSpecificOutput.permissionDecision)" "deny"
 unset VERITY_ENGINE_CLI VERITY_ENGINE_HOME VERITY_HOME
 
 echo "$pass passed, $fail failed"
