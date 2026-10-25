@@ -22,4 +22,6 @@ jq -s -r '
   (.[-10:][] | "\(.ts) \(if .applied then "LIVE  " else "shadow" end) \(.harness // "claude") \(.event) \(.tool // "-") \(kind): \((.verdict.reason // .verdict.hookSpecificOutput.permissionDecisionReason // .verdict.hookSpecificOutput.additionalContext // .verdict.systemMessage // "") | tostring | .[0:140])")
 ' "$LOG"
 echo
-echo "hook crashes: $(cat "${CANNY_HOME:-$HOME/.canny}/errors.log" 2>/dev/null | wc -l)"
+# The engine logs crashes under its own home (engine/home.js resolveHome): VERITY_ENGINE_HOME,
+# else ~/.verity/engine. verity-hook.sh passes VERITY_ENGINE_HOME through unchanged.
+echo "hook crashes: $(cat "${VERITY_ENGINE_HOME:-$HOME/.verity/engine}/errors.log" 2>/dev/null | wc -l)"

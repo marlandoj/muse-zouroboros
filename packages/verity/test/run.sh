@@ -68,6 +68,46 @@ check "bad verdict fails closed" "$(FAKE_VERDICT='not json' hook claude "$STOP" 
 check "kimi bad verdict fails closed" "$(FAKE_VERDICT='not json' hook kimi "$STOP" | jq -r .hookSpecificOutput.permissionDecision)" "deny"
 $V reset >/dev/null
 check "reset to shadow" "$(hook claude "$STOP")" "{}"
+
+# report.sh counts hook crashes from the engine's own errors.log (engine home), not ~/.canny.
+mkdir -p "$T/rh/.verity/engine" "$T/rh/.canny" "$T/reh"
+printf '2026-10-25T00:00:00.000Z boom\n' > "$T/rh/.verity/engine/errors.log"
+printf 'legacy 1\nlegacy 2\nlegacy 3\n' > "$T/rh/.canny/errors.log"
+check "report counts crashes in default engine home" "$(HOME="$T/rh" bash "$ROOT/scripts/report.sh" | tail -n 1)" "hook crashes: 1"
+printf 'a\nb\n' > "$T/reh/errors.log"
+check "report honours VERITY_ENGINE_HOME" "$(HOME="$T/rh" VERITY_ENGINE_HOME="$T/reh" bash "$ROOT/scripts/report.sh" | tail -n 1)" "hook crashes: 2"
+
+# One mode resolver: engine/cli.js mode prints the hook's posture as JSON.
+mkdir -p "$T/mo"; echo '{"mode":"shadow","harness":{"codex":{"mode":"live","checks":["deny"]}}}' > "$T/mo/config.json"
+emode() { VERITY_HOME="$T/mo" node "$ROOT/engine/cli.js" mode "$@"; }
+check "mode cli: per-harness override" "$(emode --harness codex | jq -c '[.mode, .checks, .source.mode, .override]')" '["live",["deny"],"harness",true]'
+check "mode cli: global layer" "$(emode --harness kimi | jq -c '[.mode, .checks, .source.mode, .override, .global.mode]')" '["shadow",["all"],"global",false,"shadow"]'
+check "mode cli: env beats config, configured keeps the file" "$(VERITY_MODE=live VERITY_CHECKS=done,ask emode --harness kimi | jq -c '[.mode, .checks, .source.mode, .configured.mode]')" '["live",["done","ask"],"env","shadow"]'
+check "mode cli: VERITY_DISABLE is reported, not a mode" "$(VERITY_DISABLE=1 emode --harness codex | jq -c '[.mode, .disabled]')" '["live",true]'
+# The hook's resolver path and its degraded fallback (engine tree absent) give one answer.
+mkdir -p "$T/nofb/scripts"; cp "$ROOT/scripts/verity-hook.sh" "$ROOT/scripts/adapter.mjs" "$T/nofb/scripts/"
+posture_of() {  # $1 = hook script, $2 = config text ('' = none), rest = env; prints mode/applied for a deny verdict
+  local d; d="$(mktemp -d "$T/mp.XXXX")"; [ -n "$2" ] && printf '%s' "$2" > "$d/config.json"
+  local s="$1"; shift 2
+  env "$@" VERITY_HOME="$d" FAKE_VERDICT="$DENY" bash "$s" codex <<<'{"hook_event_name":"PreToolUse"}' >/dev/null
+  jq -r '"\(.mode):\(.applied)"' "$d/verdicts.jsonl"
+}
+same=0; n=0
+for c in '' '{"mode":"live"}' '{"mode":"shadow","harness":{"codex":{"mode":"live","checks":["deny"]}}}' \
+         '{"mode":"live","checks":[]}' '{"mode":"live","checks":["done"]}' '{"harness":"bogus","mode":"live"}' 'not json' \
+         '{"mode":false,"harness":{"codex":{"mode":null,"checks":["ask","deny"]}}}' '{"mode":"live","harness":{"codex":{"mode":"shadow"}}}'; do
+  for e in X=1 VERITY_MODE=live VERITY_CHECKS=done; do
+    n=$((n+1))
+    a="$(posture_of "$ROOT/scripts/verity-hook.sh" "$c" "$e")"; b="$(posture_of "$T/nofb/scripts/verity-hook.sh" "$c" "$e")"
+    if [ "$a" = "$b" ]; then same=$((same+1)); else echo "  resolver/fallback differ for [$c] $e: $a vs $b"; fi
+  done
+done
+check "hook resolver and fallback agree on every config x env case" "$same/$n" "$n/$n"
+mkdir -p "$T/mlive"; echo '{"mode":"live"}' > "$T/mlive/config.json"
+check "engine tree absent in live still fails closed" "$(env -u CANNY_CLI VERITY_HOME="$T/mlive" bash "$T/nofb/scripts/verity-hook.sh" claude <<<"$STOP" | jq -r .decision)" "block"
+check "status reads the resolver, overrides marked" "$(VERITY_HOME="$T/mo" $V status | paste -sd'|')" "global: shadow (checks: all)|  claude: shadow (checks: all)|  codex: live (checks: deny)  [override]|  kimi: shadow (checks: all)|  gemini: shadow (checks: all)"
+mkdir -p "$T/mbad"; echo 'not json' > "$T/mbad/config.json"
+check "status survives an invalid config and says how the hook reads it" "$(VERITY_HOME="$T/mbad" $V status | sed -n 2p)" "config: $T/mbad/config.json is invalid; the hook reads it as shadow (checks: all)"
 unset CANNY_CLI TYPESAFE_API_KEY VERITY_HOME
 
 # Installer: wires all four harnesses, keeps existing hooks, and is idempotent.
@@ -153,9 +193,7 @@ SEED_SK="sk-ant-""FAKE-fakeseed-0000000000"; SEED_SL="xoxb-""fake-seed-000000000
 SEED_CRED='token = "fakeseed0123456789abcdef"'
 REAL_AWS="AKIA""ABCDEFGHIJKLMNOP"; REAL_GH="ghp_""Abcdefghijklmnopqrstuvwxyz0123456789"
 REAL_SK="sk-ant-""Q1w2E3r4Y5u6I7o8P9a0"; REAL_SL="xoxb-""1234567890-abcdefghij"
-REAL_CRED_A='token = "Zq9Xw8Vu7'
-REAL_CRED_B='Ny6Rq5Pn4"'
-REAL_CRED="$REAL_CRED_A$REAL_CRED_B"
+REAL_CRED="token = \"Zq9Xw8""Vu7Ny6Rq5Pn4\""
 SEEDED="# sanitizer fixture: every value below is seeded fake data
 aws = $SEED_AWS
 gh = $SEED_GH
@@ -183,6 +221,21 @@ FAKE" | grep -c 'a private key')" "1"
 check "e2e seeded fixture write not denied" "$(ehook claude "$(jq -nc --arg c "$SEEDED" '{hook_event_name:"PreToolUse",session_id:"seed-e2e",cwd:"/p",tool_name:"Write",tool_input:{file_path:"/p/mi/scratch/sanitizer_fixture.py",content:$c}}')" | jq -r '.hookSpecificOutput.permissionDecision // "none"')" "none"
 check "e2e mixed fixture write denied" "$(ehook claude "$(jq -nc --arg c "$SEEDED
 k = $REAL_AWS" '{hook_event_name:"PreToolUse",session_id:"seed-e2e",cwd:"/p",tool_name:"Write",tool_input:{file_path:"/p/mi/scratch/sanitizer_fixture.py",content:$c}}')" | jq -r .hookSpecificOutput.permissionDecision)" "deny"
+
+# Phase 0 item 1: one corpus through both the hook scan (detectSecret) and the
+# diff scan (findSecrets); each prints its sorted, de-duplicated label set.
+both() { node --input-type=module -e 'import { detectSecret, findSecrets } from "'"$ROOT"'/engine/checks.js";
+const t = process.argv[1];
+const d = detectSecret("/p/a.py", t, "/p");
+const dl = d === null ? [] : d.replace(/^Verity: .*? would contain what looks like /, "").replace(/\. Read the value[\s\S]*$/, "").split(" and ");
+const fl = [...new Set(findSecrets(t).map((s) => s.label))];
+process.stdout.write(JSON.stringify(dl.sort()) + " " + JSON.stringify(fl.sort()));' "$1"; }
+ALL5='["a AWS access key","a GitHub token","a OpenAI or Anthropic key","a Slack token","a hardcoded credential"]'
+check "parity seeded-only: no findings from either" "$(both "$SEEDED")" "[] []"
+check "parity mixed same pattern: unmarked finding from both" "$(both "a = $SEED_AWS b = $REAL_AWS")" '["a AWS access key"] ["a AWS access key"]'
+check "parity mixed credential: unmarked finding from both" "$(both "$SEED_CRED
+$REAL_CRED")" '["a hardcoded credential"] ["a hardcoded credential"]'
+check "parity unmarked: unchanged, all labels from both" "$(both "$UNMARKED")" "$ALL5 $ALL5"
 unset VERITY_ENGINE_CLI VERITY_ENGINE_HOME VERITY_HOME
 
 echo "$pass passed, $fail failed"

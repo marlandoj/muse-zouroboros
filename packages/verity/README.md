@@ -55,6 +55,8 @@ bash scripts/verity.sh reset [--harness kimi]                   # clear override
 
 The setting is stored in `~/.verity/config.json` and read on every hook call, so a switch takes effect on the agent's next action without restarting anything. Precedence: `VERITY_MODE` / `VERITY_CHECKS` environment variables, then the per-harness setting, then the global setting, then shadow. `VERITY_DISABLE=1` turns Verity off in one process.
 
+One resolver answers for every consumer: `node engine/cli.js mode --harness NAME` prints the posture the hook applies as JSON (`mode`, `checks`, `disabled`, the `source` of each, the file-only `configured` and `global` layers, `override`, the env overrides, and the config path and state). `verity-hook.sh`, `verity.sh status` and the orchestrator's gates report all read it; the hook falls back to reading the same keys directly only when the resolver cannot run, so a live gate still fails closed.
+
 | Check | Verity verdict | Claude Code / Codex | Kimi Code | Gemini CLI |
 |---|---|---|---|---|
 | `done` | refuse the finish | block the stop; the agent continues | deny; reason sent back once | `AfterAgent` block; the agent continues |
@@ -101,6 +103,10 @@ genuine "no check applies" flow exists.
 the `"test": "echo ok"` bypass. The gate blocks and says why. Build, lint,
 and typecheck passes are unaffected. The check is skipped when the tree
 can't be scanned; every withheld pass is audited as `"hollowPass": true`.
+
+**Engine test runners.** A headless Godot run of a project's own test runner counts as a check with no project config: the binary must run with `--headless` and a `-s` / `--script` path under a `tests` directory or with `test` or `check` in the script's name (the usual shape is `res://tests/run_tests.gd`). Running a game or scene script never counts, and the masking rules still apply — a piped run, or one whose reported exit status is not the runner's own, does not count.
+
+**Seeded test data.** The secret scan judges values, not files: when every credential-shaped value in a file carries an explicit fake-data marker inside the value itself — `fake`, `seed`, `example`, `dummy`, `placeholder`, `sample`, `test` or `redacted`, alone or compounded (as in `fakeseed`) — the write is treated as test data and is not denied. One unmarked value denies the write as usual. Env files are judged exactly as before; the marker rule does not apply to them.
 
 **Known limitation: no coverage linkage.** Verity verifies that a check
 passed after the last edit; it does not verify the check exercised the
@@ -189,7 +195,7 @@ operator policy file, rollout): `packages/zo-swarm-orchestrator/docs/verity-swar
 
 ```bash
 bash test/run.sh                                 # hook / adapter / installer suite
-bash test/engine-parity.sh "$PWD/engine/cli.js"  # golden fixture corpus (6 known-stale: 3 testdel fixtures expect `ask`, the 2026-10-14 governance change made it `deny`; secret-near-miss / secret-nested-path / secret-ts-string expect a deny for AWS's documented AKIAIOSFODNN7EXAMPLE, which the 2026-10-25 seeded-value rule now allows)
+bash test/engine-parity.sh "$PWD/engine/cli.js"  # golden fixture corpus (all 45 assert current behaviour: mv-testdel / testdel-ask / testdel-deny-codex expect `deny` since the 2026-10-14 governance change; secret-near-miss / secret-nested-path / secret-ts-string expect AWS's documented AKIAIOSFODNN7EXAMPLE to be allowed under the 2026-10-25 seeded-value rule; refreshed 2026-10-25)
 bash test/swarm-verify.sh                        # the swarm gate: snapshot/verify over scratch git fixtures
 ```
 

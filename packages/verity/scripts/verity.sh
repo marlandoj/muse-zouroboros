@@ -10,7 +10,8 @@
 # Checks: done = refuse a finish with no passing check, deny = block a tool call (secrets, test
 # deletion), ask = ask before a tool call, rewrite = add pipefail to piped test commands,
 # note = add context for the agent, warn = show a warning.
-# Precedence: VERITY_MODE / VERITY_CHECKS env > per-harness config > global config > shadow.
+# Precedence: VERITY_MODE / VERITY_CHECKS env > per-harness config > global config > shadow
+# (resolved by engine/cli.js mode, the same resolver the hook uses).
 set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 VERITY_HOME="${VERITY_HOME:-$HOME/.verity}"
@@ -21,13 +22,23 @@ usage() { sed -n 2,14p "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
 load() { [ -f "$CFG" ] && cat "$CFG" || echo '{"mode":"shadow","checks":["all"]}'; }
 save() { mkdir -p -m 700 "$VERITY_HOME"; local t; t="$(mktemp "$VERITY_HOME/.cfg.XXXX")"; cat > "$t"; mv "$t" "$CFG"; }
 
+# The configured posture per harness comes from the same resolver the hook uses (engine/cli.js mode).
+posture() { VERITY_HOME="$VERITY_HOME" node "$DIR/../engine/cli.js" mode --harness "$1"; }
+
 status() {
-  load | jq -r '
-    "global: \(.mode // "shadow") (checks: \((.checks // ["all"]) | join(",")))",
-    (["claude","codex","kimi","gemini"][] as $h |
-      "  \($h): \(.harness[$h].mode // .mode // "shadow") (checks: \((.harness[$h].checks // .checks // ["all"]) | join(",")))" +
-      (if .harness[$h] then "  [override]" else "" end))'
+  local h r
+  for h in claude codex kimi gemini; do
+    r="$(posture "$h")"
+    if [ "$h" = claude ]; then
+      jq -r '"global: \(.global.mode) (checks: \(.global.checks | join(",")))",
+        (select(.config.state == "invalid" or .config.state == "unreadable" or .config.state == "empty")
+          | "config: \(.config.path) is \(.config.state); the hook reads it as shadow (checks: all)")' <<<"$r"
+    fi
+    jq -r '"  \(.harness): \(.configured.mode) (checks: \(.configured.checks | join(",")))" +
+      (if .override then "  [override]" else "" end)' <<<"$r"
+  done
   [ -n "${VERITY_MODE:-}" ] && echo "env VERITY_MODE=$VERITY_MODE overrides the config in this shell"
+  [ -n "${VERITY_CHECKS:-}" ] && echo "env VERITY_CHECKS=$VERITY_CHECKS overrides the config in this shell"
   [ "${VERITY_DISABLE:-0}" = 1 ] && echo "env VERITY_DISABLE=1: Verity is off in this shell"
   return 0
 }
