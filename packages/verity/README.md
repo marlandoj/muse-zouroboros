@@ -102,6 +102,10 @@ the `"test": "echo ok"` bypass. The gate blocks and says why. Build, lint,
 and typecheck passes are unaffected. The check is skipped when the tree
 can't be scanned; every withheld pass is audited as `"hollowPass": true`.
 
+**Engine test runners.** A headless Godot run of a project's own test runner counts as a check with no project config: the binary must run with `--headless` and a `-s` / `--script` path under a `tests` directory or with `test` or `check` in the script's name (the usual shape is `res://tests/run_tests.gd`). Running a game or scene script never counts, and the masking rules still apply — a piped run, or one whose reported exit status is not the runner's own, does not count.
+
+**Seeded test data.** The secret scan judges values, not files: when every credential-shaped value in a file carries an explicit fake-data marker inside the value itself — `fake`, `seed`, `example`, `dummy`, `placeholder`, `sample`, `test` or `redacted`, alone or compounded (as in `fakeseed`) — the write is treated as test data and is not denied. One unmarked value denies the write as usual. Env files are judged exactly as before; the marker rule does not apply to them.
+
 **Known limitation: no coverage linkage.** Verity verifies that a check
 passed after the last edit; it does not verify the check exercised the
 edited code. A full-suite run is assumed to cover the tree. The ledger

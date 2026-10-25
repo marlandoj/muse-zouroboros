@@ -44,3 +44,14 @@ Verity previously obtained by cloning `qkal/Canny` at install time.
   `test/swarm-verify.sh`. Not changed here: the interactive hook path's
   Codex `apply_patch` blindness (#1), shell-edit blindness (#2) and the
   malformed-input `{}` answer (#5), all deferred with a documented plan.
+
+- **FP fixes (2026-10-25).** Driven by the adjudication of every
+  block-class verdict on record (12 verdicts: 9 true catches, 2 false
+  positives, 1 indeterminate; FP rate 16.7% against the <10% promotion
+  bar). Both fixes are in `checks.js`: a headless Godot test-runner
+  invocation now counts as a check for the done-gate (the script path
+  must signal a test run; the masking analysis is unchanged), and
+  `detectSecret` treats content as seeded test data when every matched
+  credential value carries an explicit fake-data marker
+  (`SEED_MARKER_RE`) — any unmarked value still denies, and the `.env`
+  branch is unchanged.
