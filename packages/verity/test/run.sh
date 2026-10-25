@@ -238,5 +238,29 @@ $REAL_CRED")" '["a hardcoded credential"] ["a hardcoded credential"]'
 check "parity unmarked: unchanged, all labels from both" "$(both "$UNMARKED")" "$ALL5 $ALL5"
 unset VERITY_ENGINE_CLI VERITY_ENGINE_HOME VERITY_HOME
 
+# Hybrid Phase 1, unit level: the skip-marker set, the shared diff-rule core,
+# the done rule, and the hook-side base record. End to end: test/hook-diff.sh.
+skips() { node --input-type=module -e 'import { findSkipMarkers } from "'"$ROOT"'/engine/checks.js"; process.stdout.write(JSON.parse(process.argv[1]).map((l) => (findSkipMarkers([l])[0] || { label: "-" }).label).join("|"));' "$1"; }
+check "skip markers: the pinned JS set" "$(skips '["it.skip(\"a\", () => {})","  test.skip(\"b\")","describe.skip(\"c\", fn)","xit(\"d\", fn)","xdescribe(\"e\", fn)","  this.skip();"]')" "js .skip(|js .skip(|js .skip(|js x-prefixed test|js x-prefixed test|mocha this.skip()"
+check "skip markers: the pinned Python set" "$(skips '["@pytest.mark.skip","@pytest.mark.skipif(sys.platform == \"win32\", reason=\"x\")","    pytest.skip(\"later\")","@unittest.skip(\"x\")","@unittest.skipIf(True, \"x\")","        self.skipTest(\"x\")"]')" "pytest.mark.skip|pytest.mark.skip|pytest.skip(|unittest.skip|unittest.skip|unittest skipTest("
+check "skip markers: the pinned Go set" "$(skips '["\tt.Skip(\"flaky\")","\tt.Skipf(\"%s\", x)","\tb.SkipNow()"]')" "go t.Skip(|go t.Skip(|go t.Skip("
+check "skip near-misses: comments do not fire" "$(skips '["// it.skip(\"a\")","# pytest.skip(\"x\")","x = 1  # @pytest.mark.skip","/* xit(\"a\") */"," * t.Skip(\"x\")","foo(); // test.skip(1)"]')" "-|-|-|-|-|-"
+check "skip near-misses: strings do not fire" "$(skips '["log(\"it.skip(\")","msg = '"'"'pytest.skip(x)'"'"'","s := `t.Skip(`"]')" "-|-|-"
+check "skip near-misses: identifiers containing the marker do not fire" "$(skips '["submit.skip(1)","fixit(\"a\")","mytest.skip()","it.skipped = true","t.Skipper()","self.skipTests(1)","pytest.skipper(1)","@pytest.mark.skipped","const xitCount = 1"]')" "-|-|-|-|-|-|-|-|-"
+dr() { node --input-type=module -e 'import { diffRules, blockingFindings, decideDone } from "'"$ROOT"'/engine/swarm.js"; const a = JSON.parse(process.argv[1]);
+const r = diffRules({ abs: "/nonexistent", entries: a.entries, added: new Map(Object.entries(a.added || {})), command: null });
+process.stdout.write(JSON.stringify({ rules: r.findings.map((f) => f.rule + ":" + f.path + (f.severity ? ":" + f.severity : "")), code: r.code, blocking: blockingFindings(r.findings).length }));' "$1"; }
+check "diffRules: D and R test entries are test_deletion, code counted" "$(dr '{"entries":[{"status":"D","path":"tests/a.test.ts"},{"status":"R","from":"src/x_test.go","path":"src/x.go"},{"status":"M","path":"README.md"}]}' | jq -c '[.rules, .code, .blocking]')" '[["test_deletion:tests/a.test.ts","test_deletion:src/x_test.go"],["tests/a.test.ts","src/x.go"],2]'
+check "diffRules: a skip marker in a test file is advisory, never blocking" "$(dr '{"entries":[{"status":"M","path":"tests/a.test.ts"}],"added":{"tests/a.test.ts":["it.skip(\"x\", f)"],"src/a.ts":["it.skip(\"x\", f)"]}}' | jq -c '[.rules, .blocking]')" '[["test_skipped:tests/a.test.ts:info"],0]'
+check "diffRules: a secret on an added line blocks" "$(dr '{"entries":[{"status":"M","path":"src/k.ts"}],"added":{"src/k.ts":["k = AKIA''ABCDEFGHIJKLMNOP"]}}' | jq -c '[.rules, .blocking]')" '[["secret:src/k.ts"],1]'
+dd() { node --input-type=module -e 'import { decideDone } from "'"$ROOT"'/engine/swarm.js"; const a = JSON.parse(process.argv[1]); const d = decideDone(a); process.stdout.write(d.decision + (d.hollowPass ? ":hollow" : ""));' "$1"; }
+check "decideDone: pass, failing exit, hollow, no check" "$(dd '{"code":["a.ts"],"command":"npm test","exitCode":0,"testFiles":true}') $(dd '{"code":["a.ts"],"command":"npm test","exitCode":1}') $(dd '{"code":["a.ts"],"command":"npm test","exitCode":0,"testFiles":false}') $(dd '{"code":["a.ts"],"command":null}')" "allow block block:hollow block"
+hb() { node --input-type=module -e 'import { recordSessionBase, treeHashFor, baseFile } from "'"$ROOT"'/engine/hookdiff.js"; const [h, c] = process.argv.slice(1); const r = recordSessionBase(h, "claude", "s/1", c);
+process.stdout.write([String(r && r.state), String(r && r.reason), String(treeHashFor(h, "claude", "s/1")), baseFile(h, "claude", "s/1").slice(h.length)].join(" "));' "$1" "$2"; }
+mkdir -p "$T/plain"
+check "hook base: a non-repo cwd is recorded unavailable, no tree hash, named like the ledger" "$(hb "$T/hb" "$T/plain")" "unavailable not_a_git_tree undefined /bases/claude-s_1.json"
+echo x > "$T/hb2"
+check "hook base: an unwritable Verity home never throws" "$(hb "$T/hb2" "$T/plain")" "null null undefined /bases/claude-s_1.json"
+
 echo "$pass passed, $fail failed"
 [ "$fail" = 0 ]

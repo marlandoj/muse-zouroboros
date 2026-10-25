@@ -14,6 +14,7 @@ import {
   repoHasTestFiles,
 } from "./checks.js";
 import { globMatch } from "./util.js";
+import { diffDecisionFor, recordSessionBase, treeHashFor } from "./hookdiff.js";
 
 const SESSION_NOTE =
   "Verity guards this session. Before you finish, a check has to pass " +
@@ -72,6 +73,8 @@ export function handleEvent(rawInput, agent, ctx) {
   const cfg = loadEffectiveConfig(home, cwd);
 
   if (name === "SessionStart") {
+    // Phase 1 dual-run: the diff ledger's base. Never fails the session start.
+    recordSessionBase(home, agent, sessionId, cwd);
     return serialize("note", SESSION_NOTE, agent);
   }
 
@@ -119,6 +122,12 @@ export function handleEvent(rawInput, agent, ctx) {
         );
       built.fact.code = built.fact.code.filter((f) => !isIgnored(f));
     }
+    // A passing check carries the working-tree hash it passed on (sessions
+    // with a usable diff base only; other facts are unchanged).
+    if (built.fact.kind === "command" && built.fact.verify && built.fact.exitCode === 0) {
+      const treeHash = treeHashFor(home, agent, sessionId);
+      if (treeHash !== undefined) built.fact.treeHash = treeHash;
+    }
     appendLine(home, agent, sessionId, {
       type: "event",
       cwd,
@@ -154,6 +163,10 @@ export function handleEvent(rawInput, agent, ctx) {
     const extras = {};
     if (valve) extras.valve = true;
     if (hollowPass) extras.hollowPass = true;
+    // Second opinion, recorded only: the event verdict above answers the
+    // harness. Absent when the session has no usable diff base.
+    const diffDecision = diffDecisionFor(home, agent, sessionId, { history, cfg, testFiles });
+    if (diffDecision) extras.diffDecision = diffDecision;
     appendVerdict(home, agent, sessionId, cwd, "stop", decision, message, Object.keys(extras).length ? extras : undefined);
     return serialize(decision, message, agent);
   }

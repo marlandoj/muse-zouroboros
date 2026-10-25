@@ -27,7 +27,7 @@ import os from "node:os";
 import path from "node:path";
 import { spawn, spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { findSecrets, isCodeFile, isVerify, looksLikeTestFile, repoHasTestFiles, stripModifiers } from "./checks.js";
+import { findSecrets, findSkipMarkers, isCodeFile, isVerify, looksLikeTestFile, repoHasTestFiles, stripModifiers } from "./checks.js";
 import { decideStop } from "./rules.js";
 import { globMatch, hash16, stripQuotesAndComments } from "./util.js";
 
@@ -44,11 +44,11 @@ export const DEFAULT_IGNORE = ["package-lock.json", "pnpm-lock.yaml", "yarn.lock
 /** Loose-file manifest: never scanned (orchestrator/dispatcher artefacts; the gate's own state). */
 const LOOSE_EXCLUDE_NAMES = new Set(["run.log", "TASK.md", ".verity", ".factory-seed.json"]);
 const SKIP_DIRS = new Set([".git", "node_modules", ".verity"]);
-const MAX_LOOSE_FILES = 5000;
+export const MAX_LOOSE_FILES = 5000;
 const MAX_LOOSE_SCAN_BYTES = 2 * 1024 * 1024;
 const MAX_HASH_BYTES = 64 * 1024 * 1024;
 const MAX_EXCLUDE_BYTES = 64 * 1024;
-const MAX_DIFF_BYTES = 128 * 1024 * 1024;
+export const MAX_DIFF_BYTES = 128 * 1024 * 1024;
 const MAX_ADDED_BYTES_PER_FILE = 4 * 1024 * 1024;
 const MAX_CHECK_OUTPUT_BYTES = 8 * 1024 * 1024;
 /** Config files whose change redefines the check they configure. */
@@ -97,7 +97,7 @@ function gitOk(repo, args, opts = {}) {
   return r;
 }
 
-function gitTry(repo, args, opts = {}) {
+export function gitTry(repo, args, opts = {}) {
   try {
     const r = git(repo, args, opts);
     return r.status === 0 ? String(r.stdout).trim() : null;
@@ -158,14 +158,22 @@ function gitPath(repo, what) {
  * temporary copy of the index. The real index is never read-locked, written
  * or otherwise touched.
  */
-export function writeWorkingTree(repo) {
+export function writeWorkingTree(repo, { timeoutMs } = {}) {
   const indexPath = gitPath(repo, "index");
   const tmp = path.join(os.tmpdir(), `verity-swarm-index-${process.pid}-${Date.now()}-${Math.floor(Math.random() * 1e9)}`);
   try {
-    if (fs.existsSync(indexPath)) fs.copyFileSync(indexPath, tmp);
+    if (fs.existsSync(indexPath)) {
+      fs.copyFileSync(indexPath, tmp);
+      // Keep git's racy-clean check honest: a fresh mtime on the copy would
+      // make a same-size edit from the index's own timestamp window look
+      // clean, so the copy carries the original's mtime (1 ms earlier errs
+      // toward re-hashing, never toward trusting stale stat data).
+      const st = fs.statSync(indexPath);
+      fs.utimesSync(tmp, st.atimeMs / 1000, (st.mtimeMs - 1) / 1000);
+    }
     const env = { GIT_INDEX_FILE: tmp };
-    gitOk(repo, ["add", "-A", "--ignore-errors", "--", "."], { env, timeoutMs: 600_000 });
-    return gitOk(repo, ["write-tree"], { env }).stdout.trim();
+    gitOk(repo, ["add", "-A", "--ignore-errors", "--", "."], { env, timeoutMs: timeoutMs ?? 600_000 });
+    return gitOk(repo, ["write-tree"], { env, ...(timeoutMs ? { timeoutMs } : {}) }).stdout.trim();
   } finally {
     for (const f of [tmp, `${tmp}.lock`]) {
       try {
@@ -188,7 +196,7 @@ function excludeRecord(repo) {
   return { sha256: sha256(content), content: content.length <= MAX_EXCLUDE_BYTES ? content : null };
 }
 
-function treeExists(repo, tree) {
+export function treeExists(repo, tree) {
   return git(repo, ["cat-file", "-e", `${tree}^{tree}`]).status === 0;
 }
 
@@ -369,20 +377,21 @@ function parseAddedLines(text) {
   return out;
 }
 
-function diffRepo(abs, baseTree, postTree) {
-  const ns = gitOk(abs, ["diff", "-M", "--name-status", "-z", baseTree, postTree], { maxBuffer: MAX_DIFF_BYTES }).stdout;
+export function diffRepo(abs, baseTree, postTree, { timeoutMs } = {}) {
+  const t = timeoutMs ? { timeoutMs } : {};
+  const ns = gitOk(abs, ["diff", "-M", "--name-status", "-z", baseTree, postTree], { maxBuffer: MAX_DIFF_BYTES, ...t }).stdout;
   const entries = parseNameStatus(ns);
   let added = new Map();
   let truncated = false;
   try {
-    const u = gitOk(abs, ["diff", "--unified=0", "--no-color", "--no-ext-diff", "-M", baseTree, postTree], { maxBuffer: MAX_DIFF_BYTES }).stdout;
+    const u = gitOk(abs, ["diff", "--unified=0", "--no-color", "--no-ext-diff", "-M", baseTree, postTree], { maxBuffer: MAX_DIFF_BYTES, ...t }).stdout;
     added = parseAddedLines(u);
   } catch (e) {
     if (/maxBuffer|ENOBUFS/.test(String(e && e.message))) truncated = true;
     else throw e;
   }
   const untracked = new Set(
-    (gitTry(abs, ["ls-files", "--others", "--exclude-standard", "-z"]) || "").split("\0").filter(Boolean),
+    (gitTry(abs, ["ls-files", "--others", "--exclude-standard", "-z"], t) || "").split("\0").filter(Boolean),
   );
   return { entries, added, untracked, truncated };
 }
@@ -461,6 +470,89 @@ function checkDefinitionChanges(abs, entries, baseTree, postTree, command) {
     if (before === undefined || after === undefined || pick(before) !== pick(after)) hits.push("package.json");
   }
   return [...new Set(hits)];
+}
+
+// ---------------------------------------------------------------------------
+// diff rules: the shared core (swarm verify gate and the hook Stop path)
+// ---------------------------------------------------------------------------
+
+/**
+ * Apply the diff rules to one repo's base→post diff. Pure over its inputs
+ * apart from reading package.json at both trees for the definition check.
+ *
+ *   test_deletion             a test file deleted (D) or renamed out of the tests (R)
+ *   secret                    a credential shape on an added line (label + fingerprint, never the value)
+ *   check_definition_changed  a path that redefines `command` (only when a command is known)
+ *   test_skipped              a skip marker on a line added to a test file (severity info: recorded, never blocking)
+ *
+ * Returns the findings in that order plus the change ledger (code paths,
+ * non-code count, deleted tests, untracked code, definition changes). Paths
+ * are shown under `repoPath` ("." = no prefix).
+ */
+export function diffRules({ repoPath = ".", abs, entries, added, untracked = new Set(), baseTree, postTree, ignoreGlobs = DEFAULT_IGNORE, allowSecrets = false, allowTestDeletion = false, allowCheckEdits = false, command = null }) {
+  const findings = [];
+  const code = [];
+  const deletedTests = [];
+  const untrackedCode = [];
+  const checkDefinitionChanged = [];
+  let nonCodeCount = 0;
+  for (const e of entries) {
+    const disp = displayPath(repoPath, e.path);
+    if (e.status === "D") {
+      if (looksLikeTestFile(e.path) && !allowTestDeletion) {
+        deletedTests.push(disp);
+        findings.push({ rule: "test_deletion", path: disp });
+      }
+      if (isCodeFile(e.path) && !isIgnored(e.path, ignoreGlobs)) code.push(disp);
+      else nonCodeCount++;
+      continue;
+    }
+    if (e.status === "R" && e.from && looksLikeTestFile(e.from) && !looksLikeTestFile(e.path) && !allowTestDeletion) {
+      const from = displayPath(repoPath, e.from);
+      deletedTests.push(from);
+      findings.push({ rule: "test_deletion", path: from, renamedTo: disp });
+    }
+    if (isCodeFile(e.path) && !isIgnored(e.path, ignoreGlobs)) {
+      code.push(disp);
+      if (untracked.has(e.path)) untrackedCode.push(disp);
+    } else nonCodeCount++;
+  }
+  if (!allowSecrets) {
+    for (const [p, lines] of added) {
+      for (const s of findSecrets(lines.join("\n"))) {
+        findings.push({ rule: "secret", path: displayPath(repoPath, p), label: s.label, fingerprint: hash16(s.value) });
+      }
+    }
+  }
+  if (command) {
+    for (const p of checkDefinitionChanges(abs, entries, baseTree, postTree, command)) {
+      const disp = displayPath(repoPath, p);
+      checkDefinitionChanged.push(disp);
+      findings.push({ rule: "check_definition_changed", path: disp, ...(allowCheckEdits ? { allowed: true } : {}) });
+    }
+  }
+  for (const [p, lines] of added) {
+    if (!looksLikeTestFile(p)) continue;
+    for (const m of findSkipMarkers(lines)) findings.push({ rule: "test_skipped", path: displayPath(repoPath, p), label: m.label, severity: "info" });
+  }
+  return { findings, code, nonCodeCount, deletedTests, untrackedCode, checkDefinitionChanged };
+}
+
+/** Findings that decide a verdict: info-severity findings and allowed definition edits only inform. */
+export function blockingFindings(findings) {
+  return findings.filter((f) => f.severity !== "info" && !(f.rule === "check_definition_changed" && f.allowed));
+}
+
+/**
+ * The done rule over one check outcome: code changed, and `check` (the
+ * gate-run check, or the hook's last passing check still valid for the
+ * current tree) either passed for real or did not. `exitCode` 124 = timed
+ * out. Returns decideStop's { decision: allow|block, message, hollowPass }.
+ */
+export function decideDone({ code, command, exitCode, testFiles = null }) {
+  const lines = [{ type: "event", fact: { kind: "edit", files: code, deleted: [], code } }];
+  if (command) lines.push({ type: "event", fact: { kind: "command", command, exitCode, verify: true, code: [] } });
+  return decideStop(lines, false, false, testFiles);
 }
 
 // ---------------------------------------------------------------------------
@@ -733,44 +825,14 @@ export async function verify(opts) {
     if (r.postTree === r.baseTree) continue;
     const d = diffRepo(r.abs, r.baseTree, r.postTree);
     if (d.truncated) truncated = true;
-    for (const e of d.entries) {
-      const disp = displayPath(r.path, e.path);
-      if (e.status === "D") {
-        if (looksLikeTestFile(e.path) && !allowTestDeletion) {
-          deletedTests.push(disp);
-          findings.push({ rule: "test_deletion", path: disp });
-        }
-        if (isCodeFile(e.path) && !isIgnored(e.path, ignoreGlobs)) {
-          code.push(disp);
-          codeRepos.add(r.path);
-        } else nonCodeCount++;
-        continue;
-      }
-      if (e.status === "R" && e.from && looksLikeTestFile(e.from) && !looksLikeTestFile(e.path) && !allowTestDeletion) {
-        const from = displayPath(r.path, e.from);
-        deletedTests.push(from);
-        findings.push({ rule: "test_deletion", path: from, renamedTo: disp });
-      }
-      if (isCodeFile(e.path) && !isIgnored(e.path, ignoreGlobs)) {
-        code.push(disp);
-        codeRepos.add(r.path);
-        if (d.untracked.has(e.path)) untrackedCode.push(disp);
-      } else nonCodeCount++;
-    }
-    if (!allowSecrets) {
-      for (const [p, lines] of d.added) {
-        for (const s of findSecrets(lines.join("\n"))) {
-          findings.push({ rule: "secret", path: displayPath(r.path, p), label: s.label, fingerprint: hash16(s.value) });
-        }
-      }
-    }
-    if (command) {
-      for (const p of checkDefinitionChanges(r.abs, d.entries, r.baseTree, r.postTree, command)) {
-        const disp = displayPath(r.path, p);
-        checkDefinitionChanged.push(disp);
-        findings.push({ rule: "check_definition_changed", path: disp, ...(allowCheckEdits ? { allowed: true } : {}) });
-      }
-    }
+    const dr = diffRules({ repoPath: r.path, abs: r.abs, entries: d.entries, added: d.added, untracked: d.untracked, baseTree: r.baseTree, postTree: r.postTree, ignoreGlobs, allowSecrets, allowTestDeletion, allowCheckEdits, command });
+    findings.push(...dr.findings);
+    code.push(...dr.code);
+    if (dr.code.length) codeRepos.add(r.path);
+    deletedTests.push(...dr.deletedTests);
+    untrackedCode.push(...dr.untrackedCode);
+    checkDefinitionChanged.push(...dr.checkDefinitionChanged);
+    nonCodeCount += dr.nonCodeCount;
   }
 
   // 4. loose files (non-git workspace root): secrets only, never code.
@@ -799,7 +861,7 @@ export async function verify(opts) {
   }
 
   // 5. decide.
-  const blocking = findings.filter((f) => f.rule !== "ignored_new_code" && !(f.rule === "check_definition_changed" && f.allowed));
+  const blocking = blockingFindings(findings);
   const messages = [];
   for (const f of blocking) {
     if (f.rule === "secret") messages.push(`Verity: ${f.path} would contain what looks like ${f.label}. Read the value from the environment or a git-ignored env file instead of writing it into the file.`);
@@ -838,11 +900,7 @@ export async function verify(opts) {
     const run = await runCheck({ command, cwd: checkCwdAbs, timeoutS, logPath: opts.checkLog || null });
     const testFiles = repoHasTestFiles(checkCwdAbs);
     const exitCode = run.exitCode;
-    const lines = [
-      { type: "event", fact: { kind: "edit", files: code, deleted: [], code } },
-      { type: "event", fact: { kind: "command", command, exitCode: run.timedOut ? 124 : exitCode, verify: true, code: [] } },
-    ];
-    const d = decideStop(lines, false, false, testFiles);
+    const d = decideDone({ code, command, exitCode: run.timedOut ? 124 : exitCode, testFiles });
     check = {
       command, source: resolved.source, cwd: checkCwdRel, exitCode: run.timedOut ? 124 : exitCode, timedOut: run.timedOut,
       durationMs: run.durationMs, outputSha256: sha256(run.output), outputBytes: run.outputBytes, hollow: d.hollowPass === true,
