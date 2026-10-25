@@ -1,1 +1,0 @@
-TS  HOME/sessions/claude-secret-near-miss.jsonl  /p

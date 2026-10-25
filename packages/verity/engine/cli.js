@@ -9,6 +9,7 @@
 //   engine/cli.js trust                       let this project's .verity.json turn checks off
 //   engine/cli.js snapshot --cwd D --out F    Verity×Swarm: record a workspace's pre-task base
 //   engine/cli.js verify --cwd D --base F     Verity×Swarm: judge the workspace against its base
+//   engine/cli.js mode [--harness H]          the hook's resolved mode / checks for a harness, as JSON
 //
 // Home: $VERITY_ENGINE_HOME, else ~/.verity/engine.
 // Existing ~/.canny sessions migrate automatically.
@@ -20,6 +21,7 @@ import { listSessions, sessionFile } from "./ledger.js";
 import { parseJsonLines } from "./util.js";
 import { migrateIfNeeded, resolveHome, sessionsDir } from "./home.js";
 import { trustCwd } from "./config.js";
+import { resolveMode } from "./mode.js";
 import { DEFAULT_CHECK_TIMEOUT_S, DEFAULT_MAX_DEPTH, EXIT, GateError, VERDICT_SCHEMA, engineFingerprint, exitCodeFor, snapshot, verify } from "./swarm.js";
 
 const HOME = resolveHome();
@@ -282,6 +284,7 @@ function help() {
       `  engine/cli.js verify --cwd D --base F --json [--check CMD ...]\n` +
       `                                            swarm gate: judge the workspace against its base\n` +
       `                                            (exit 0 pass, 1 fail, 2 unverifiable, 64 usage, 70 internal)\n` +
+      `  engine/cli.js mode [--harness H]          the hook's resolved mode / checks for a harness, as JSON\n` +
       `\n` +
       `Sessions live in ${HOME}/sessions. No model is ever consulted: only facts can block.\n`
   );
@@ -312,6 +315,11 @@ switch (cmd) {
   case "trust":
     cmdTrust();
     break;
+  case "mode": {
+    const hi = rest.indexOf("--harness");
+    process.stdout.write(JSON.stringify(resolveMode(hi === -1 ? "claude" : rest[hi + 1] ?? "claude")) + "\n");
+    break;
+  }
   default:
     help();
     break;

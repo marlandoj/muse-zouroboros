@@ -266,15 +266,22 @@ function credentialValues(text) {
  * (all matches, not just the first) plus hardcoded credential values. Used by
  * the swarm verify gate, which records only the label and a fingerprint of
  * the value — never the value itself.
+ *
+ * Applies the same per-value seeded rule as detectSecret (isSeededValue on
+ * the widened token): a seeded value contributes no finding, every unmarked
+ * value still does. No env-file branch — that is a detectSecret concern.
  */
 export function findSecrets(text) {
   const s = String(text ?? "");
   const out = [];
   for (const p of SECRET_PATTERNS) {
-    const re = new RegExp(p.re.source, "g");
-    for (const m of s.matchAll(re)) out.push({ label: p.label, value: m[0] });
+    for (const t of tokenMatches(s, p.re)) {
+      if (!isSeededValue(t.token)) out.push({ label: p.label, value: t.value });
+    }
   }
-  for (const v of credentialValues(s)) out.push({ label: "a hardcoded credential", value: v });
+  for (const v of credentialValues(s)) {
+    if (!isSeededValue(v)) out.push({ label: "a hardcoded credential", value: v });
+  }
   return out;
 }
 
@@ -310,9 +317,10 @@ function isSeededValue(v) {
 /**
  * Every value a token pattern matches, widened to the whole surrounding
  * token ([A-Za-z0-9_-] run) so a fixed-length pattern like AKIA+16 still
- * sees a marker that sits just past the matched span.
+ * sees a marker that sits just past the matched span. tokenMatches keeps
+ * the matched span too (findSecrets fingerprints it, unchanged).
  */
-function tokenValues(text, re) {
+function tokenMatches(text, re) {
   const out = [];
   const g = new RegExp(re.source, "g");
   for (const m of text.matchAll(g)) {
@@ -320,9 +328,13 @@ function tokenValues(text, re) {
     let end = m.index + m[0].length;
     while (start > 0 && /[A-Za-z0-9_-]/.test(text[start - 1])) start--;
     while (end < text.length && /[A-Za-z0-9_-]/.test(text[end])) end++;
-    out.push(text.slice(start, end));
+    out.push({ value: m[0], token: text.slice(start, end) });
   }
   return out;
+}
+
+function tokenValues(text, re) {
+  return tokenMatches(text, re).map((t) => t.token);
 }
 
 /**

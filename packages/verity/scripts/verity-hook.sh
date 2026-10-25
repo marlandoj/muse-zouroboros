@@ -23,12 +23,20 @@ answer='{}'
 # The posture is read before the engine is called, because the degraded paths must know
 # whether they are allowed to pass quietly. Shadow mode is fail-open by design: the gate
 # only observes there, so an absent engine changes nothing an operator can see.
-cfg="$VERITY_HOME/config.json"
-[ -f "$cfg" ] || cfg=/dev/null
-mode=$(jq -r --arg h "$HARNESS" '.harness[$h].mode // .mode // "shadow"' "$cfg" 2>/dev/null)
-checks=$(jq -r --arg h "$HARNESS" '(.harness[$h].checks // .checks // ["all"]) | join(",")' "$cfg" 2>/dev/null)
-mode="${VERITY_MODE:-${mode:-shadow}}"
-checks="${VERITY_CHECKS:-${checks:-all}}"
+# One resolver (engine/cli.js mode, engine/mode.js) answers for this hook, verity.sh and the
+# orchestrator's gates report. It is this repo's engine even when VERITY_ENGINE_CLI points
+# elsewhere. If it cannot answer (node or the engine tree missing), the same keys are read
+# directly, so a live gate still fails closed below; test/run.sh holds both to one answer.
+posture=$(VERITY_HOME="$VERITY_HOME" timeout 5 node "$DIR/../engine/cli.js" mode --harness "$HARNESS" 2>/dev/null)
+if ! mode=$(printf '%s' "$posture" | jq -er '.mode' 2>/dev/null) \
+   || ! checks=$(printf '%s' "$posture" | jq -er '.checks | join(",")' 2>/dev/null); then
+  cfg="$VERITY_HOME/config.json"
+  [ -f "$cfg" ] || cfg=/dev/null
+  mode=$(jq -r --arg h "$HARNESS" '.harness[$h].mode // .mode // "shadow"' "$cfg" 2>/dev/null)
+  checks=$(jq -r --arg h "$HARNESS" '(.harness[$h].checks // .checks // ["all"]) | join(",")' "$cfg" 2>/dev/null)
+  mode="${VERITY_MODE:-${mode:-shadow}}"
+  checks="${VERITY_CHECKS:-${checks:-all}}"
+fi
 
 # Engine selection. VERITY_ENGINE_CLI wins outright; CANNY_CLI is honored as
 # a deprecated alias (used by the test suite to inject a fake engine);

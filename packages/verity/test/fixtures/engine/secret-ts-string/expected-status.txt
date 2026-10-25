@@ -1,7 +1,1 @@
-session   claude-secret-ts-string.jsonl
-project   /p
-events    0
-edited    nothing that needs a check
-verified  no passing check since the last edit
-stops     none yet
-jev       0 calls, 0 cached, 0 failed
+no sessions recorded for / under HOME; `node "CLI" sessions` lists every project's

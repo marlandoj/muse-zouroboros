@@ -1,1 +1,1 @@
-{"ts":0,"type":"verdict","cwd":"/p","phase":"pre","decision":"ask","message":"Verity: this command removes src/a.test.ts from the tests. Tests are only removed or skipped when the user asked for it. Fix the code the test covers instead."}
+{"ts":0,"type":"verdict","cwd":"/p","phase":"pre","decision":"deny","message":"Verity: this command removes src/a.test.ts from the tests. Tests are only removed or skipped when the user asked for it. Fix the code the test covers instead."}
