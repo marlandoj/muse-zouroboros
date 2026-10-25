@@ -44,14 +44,25 @@ Verity previously obtained by cloning `qkal/Canny` at install time.
   `test/swarm-verify.sh`. Not changed here: the interactive hook path's
   Codex `apply_patch` blindness (#1), shell-edit blindness (#2) and the
   malformed-input `{}` answer (#5), all deferred with a documented plan.
+- **Hybrid Phase 1 (2026-10-25): the diff ledger under the hook path,
+  dual-run.** `swarm.js` exports the diff rule core, `diffRules` (test
+  deletion / rename-away on D and R entries, the secret scan over added
+  lines, check-definition changes, and the new advisory `test_skipped`
+  rule over lines added to test files — `checks.findSkipMarkers`, pinned
+  set in `test/run.sh`), with `blockingFindings` and `decideDone` (the done
+  rule over one check outcome); `verify` calls them unchanged in verdict
+  contract. `hookdiff.js` runs the same core under the hooks: SessionStart
+  records a base tree in `<home>/bases/<agent>-<session>.json` (or
+  `state: "unavailable"` with the reason: `not_a_git_tree`,
+  `untracked_files_over_cap`, `untracked_bytes_over_cap`, `snapshot_error`);
+  a passing check's fact carries `treeHash`; Stop appends `diffDecision`
+  (pass | fail | unverifiable, reason, provenance-only findings) to the
+  stop verdict line. **Record-only**: the event verdict alone answers the
+  harness, in live and shadow. No base → today's Stop path, byte for byte
+  (the parity corpus). Hook-path git work has a 2 s budget per event (the
+  wrapper kills the engine at 8 s). `writeWorkingTree` now keeps the real
+  index's mtime on its temporary copy, so git's racy-clean check still
+  re-hashes a same-size edit from the index's timestamp window. K2
+  disagreement count: `scripts/diff-disagreements.sh [engine-home]`.
+  Tests: `test/hook-diff.sh`.
 
-- **FP fixes (2026-10-25).** Driven by the adjudication of every
-  block-class verdict on record (12 verdicts: 9 true catches, 2 false
-  positives, 1 indeterminate; FP rate 16.7% against the <10% promotion
-  bar). Both fixes are in `checks.js`: a headless Godot test-runner
-  invocation now counts as a check for the done-gate (the script path
-  must signal a test run; the masking analysis is unchanged), and
-  `detectSecret` treats content as seeded test data when every matched
-  credential value carries an explicit fake-data marker
-  (`SEED_MARKER_RE`) — any unmarked value still denies, and the `.env`
-  branch is unchanged.

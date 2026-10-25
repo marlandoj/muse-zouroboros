@@ -285,6 +285,50 @@ export function findSecrets(text) {
   return out;
 }
 
+// ---------------------------------------------------------------------------
+// Skipped tests (diff rules: lines added to test files)
+// ---------------------------------------------------------------------------
+
+// The pinned marker set. Each label is what a finding records (never the
+// line itself). A marker counts only at an identifier boundary: `submit.skip(`
+// and `fixit(` do not match `it.skip(` / `xit(`.
+const SKIP_MARKERS = [
+  { re: /(?<![\w$.])(?:it|test|describe|context|suite)\.skip\s*\(/, label: "js .skip(" },
+  { re: /(?<![\w$.])(?:xit|xtest|xdescribe|xcontext)\s*\(/, label: "js x-prefixed test" },
+  { re: /(?<![\w$.])this\.skip\s*\(\s*\)/, label: "mocha this.skip()" },
+  { re: /@pytest\.mark\.skip(?:if)?(?!\w)/, label: "pytest.mark.skip" },
+  { re: /(?<![\w$.])pytest\.skip\s*\(/, label: "pytest.skip(" },
+  { re: /@unittest\.skip(?:If|Unless)?(?!\w)/, label: "unittest.skip" },
+  { re: /(?<![\w$.])self\.skipTest\s*\(/, label: "unittest skipTest(" },
+  { re: /(?<![\w$.])[tb]\.Skip(?:f|Now)?\s*\(/, label: "go t.Skip(" },
+];
+
+/** A line with its string literals emptied and its trailing comment cut (`//` or `#`); block-comment lines become empty. */
+function codeOfLine(line) {
+  const t = String(line).trim();
+  if (t.startsWith("/*") || t.startsWith("*")) return "";
+  let s = stripQuotesAndComments(t.replace(/`(?:[^`\\]|\\.)*`/g, ""));
+  const c = s.indexOf("//");
+  if (c !== -1) s = s.slice(0, c);
+  return s;
+}
+
+/**
+ * Skip markers in lines added to a test file, as [{ label }] (one per
+ * matching line, first marker wins). Comments and string contents never
+ * count; the caller decides which files are test files.
+ */
+export function findSkipMarkers(lines) {
+  const out = [];
+  for (const line of lines || []) {
+    const code = codeOfLine(line);
+    if (!code) continue;
+    const m = SKIP_MARKERS.find((k) => k.re.test(code));
+    if (m) out.push({ label: m.label });
+  }
+  return out;
+}
+
 // Extensions that never count as code for the done-gate (behaviorally
 // derived denylist: docs, images, logs, lockfiles; case-insensitive).
 // Everything else — including extensionless files — counts as code.
