@@ -46,7 +46,7 @@ import type { SwarmPlanGateConfig, ExecutorRegistryEntry } from "../src/types";
 // RB-23: single tier-to-model contract — the CC campaign path consults the
 // shared model router instead of emitting tier labels for bridges to translate.
 import { resolveModelForExecutor } from "../src/routing/model-router";
-import { renderUpstreamContext, UPSTREAM_DATA_REMINDER, type UpstreamEntry } from "../src/context/upstream-frame";
+import { renderSpecialistAdvice, renderUpstreamContext, UPSTREAM_DATA_REMINDER, type UpstreamEntry } from "../src/context/upstream-frame";
 import { EXECUTOR_REGISTRY_RELATIVE, resolveExecutorRegistryPath } from "../src/registry/loader";
 import { auditRegistryBridges, describeExclusion, notRegisteredExclusion, type BridgeExclusion } from "../src/executor/bridge-resolution";
 import { bridgeOutputFailure } from "../src/executor/bridge-output";
@@ -54,7 +54,6 @@ import { captureOutcome } from "../src/standalone/trace-outcome";
 import { syncEpisodeDocument } from "../src/episode-document";
 import {
   consultSpecialists,
-  renderSpecialistOutputs,
   resolveSpecialistConsultMode,
   type SpecialistAssignment,
   type SpecialistConsultEvidence,
@@ -2190,7 +2189,9 @@ class SwarmOrchestrator {
           specialistCostUsd,
         };
       }
-      specialistAdvice = renderSpecialistOutputs(advice);
+      // Specialist output is model-written text: it reaches the prompt only as
+      // fenced, labelled data (see src/context/upstream-frame.ts).
+      specialistAdvice = renderSpecialistAdvice(advice.evidence);
     }
 
     let retries = 0;
@@ -2540,7 +2541,7 @@ class SwarmOrchestrator {
         chars: upstreamContext.length,
       });
     }
-    const taskSection = () => `## Your Task\n\n${basePrompt}` + (upstreamContext ? `\n\n${UPSTREAM_DATA_REMINDER}` : "");
+    const taskSection = () => `## Your Task\n\n${basePrompt}` + (upstreamContext || specialistAdvice ? `\n\n${UPSTREAM_DATA_REMINDER}` : "");
 
     // Failure context from previous attempts
     let failureContext = "";
@@ -2567,7 +2568,7 @@ Consider approaching this as a "${stagnation.suggestedPersona}" would.
 
     // Assemble prompt
     let fullPrompt = "";
-    if (specialistAdvice) fullPrompt += `## Specialist Advice\n${specialistAdvice}\n\n`;
+    if (specialistAdvice) fullPrompt += specialistAdvice + "\n";
     if (personaContext) fullPrompt += personaContext + "\n";
     if (failureContext) fullPrompt += failureContext;
     if (unstuckAdvisory) fullPrompt += unstuckAdvisory;
