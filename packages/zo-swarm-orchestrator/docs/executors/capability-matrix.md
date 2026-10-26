@@ -58,6 +58,10 @@ After selecting the executor, the orchestrator resolves the model from the share
 4. Last-known-good catalog model.
 5. Static floor or compatible fallback, with a recorded fallback reason.
 
+An explicit model is not guaranteed to be the model that runs: step 5 can
+replace a model the selected executor does not accept. See "Known issues" in
+`docs/swarm.md` at the repository root.
+
 The catalog is generated from the model-intelligence feed. Light candidates are capped at $2/M output and mid candidates at $15/M; heavy candidates have no price ceiling. A candidate becomes routable only after a real bridge probe and three-task canary. A stale or missing catalog never blocks the swarm.
 
 The DAG passes the resolved value to every transport as `SWARM_RESOLVED_MODEL`. ACP adapters apply it through an environment variable, ACP session configuration, or an ACP extension according to the registry. Bridge executors receive the same task-scoped environment value. A fallback executor re-resolves the model against its own accepted model family before dispatch.

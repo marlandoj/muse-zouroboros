@@ -7,8 +7,10 @@ it across the AI CLIs installed on your machine (`packages/zo-swarm-executors`
 describes them). Each task is routed to the best *healthy* executor by a
 6-signal composite router (capability match, cost, latency history, procedure
 memory, temporal signals, load), with circuit breakers, fallback chains, a
-budget governor. Executors run sandboxed (systemd/cgroup) with prestaged user
-namespaces.
+budget governor. Executors run as the user who starts the orchestrator, with
+that user's privileges, credentials and environment; there is no OS sandbox
+by default. Read the executor trust model in `SECURITY.md` before you point
+the swarm at anything sensitive.
 
 Why: you already pay for several model subscriptions (Claude Max, ChatGPT,
 API credits). The swarm arbitrages across them — heavy reasoning where it's
@@ -80,10 +82,28 @@ server and let Muse file runs instead of doing large builds inline.
   next fallback in the chain.
 - **Budget exceeded** → the governor stops dispatching new tasks; running
   tasks finish.
-- **Sandbox denied** (e.g. user namespaces unavailable) → prestaged fallback,
-  then unsandboxed with a ledger note. Never silent.
 - **Hook/bridge crashes** → stderr diagnostics, non-zero exit, task marked
   failed with the evidence attached.
+
+## Known issues
+
+- **A model named on a task can be overridden.** The model router in this
+  release is frozen, and its fallback logic can replace the model a task
+  asks for. If the routed executor does not accept that model (for example
+  after a reroute to a different executor), the router substitutes the
+  executor's static fallback or default model and records only a fallback
+  reason. Tier aliases (light/mid/heavy) resolve through pins and the
+  catalog, not to a fixed model. Set models explicitly: pin `executor` on the
+  task, name a concrete model id that executor accepts rather than an alias,
+  set `modelPins` in the executor registry for the tiers you rely on, and
+  check `modelUsed` in the results file.
+- **Pi needs an MCP config, or its probe fails on a clean install.** The Pi
+  bridge builds its MCP configuration from a `.mcp.json` in the task
+  workspace (or a parent directory), or from the file named by
+  `PI_MCP_CONFIG_PATH`. With neither, the Pi health probe fails and Pi is
+  reported unhealthy. Create a `.mcp.json` in the workspace
+  (`{"mcpServers": {}}` is enough) or set `PI_MCP_CONFIG_PATH` to an
+  absolute path.
 
 ## Operating notes
 
