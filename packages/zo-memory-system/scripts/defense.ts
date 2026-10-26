@@ -59,6 +59,9 @@ const SECRET_PATTERNS: DefensePattern[] = [
   { name: 'openai_api_key', kind: 'secret', regex: /\bsk-[A-Za-z0-9_-]{20,}\b/g },
   { name: 'slack_token', kind: 'secret', regex: /\bxox[baprs]-[A-Za-z0-9-]{10,}\b/g },
   { name: 'google_api_key', kind: 'secret', regex: /\bAIza[0-9A-Za-z_-]{35}\b/g },
+  // Google AI Studio "auth keys" (AQ.Ab8…), issued instead of AIza… keys since 2026.
+  { name: 'google_auth_key', kind: 'secret', regex: /\bAQ\.[A-Za-z0-9_-]{20,}/g },
+  { name: 'synthetic_api_key', kind: 'secret', regex: /\bsyn_[A-Za-z0-9]{20,}\b/g },
   { name: 'stripe_key', kind: 'secret', regex: /\b[rs]k_(?:live|test)_[A-Za-z0-9]{16,}\b/g },
   {
     name: 'private_key_block', kind: 'secret',

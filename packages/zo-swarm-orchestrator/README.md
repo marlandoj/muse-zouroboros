@@ -23,7 +23,7 @@ pnpm add zouroboros-swarm
 
 ### ACP Adapter Prerequisites
 
-The swarm uses the [Agent Client Protocol (ACP)](https://github.com/agentclientprotocol) for Claude Code, Codex, Gemini, Hermes, OpenCode, and Kimi. Pi uses an isolated one-shot bridge. Install the required adapter binaries before running:
+The swarm uses the [Agent Client Protocol (ACP)](https://github.com/agentclientprotocol) for Claude Code, Codex, Gemini, Hermes, OpenCode, and Kimi. Pi uses a one-shot bridge (no session state; it is not an OS sandbox). Install the required adapter binaries before running:
 
 ```bash
 # Install all ACP adapters
@@ -44,7 +44,7 @@ bash packages/swarm/scripts/install-acp-adapters.sh --update
 | Hermes | `hermes acp --accept-hooks` | runtime source |
 | OpenCode | `opencode acp --pure` | `opencode-ai` |
 | Kimi | Kimi native ACP through `kimi-bridge.sh` | `kimi-cli` |
-| Pi | isolated bridge + Pi MCP adapter | `@earendil-works/pi-coding-agent` |
+| Pi | one-shot bridge + Pi MCP adapter | `@earendil-works/pi-coding-agent` |
 
 ## Quick Start
 

@@ -41,8 +41,9 @@ adaptive decay, and per-workload model routing.
 
 Task orchestration across local harness executors: DAG definition, 6-signal
 composite routing, circuit-breaker health checks, fallback chains, budget
-governor, systemd/cgroup sandboxing, and a
-57-role specialist roster with persona consult.
+governor, opt-in resource limits for ACP executors, and a 57-role specialist
+roster with persona consult. Executors are not sandboxed by default; see the
+executor trust model in `SECURITY.md`.
 
 - **Entry points:** `bun scripts/orchestrate-v5.ts` (`doctor`, `status`),
   `bun scripts/tier-resolve.ts`, MCP servers (`mcp`, `mcp-http`).
