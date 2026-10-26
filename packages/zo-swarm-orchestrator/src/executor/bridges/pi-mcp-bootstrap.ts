@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, isAbsolute, join } from 'node:path';
+import { renderMemoryBriefing } from '../../context/upstream-frame.js';
 
 type JsonMcpServer = {
   command?: unknown;
@@ -64,7 +65,8 @@ export async function buildPiPrompt(
     if (!response.ok) return prompt;
     const context = (await response.text()).trim();
     if (!context || context === 'null') return prompt;
-    return `${prompt}\n\n[SESSION BRIEFING - Zo Shared Memory]\n${context}`;
+    // Memory-gate output is fenced as data, never appended as instructions.
+    return `${prompt}\n\n${renderMemoryBriefing(context)}`;
   } catch {
     return prompt;
   }

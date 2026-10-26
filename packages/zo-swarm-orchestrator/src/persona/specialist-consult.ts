@@ -538,6 +538,11 @@ export async function consultSpecialists(
   };
 }
 
+/**
+ * Plain-text rendering for display and evidence records. Not for prompts:
+ * prompt paths use renderSpecialistAdvice() in context/upstream-frame.ts,
+ * which fences the output as data.
+ */
 export function renderSpecialistOutputs(result: SpecialistConsultResult): string {
   return result.evidence
     .filter((entry) => entry.status === "invoked" && entry.output)

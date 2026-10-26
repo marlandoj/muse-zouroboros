@@ -16,6 +16,7 @@ import { spawn, spawnSync, ChildProcess } from 'child_process';
 import { Writable, Readable } from 'stream';
 import type { Task, TaskResult, ExecutorRegistryEntry, WayfinderShadowConfig } from '../types.js';
 import { CircuitBreaker } from '../circuit/breaker.js';
+import { renderMemoryBriefing } from '../context/upstream-frame.js';
 import type {
   ExecutorTransport,
   TransportOptions,
@@ -945,7 +946,8 @@ export async function buildAcpPrompt(
     if (!response.ok) return task.task;
     const context = (await response.text()).trim();
     if (!context || context === 'null') return task.task;
-    return `${task.task}\n\n[SESSION BRIEFING - Zo Shared Memory]\n${context}`;
+    // Memory-gate output is fenced as data, never appended as instructions.
+    return `${task.task}\n\n${renderMemoryBriefing(context)}`;
   } catch {
     return task.task;
   }

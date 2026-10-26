@@ -50,8 +50,10 @@ executor and that account:
   key files the user can read, and the credential stores of every installed
   CLI, not only its own.
 - Task content can come from other models: upstream task output, recalled
-  memory, files in the workspace. The orchestrator passes upstream output to
-  later tasks as fenced data rather than as instructions. That reduces prompt
+  memory, files in the workspace. The orchestrator passes upstream output,
+  specialist-consult advice and the memory-gate briefing to executors as
+  fenced data rather than as instructions, and the memory-gate hook fences
+  what it injects into the host prompt the same way. That reduces prompt
   injection; it is not a security boundary. An executor that follows injected
   text still acts with your full privileges.
 
