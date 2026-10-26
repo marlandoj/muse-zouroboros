@@ -10,6 +10,10 @@ name: ip-guard
 on:
   pull_request:
     branches: [main]
+  # Every push to any branch is scanned too, so a direct push (which branch
+  # protection should refuse on main) is observed failing immediately.
+  push:
+    branches: ['**']
 
 jobs:
   ip-guard:
@@ -20,6 +24,8 @@ jobs:
       - name: Scan tracked files for Tier 3 markers and forbidden paths
         run: |
           set -u
+          # byte-order collation so sort and comm agree on every runner locale
+          export LC_ALL=C
           fail=0
           sort -u .github/ip-guard-baseline.txt > /tmp/baseline.txt
 
