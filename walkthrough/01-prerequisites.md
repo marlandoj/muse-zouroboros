@@ -10,14 +10,33 @@ host with the same shape works — the only hard assumption is a persistent
 
 Install Bun (memory system, swarm, factory lane), Node 22+ (hooks, verity's
 engine), and Python 3.11+ (wayfinder engine). Also needed: `git`, `jq`,
-`bash`, GNU `timeout`.
+`bash`, and `timeout` (GNU coreutils).
 
-Bun is not in most distro package managers; the official installer puts it
-in `~/.bun/bin` (open a new shell afterwards so it is on `PATH`):
+You don't have to work out the install commands yourself. The installer
+(`quickstart.sh`, and `bootstrap.sh` when run directly) checks every one of
+these first. For anything missing or too old, it prints the exact commands
+for your distro family (Debian/Ubuntu, Fedora, Arch, or generic package
+names and upstream links). It never runs them and never uses `sudo`: you
+run them, then re-run the installer. For reference, on Debian/Ubuntu:
 
 ```bash
+# bun: not in most distro package managers; the official installer puts
+# it in ~/.bun/bin
 curl -fsSL https://bun.sh/install | bash
+export PATH="$HOME/.bun/bin:$PATH"   # or open a new shell
+
+# Node 22 (NodeSource)
+curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# git, python3, jq, timeout (coreutils)
+sudo apt-get update && sudo apt-get install -y git python3 jq coreutils
 ```
+
+The Bun installer adds `~/.bun/bin` to your *interactive* shell profile only.
+That means a non-interactive shell (`ssh host 'command'`, cron, CI) won't
+have it on `PATH`. The installer checks `~/.bun/bin`, `~/.local/bin` and
+`~/bin` before it reports a tool missing.
 
 Check them all:
 
@@ -25,6 +44,7 @@ Check them all:
 bun --version
 node --version     # want v22+
 python3 --version  # want 3.11+
+git --version; jq --version; timeout --version
 ```
 
 ## Agent CLIs (your executors)
@@ -74,7 +94,7 @@ Clone this repo to `~/workspace/zouroboros-for-muse` and `cd` into it.
 
 ## Prove it
 
-- [ ] `bun --version`, `node --version` (v22+), `python3 --version` (3.11+)
+- [ ] `bun --version`, `node --version` (v22+), `python3 --version` (3.11+), and `git`, `jq`, `timeout` all present
 - [ ] At least two agent CLIs installed and authenticated
 - [ ] `~/.config/zouroboros/apis.env` exists at mode 600 with `OPENAI_API_KEY`
 

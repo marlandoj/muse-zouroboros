@@ -14,15 +14,21 @@ same thing by hand.
 ## The concierge path (recommended)
 
 **Ask Muse to set up Zouroboros.** That's it — that's the step. Muse hands
-you one command:
+you one command, and it needs nothing but `bash` and `curl`:
 
 ```bash
-npx -y muse-zouroboros@latest
+curl -fsSL https://raw.githubusercontent.com/marlandoj/muse-zouroboros/main/scripts/quickstart.sh | bash
 ```
 
-(The curl equivalent: `curl -fsSL https://raw.githubusercontent.com/marlandoj/muse-zouroboros/main/scripts/quickstart.sh | bash`.)
+(If Node is already installed, `npx -y muse-zouroboros@latest` runs the same
+installer. On a fresh machine, use the curl form: npx needs Node first.)
 
-Paste it into a terminal. The installer clones the repo, runs the setup
+Paste it into a terminal. It checks the prerequisites first (Bun, Node 22+,
+Python 3.11+, git, jq, `timeout`). If any are missing, it stops before
+cloning anything and prints the exact install commands for your distro.
+It never installs them itself and never uses `sudo`: run the commands,
+then paste the installer command again. When everything is there, the
+installer clones the repo, runs the setup
 (answering its questions as they come), verifies the install, and prints a
 handoff block. **Paste the handoff block back to Muse.** From there, Muse
 reads what's green and red, walks you through anything that needs
@@ -44,8 +50,10 @@ Prefer to drive? Everything below is what the concierge path does for you.
 
 Two things, and the second one is the one that matters:
 
-1. **A machine with the basics.** Bun, Node 22+, Python 3.11+, git, jq.
-   `bootstrap.sh` checks all of these and tells you exactly what's missing.
+1. **A machine with the basics.** Bun, Node 22+, Python 3.11+, git, jq,
+   and `timeout` (GNU coreutils). `bootstrap.sh` checks all of these, and
+   for anything missing or too old it prints the exact install commands
+   for your distro. It does not install them for you.
 2. **One AI builder.** Either a coding subscription you already pay for
    (Claude Code, Codex CLI, Gemini CLI, OpenCode, Kimi, or Pi — CLI
    installed and logged in), **or** the Gemini CLI free tier: a personal
