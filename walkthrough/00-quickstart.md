@@ -24,8 +24,9 @@ curl -fsSL https://raw.githubusercontent.com/marlandoj/muse-zouroboros/main/scri
 installer. On a fresh machine, use the curl form: npx needs Node first.)
 
 Paste it into a terminal. It checks the prerequisites first (Bun, Node 22+,
-Python 3.11+, git, jq, `timeout`). If any are missing, it stops before
-cloning anything and prints the exact install commands for your distro.
+Python 3.11+, git, jq, `timeout`, plus `unzip` while Bun still needs
+installing). If any are missing, it stops before cloning anything and
+prints the exact install commands for your distro, system packages first.
 It never installs them itself and never uses `sudo`: run the commands,
 then paste the installer command again. When everything is there, the
 installer clones the repo, runs the setup

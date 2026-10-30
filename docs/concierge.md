@@ -27,11 +27,13 @@ happens in chat.
 
 **If it stops at `MISSING PREREQUISITES`** instead of printing a handoff,
 the preflight found a missing or too-old tool (bun, node 22+, python3
-3.11+, git, jq, timeout). Nothing was cloned or created. The block names
-each tool and gives the exact install commands for their distro. Have them
-run those commands and then paste the installer command again. They'll
-need `sudo` for the system packages. The installer never runs sudo
-itself, and you shouldn't paper over that.
+3.11+, git, jq, timeout, and unzip when bun is missing, because the bun
+installer needs it). Nothing was cloned or created. The block names each
+tool and gives the exact install commands for their distro, system
+packages first. Have them run those commands in the order printed, then
+paste the installer command again. They'll need `sudo` for the system
+packages. The installer never runs sudo itself, and you shouldn't paper
+over that.
 
 ## Reading the handoff block
 
@@ -128,8 +130,9 @@ is a question for me, not a chore for you." Point yourself at
 Users will ask. The true answers:
 
 - Checks prerequisites first (bun, node 22+, python3 3.11+, git, jq,
-  timeout). If any are missing, it prints the install commands for their
-  distro and stops before cloning. It never installs them itself.
+  timeout, plus unzip when bun is missing). If any are missing, it prints
+  the install commands for their distro and stops before cloning. It never
+  installs them itself.
 - Clones the repo to `~/workspace/muse-zouroboros` (or a path they choose
   as the script's first argument).
 - Runs `bootstrap.sh`: checks prerequisites, creates `~/.zo/` and
