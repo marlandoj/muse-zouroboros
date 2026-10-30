@@ -29,7 +29,7 @@ import {
   resolveWayfinderLivePick,
   wayfinderInjectionArmed,
   type WayfinderSuggestion,
-} from './transport/acp-transport.js';
+} from './transport/wayfinder-rank.js';
 import type { WayfinderShadowConfig } from './types.js';
 
 /** One task's ranking, carried from dispatch to the post-attempt label. */
