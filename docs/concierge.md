@@ -12,15 +12,26 @@ When a user asks to set up, install, or try Zouroboros, give them exactly
 this and nothing else to start:
 
 ```bash
-npx -y muse-zouroboros@latest
+curl -fsSL https://raw.githubusercontent.com/marlandoj/muse-zouroboros/main/scripts/quickstart.sh | bash
 ```
 
-(The `-y` skips npx's install prompt and `@latest` dodges its cache, so
-the user always gets the newest installer.)
+It needs nothing but `bash` and `curl`, so it works on a fresh machine.
+If the user already has Node, `npx -y muse-zouroboros@latest` runs the same
+installer. The `-y` skips npx's install prompt and `@latest` dodges its
+cache. Don't lead with npx: on a machine without Node it fails in the shell
+before the installer can explain anything.
 
 Tell them: paste it into a terminal, answer its questions, then paste the
 `CONCIERGE HANDOFF` block it prints back to you. Everything after that
 happens in chat.
+
+**If it stops at `MISSING PREREQUISITES`** instead of printing a handoff,
+the preflight found a missing or too-old tool (bun, node 22+, python3
+3.11+, git, jq, timeout). Nothing was cloned or created. The block names
+each tool and gives the exact install commands for their distro. Have them
+run those commands and then paste the installer command again. They'll
+need `sudo` for the system packages. The installer never runs sudo
+itself, and you shouldn't paper over that.
 
 ## Reading the handoff block
 
@@ -116,6 +127,9 @@ is a question for me, not a chore for you." Point yourself at
 
 Users will ask. The true answers:
 
+- Checks prerequisites first (bun, node 22+, python3 3.11+, git, jq,
+  timeout). If any are missing, it prints the install commands for their
+  distro and stops before cloning. It never installs them itself.
 - Clones the repo to `~/workspace/muse-zouroboros` (or a path they choose
   as the script's first argument).
 - Runs `bootstrap.sh`: checks prerequisites, creates `~/.zo/` and

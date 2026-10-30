@@ -12,7 +12,7 @@ you move on. Total time: an afternoon, most of it waiting on installs.
 
 | Step | What you do | What you get |
 |---|---|---|
-| 01 | Prerequisites | A machine that's ready: Bun, Node, Python, CLIs, one API key |
+| 01 | Prerequisites | A machine that's ready: Bun, Node, Python, git, jq, timeout, CLIs, one API key |
 | 02 | Core install | `scripts/bootstrap.sh`: directories, registry paths, key file |
 | 03 | Memory | zo-memory storing and retrieving; MCP wired into one harness |
 | 04 | Swarm | Executors healthy in `doctor`; a real 2-task DAG run |

@@ -98,16 +98,22 @@ A hosted workshop is an MCP server your Muse connects to. Everything below is a 
 
 **Easiest: ask Muse to set you up.** Muse hands you one command, you paste
 it into a terminal, then paste the result back — Muse walks you through
-the rest in chat. You need [Bun](https://bun.sh) first (the installer
-stops and tells you if it's missing), plus Node 22+, Python 3.11+, `git`,
-`jq` — [full list](walkthrough/01-prerequisites.md):
+the rest in chat. The command needs nothing but `bash` and `curl`:
 
 ```bash
-curl -fsSL https://bun.sh/install | bash   # once, then open a new shell
-npx -y muse-zouroboros@latest
+curl -fsSL https://raw.githubusercontent.com/marlandoj/muse-zouroboros/main/scripts/quickstart.sh | bash
 ```
 
-(Prefer curl? `curl -fsSL https://raw.githubusercontent.com/marlandoj/muse-zouroboros/main/scripts/quickstart.sh | bash` does the same thing.)
+Before it touches git or disk, the installer checks the workshop's
+prerequisites — Bun, Node 22+, Python 3.11+, `git`, `jq` and `timeout`
+(GNU coreutils) — [full list](walkthrough/01-prerequisites.md). If any are
+missing or too old, it stops and prints the exact commands that install
+them on your Linux distro. It never installs them itself and never uses
+`sudo`: you run the commands, then run the installer again.
+
+(Already have Node? `npx -y muse-zouroboros@latest` runs the same
+installer. npx needs Node and npm installed first, so on a fresh machine
+use the curl form.)
 
 **Short on time but prefer to drive?** Start with
 [walkthrough/00-quickstart.md](walkthrough/00-quickstart.md) — install,
