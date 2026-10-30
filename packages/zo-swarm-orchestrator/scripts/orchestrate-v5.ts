@@ -77,6 +77,7 @@ import { HierarchicalMemory, SlidingWindowMemory, MemoryItem, MemoryStrategy } f
 
 // v5.1: RAG enrichment — auto-inject relevant SDK patterns from Agentic RAG
 import { enrichTaskWithRAG, shouldEnrichWithRAG } from "./rag-enrichment";
+import { labelBridgeTask, rankBridgeTask, readWayfinderConfig, type BridgeWayfinderRanking } from "../src/wayfinder-bridge";
 
 // v5.2: Dep-graph — file dependency analysis for write-scope conflict detection
 import { buildDepGraph } from "./dep-graph";
@@ -2200,6 +2201,14 @@ class SwarmOrchestrator {
     const tried = new Set<string>();
     const exhaustedExecutors = new Set<string>();
     let recentOutputs: string[] = [];
+    // Wayfinder: ranked once per task, labelled once after the attempt it ranked.
+    let wayfinderRanked = false;
+    let wayfinderRanking: BridgeWayfinderRanking | undefined;
+    const labelWayfinder = () => {
+      const ranking = wayfinderRanking;
+      wayfinderRanking = undefined;
+      if (ranking) labelBridgeTask(ranking, WORKSPACE, process.env);
+    };
 
     while (retries <= this.config.maxRetries) {
       // Route to executor — with fallback chain awareness
@@ -2291,13 +2300,25 @@ class SwarmOrchestrator {
       const { model: resolvedModel, source: modelSource } = routed ?? resolveModelFromTier(task);
 
       // Build optimized prompt
-      const prompt = await this.buildOptimizedPrompt(task, exid, retries > 0 ? recentOutputs : [], specialistAdvice);
+      let prompt = await this.buildOptimizedPrompt(task, exid, retries > 0 ? recentOutputs : [], specialistAdvice);
+
+      // Wayfinder (src/wayfinder-bridge.ts): shadow ranks out of band; canary/live
+      // appends the suggestion only with WAYFINDER_LIVE_INJECT=1 in this env.
+      if (!wayfinderRanked && retries === 0 && reroutes === 0) {
+        wayfinderRanked = true;
+        wayfinderRanking = await rankBridgeTask(task, exid, readWayfinderConfig(REGISTRY, exid), process.env, WORKSPACE);
+        if (wayfinderRanking) {
+          if (wayfinderRanking.injected) prompt += wayfinderRanking.promptSuffix;
+          console.log(`  🧭 [${task.id}] wayfinder ${wayfinderRanking.injected ? `injected pick '${wayfinderRanking.pick}'` : "shadow ranking dispatched"} invocation=${wayfinderRanking.suggestion.invocationId} (${wayfinderRanking.elapsedMs}ms)`);
+        }
+      }
 
       console.log(`  ▶️  [${task.id}] ${exid} (attempt ${retries + 1}/${this.config.maxRetries + 1}, reroute ${reroutes}/${MAX_REROUTES}) model=${resolvedModel} [${modelSource}] tier=${complexity.tier}`);
 
       const t0 = Date.now();
       try {
-        const invocation = await this.callLocalAgent(exid, bridge, prompt, timeout, resolvedModel, complexity.tier);
+        const invocation = await this.callLocalAgent(exid, bridge, prompt, timeout, resolvedModel, complexity.tier)
+          .finally(labelWayfinder);
         const duration = Date.now() - t0;
         const childRecords = invocation.childRecords.map(record => ({
           ...record,
