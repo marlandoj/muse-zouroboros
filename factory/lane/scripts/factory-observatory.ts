@@ -47,7 +47,9 @@ import {
 import { readFactoryLog, defaultSources } from "./factory-collect";
 import { computeSurvivability, loadSurvivabilityConfig, readFateLedger, type SurvivalBucket } from "./survivability-core";
 import { readLedger, type LedgerEntry } from "./approval-ledger";
-import { loadRuntimeConfig, divergenceFrom, configHash, TICKS_PATH, type RuntimeConfigFile } from "./runtime-config";
+import { loadRuntimeConfig, divergenceFrom, configHash, CONFIG_PATH, CONFIG_PATH_OVERRIDDEN, RUNTIME_FLAGS_PATH_ENV, TICKS_PATH, type RuntimeConfigFile } from "./runtime-config";
+import { resolveCampaignPersonaOrchestrationMode } from "./persona-orchestrator";
+import { createHash } from "node:crypto";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 
@@ -76,6 +78,29 @@ export interface ModeSurface {
   label: string;
   mode: SurfaceMode;
   source: string;
+  /** Human qualifier rendered beside the mode, e.g. "canary (low-risk only)". */
+  detail?: string;
+}
+
+/** The last conveyor tick from config-ticks.jsonl (what a running conveyor actually loaded). */
+export interface ConveyorTick {
+  at: string | null;
+  source: string | null;
+  version: number | null;
+  hash: string | null;
+  persona_mode: string | null;
+}
+
+/** Which flags file the board read, so two lines can never silently disagree. */
+export interface FlagsHome {
+  path: string;
+  overridden: boolean;
+  override_env: string;
+  version: number | null;
+  sha256: string | null;
+  config_hash: string | null;
+  ticks_path: string;
+  last_tick: ConveyorTick | null;
 }
 
 export interface ObservatoryAlert {
@@ -141,6 +166,7 @@ export interface ObservatorySnapshot {
   };
   modes: {
     shadow_phase: string | null;
+    flags_home: FlagsHome;
     surfaces: ModeSurface[];
     actions_by_mode: Record<SurfaceMode, string[]>;
   };
@@ -184,13 +210,44 @@ function enumMode(v: string | null): SurfaceMode {
   return "off";
 }
 
+export interface DeriveSurfacesOptions {
+  /** Env the persona resolver sees (HOME locates the panel promotion file). */
+  env?: Record<string, string | undefined>;
+  /** Explicit panel promotion file (tests); defaults to the runner's path. */
+  panelPath?: string;
+  /** Last conveyor tick, rendered beside the persona mode. */
+  lastTick?: ConveyorTick | null;
+}
+
+/**
+ * Persona review mode, decided by the same resolver the runner uses
+ * (resolveCampaignPersonaOrchestrationMode). With enforce set and the panel
+ * unpromoted, only low-risk campaigns enforce: that is a canary, never "live".
+ */
+function personaSurface(config: RuntimeConfigFile | null, opts: DeriveSurfacesOptions): ModeSurface {
+  const flag = flagValue(config, "FACTORY_PERSONA_ROUTING_MODE");
+  const tick = opts.lastTick === undefined ? undefined : opts.lastTick === null ? "last conveyor tick: never" : `last conveyor tick: ${opts.lastTick.at ?? "unknown"}${opts.lastTick.persona_mode ? ` (flag at tick: ${opts.lastTick.persona_mode})` : ""}`;
+  const base = { id: "diversity_review", label: "Persona Diversity of Thought review", source: "FACTORY_PERSONA_ROUTING_MODE" };
+  const withTick = (detail: string | undefined) => {
+    const parts = [detail, tick].filter((p): p is string => Boolean(p));
+    return parts.length > 0 ? { detail: parts.join(" · ") } : {};
+  };
+  if (flag !== "enforce") return { ...base, mode: enumMode(flag), ...withTick(undefined) };
+  const env = { ...(opts.env ?? process.env), FACTORY_PERSONA_ROUTING_MODE: flag };
+  const lowRisk = resolveCampaignPersonaOrchestrationMode({ risk_tier: "low" }, env, opts.panelPath);
+  const highRisk = resolveCampaignPersonaOrchestrationMode({ risk_tier: "high" }, env, opts.panelPath);
+  if (highRisk === "enforce") return { ...base, mode: "live", source: "FACTORY_PERSONA_ROUTING_MODE+panel promoted", ...withTick("enforce (panel promoted, all risk tiers)") };
+  if (lowRisk === "enforce") return { ...base, mode: "canary", source: "FACTORY_PERSONA_ROUTING_MODE+panel unpromoted", ...withTick("canary (low-risk only)") };
+  return { ...base, mode: enumMode(lowRisk), ...withTick(undefined) };
+}
+
 /**
  * Every mode is a mechanical function of runtime-flags.json — no judgment
  * calls at render time. Auto-merge maps 1 -> canary by charter: the L4 plan
  * only ever authorizes one-at-a-time canary merges; expansion past canary
  * requires a new operator decision and a new mapping here.
  */
-export function deriveSurfaces(config: RuntimeConfigFile | null): ModeSurface[] {
+export function deriveSurfaces(config: RuntimeConfigFile | null, opts: DeriveSurfacesOptions = {}): ModeSurface[] {
   const pool = flagValue(config, "SF003_POOL");
   const poolMode = flagValue(config, "SF003_POOL_MODE");
   const assemblyMode: SurfaceMode =
@@ -201,7 +258,7 @@ export function deriveSurfaces(config: RuntimeConfigFile | null): ModeSurface[] 
     { id: "scenario_gate", label: "Digital-twin scenario gate (SF-009)", mode: boolMode(flagValue(config, "SF009_SCENARIOS"), "live", "advisory"), source: "SF009_SCENARIOS" },
     { id: "dedup_gate", label: "Dedup gate (SF-006)", mode: flagValue(config, "SF006_ENFORCE") === "1" ? "live" : boolMode(flagValue(config, "SF006_DEDUP"), "advisory"), source: "SF006_DEDUP+SF006_ENFORCE" },
     { id: "consensus_review", label: "Legacy model consensus review", mode: enumMode(flagValue(config, "FACTORY_MODEL_REVIEW")), source: "FACTORY_MODEL_REVIEW" },
-    { id: "diversity_review", label: "Persona Diversity of Thought review", mode: enumMode(flagValue(config, "FACTORY_PERSONA_ROUTING_MODE")), source: "FACTORY_PERSONA_ROUTING_MODE" },
+    personaSurface(config, opts),
     { id: "review_gate", label: "Review gate", mode: enumMode(flagValue(config, "FACTORY_REVIEW_GATE_MODE")), source: "FACTORY_REVIEW_GATE_MODE" },
     { id: "first_pass_validation", label: "Independent first-pass validation", mode: enumMode(process.env.FIRST_PASS_VALIDATION_MODE ?? flagValue(config, "FIRST_PASS_VALIDATION_MODE")), source: "FIRST_PASS_VALIDATION_MODE" },
     { id: "serial_promotion", label: "Serial promotion", mode: enumMode(flagValue(config, "FACTORY_SERIAL_PROMOTION")), source: "FACTORY_SERIAL_PROMOTION" },
@@ -213,6 +270,53 @@ export function deriveSurfaces(config: RuntimeConfigFile | null): ModeSurface[] 
 }
 
 // ─── Section collectors (each failure-isolated) ───────────────────────────────
+
+/** Last line of config-ticks.jsonl, or null when no conveyor ever ticked. */
+export function readLastConveyorTick(ticksPath: string, errors: string[]): ConveyorTick | null {
+  try {
+    if (!existsSync(ticksPath)) return null;
+    const lines = readFileSync(ticksPath, "utf8").trim().split("\n").filter(Boolean);
+    if (lines.length === 0) return null;
+    const t = JSON.parse(lines[lines.length - 1]) as Record<string, unknown>;
+    const effective = (t.effective ?? null) as Record<string, unknown> | null;
+    const hash = typeof t.hash === "string" ? t.hash : typeof t.config_hash === "string" ? t.config_hash : null;
+    return {
+      at: typeof t.at === "string" ? t.at : null,
+      source: typeof t.source === "string" ? t.source : null,
+      version: typeof t.version === "number" ? t.version : null,
+      hash,
+      persona_mode: effective && typeof effective.FACTORY_PERSONA_ROUTING_MODE === "string" ? effective.FACTORY_PERSONA_ROUTING_MODE : null,
+    };
+  } catch (err) {
+    errors.push(`config-ticks.jsonl: ${String(err)}`);
+    return null;
+  }
+}
+
+export function collectFlagsHome(
+  loaded: ReturnType<typeof loadRuntimeConfig>,
+  errors: string[],
+  paths: { configPath?: string; overridden?: boolean; ticksPath?: string } = {},
+): FlagsHome {
+  const path = paths.configPath ?? CONFIG_PATH;
+  const ticksPath = paths.ticksPath ?? TICKS_PATH;
+  let sha256: string | null = null;
+  try {
+    if (existsSync(path)) sha256 = createHash("sha256").update(readFileSync(path)).digest("hex");
+  } catch (err) {
+    errors.push(`flags sha256: ${String(err)}`);
+  }
+  return {
+    path,
+    overridden: paths.overridden ?? CONFIG_PATH_OVERRIDDEN,
+    override_env: RUNTIME_FLAGS_PATH_ENV,
+    version: loaded.ok ? loaded.config.version : null,
+    sha256,
+    config_hash: loaded.ok ? loaded.hash : null,
+    ticks_path: ticksPath,
+    last_tick: readLastConveyorTick(ticksPath, errors),
+  };
+}
 
 function readShadowPhase(errors: string[]): string | null {
   const p = join(STATE_DIR, "shadow-state.json");
@@ -498,8 +602,10 @@ export function deriveAlerts(
         if (lines.length > 0) {
           const lastTick = JSON.parse(lines[lines.length - 1]);
           const currentHash = configHash(config.flags);
-          if (typeof lastTick.config_hash === "string" && lastTick.config_hash !== currentHash) {
-            alerts.push({ id: "config_drift_tick", severity: "warning", surface: "runtime_config", mode: "live", message: "last conveyor tick recorded a different config hash than the current file — activation pending or unrecorded", value: lastTick.config_hash, threshold: currentHash });
+          // recordTick writes `hash`; `config_hash` is the legacy key.
+          const tickHash = typeof lastTick.hash === "string" ? lastTick.hash : typeof lastTick.config_hash === "string" ? lastTick.config_hash : null;
+          if (tickHash !== null && tickHash !== currentHash) {
+            alerts.push({ id: "config_drift_tick", severity: "warning", surface: "runtime_config", mode: "live", message: `last conveyor tick (${typeof lastTick.at === "string" ? lastTick.at : "unknown"}) recorded a different config hash than the current file — activation pending or unrecorded`, value: tickHash, threshold: currentHash });
           }
         }
       }
@@ -562,7 +668,8 @@ export function createObservatorySnapshot(opts: ObservatoryOptions = {}): Observ
   const configErrors = loaded.ok ? [] : loaded.errors;
   if (!loaded.ok) errors.push(...loaded.errors.map((e) => `runtime-config: ${e}`));
 
-  const surfaces = deriveSurfaces(config);
+  const flagsHome = collectFlagsHome(loaded, errors);
+  const surfaces = deriveSurfaces(config, { lastTick: flagsHome.last_tick });
   const actionsByMode: Record<SurfaceMode, string[]> = { advisory: [], shadow: [], canary: [], live: [], off: [], measurement: [] };
   for (const s of surfaces) actionsByMode[s.mode].push(s.id);
 
@@ -575,13 +682,14 @@ export function createObservatorySnapshot(opts: ObservatoryOptions = {}): Observ
     sources: {
       project_dir: PROJECT_DIR,
       pool_state_dir: resolveFactoryStateOverride(process.env.SF003_POOL_STATE_DIR, "pool"),
-      config_path: loaded.ok ? "config/runtime-flags.json" : null,
+      config_path: loaded.ok ? CONFIG_PATH : null,
       cost_path: costPath,
       worktrees_root: worktreesRoot,
       read_errors: errors,
     },
     modes: {
       shadow_phase: readShadowPhase(errors),
+      flags_home: flagsHome,
       surfaces,
       actions_by_mode: actionsByMode,
     },
@@ -618,7 +726,11 @@ export function renderObservatory(s: ObservatorySnapshot): string {
   out.push("");
 
   out.push("MODES");
-  for (const m of s.modes.surfaces) out.push(`  [${m.mode.toUpperCase().padEnd(11)}] ${m.label}  (${m.source})`);
+  const fh = s.modes.flags_home;
+  out.push(`  flags: ${fh.path} ${fh.overridden ? `(authoritative, ${fh.override_env})` : "(in-repo default)"} v${fh.version ?? "?"} sha256=${fh.sha256 ?? "unreadable"}`);
+  const lt = fh.last_tick;
+  out.push(`  last conveyor tick: ${lt === null ? "never recorded" : `${lt.at ?? "unknown"} v${lt.version ?? "?"} hash=${lt.hash ?? "?"}${lt.hash !== null && fh.config_hash !== null && lt.hash !== fh.config_hash ? " (differs from current flags)" : ""}`}  (${fh.ticks_path})`);
+  for (const m of s.modes.surfaces) out.push(`  [${m.mode.toUpperCase().padEnd(11)}] ${m.label}${m.detail ? ` — ${m.detail}` : ""}  (${m.source})`);
   out.push("");
 
   out.push(`ASSEMBLY LINE ${tag("assembly_line")}`);
