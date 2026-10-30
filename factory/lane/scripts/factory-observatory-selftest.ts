@@ -10,21 +10,25 @@
  * evidence/config drift, and missing sources reported as unavailable.
  */
 
-import { mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { join } from "node:path";
 import {
   COST_STALE_DAYS,
   DEFAULT_STALE_HOURS,
+  collectFlagsHome,
   createObservatorySnapshot,
   deriveAlerts,
   deriveSurfaces,
   rate,
+  readLastConveyorTick,
   renderObservatory,
+  type FlagsHome,
   type ObservatorySnapshot,
   type SurfaceMode,
 } from "./factory-observatory";
 import type { RuntimeConfigFile } from "./runtime-config";
-import { FLAG_SCHEMA } from "./runtime-config";
+import { FLAG_SCHEMA, loadRuntimeConfig } from "./runtime-config";
 import type { QualificationStatus } from "./l4-qualification";
 import type { SF003Snapshot } from "./pool-manager";
 
@@ -108,6 +112,20 @@ function fixtureQualification(overrides: Partial<QualificationStatus> = {}): Qua
   };
 }
 
+function fixtureFlagsHome(overrides: Partial<FlagsHome> = {}): FlagsHome {
+  return {
+    path: "/etc/zouroboros/factory/runtime-flags.json",
+    overridden: true,
+    override_env: "FACTORY_RUNTIME_FLAGS_PATH",
+    version: 12,
+    sha256: "a".repeat(64),
+    config_hash: "1111111111111111",
+    ticks_path: "/var/lib/zouroboros/runtime/factory-state/v1/config-ticks.jsonl",
+    last_tick: { at: "2026-10-07T10:41:04.510Z", source: "lane-utilization begin", version: 15, hash: "8e2e33845ef0bc0b", persona_mode: "shadow" },
+    ...overrides,
+  };
+}
+
 function fixtureSnapshot(input: {
   line?: SF003Snapshot;
   qualification?: QualificationStatus;
@@ -123,7 +141,7 @@ function fixtureSnapshot(input: {
     schema_version: 1,
     generated_at: new Date().toISOString(),
     sources: { project_dir: "/tmp", pool_state_dir: "/tmp", config_path: null, cost_path: "/tmp/cost.json", worktrees_root: "/tmp", read_errors: [] },
-    modes: { shadow_phase: "live", surfaces, actions_by_mode: actionsByMode },
+    modes: { shadow_phase: "live", flags_home: fixtureFlagsHome(), surfaces, actions_by_mode: actionsByMode },
     line: input.line ?? fixtureLine(),
     worktrees: { root: "/tmp", count: 0, entries: [] },
     gates: {
@@ -209,6 +227,48 @@ function run(): void {
   check("persona review shadow is visible while legacy model consensus stays off",
     diversityShadow.find((s) => s.id === "diversity_review")?.mode === "shadow"
       && diversityShadow.find((s) => s.id === "consensus_review")?.mode === "off");
+
+  console.log("Persona surface uses the runner's canary bound (V2 board honesty)");
+  const panelDir = join(root, "panel");
+  mkdirSync(panelDir, { recursive: true });
+  const panelPath = join(panelDir, "lineup.consensus.panel.json");
+  const enforceConfig = fixtureConfig({ FACTORY_PERSONA_ROUTING_MODE: "enforce" });
+  const unpromoted = deriveSurfaces(enforceConfig, { panelPath, env: { HOME: panelDir } }).find((s) => s.id === "diversity_review");
+  check("enforce + missing panel promotion renders canary (low-risk only), never live",
+    unpromoted?.mode === "canary" && unpromoted.detail === "canary (low-risk only)", JSON.stringify(unpromoted));
+  writeFileSync(panelPath, JSON.stringify({ schemaVersion: 2, profile: "consensus-persona-panel", status: "shadow" }));
+  const shadowPanel = deriveSurfaces(enforceConfig, { panelPath }).find((s) => s.id === "diversity_review");
+  check("enforce + shadow panel still renders canary", shadowPanel?.mode === "canary", JSON.stringify(shadowPanel));
+  writeFileSync(panelPath, JSON.stringify({ schemaVersion: 2, profile: "consensus-persona-panel", status: "promoted" }));
+  const promoted = deriveSurfaces(enforceConfig, { panelPath }).find((s) => s.id === "diversity_review");
+  check("enforce + promoted panel renders live for all risk tiers", promoted?.mode === "live" && (promoted.detail ?? "").includes("panel promoted"), JSON.stringify(promoted));
+  const withTick = deriveSurfaces(enforceConfig, { panelPath: join(panelDir, "absent.json"), lastTick: fixtureFlagsHome().last_tick }).find((s) => s.id === "diversity_review");
+  check("persona surface carries the last conveyor tick beside the mode",
+    withTick?.detail === "canary (low-risk only) · last conveyor tick: 2026-10-07T10:41:04.510Z (flag at tick: shadow)", withTick?.detail);
+  const neverTicked = deriveSurfaces(enforceConfig, { panelPath: join(panelDir, "absent.json"), lastTick: null }).find((s) => s.id === "diversity_review");
+  check("a never-ticked conveyor says so", (neverTicked?.detail ?? "").includes("last conveyor tick: never"));
+
+  console.log("Flags home and last tick are read from disk, not assumed");
+  const ticksPath = join(root, "config-ticks.jsonl");
+  writeFileSync(ticksPath, `${JSON.stringify({ at: "2026-10-06T00:00:00.000Z", source: "old", valid: true, version: 14, hash: "0".repeat(16), effective: {} })}\n${JSON.stringify({ at: "2026-10-07T10:41:04.510Z", source: "lane-utilization begin", valid: true, version: 15, hash: "8e2e33845ef0bc0b", effective: { FACTORY_PERSONA_ROUTING_MODE: "shadow" } })}\n`);
+  const tick = readLastConveyorTick(ticksPath, []);
+  check("last tick is the final config-ticks.jsonl line", tick?.at === "2026-10-07T10:41:04.510Z" && tick.version === 15 && tick.hash === "8e2e33845ef0bc0b" && tick.persona_mode === "shadow", JSON.stringify(tick));
+  check("absent ticks file yields null (never fabricated)", readLastConveyorTick(join(root, "absent.jsonl"), []) === null);
+  const flagsPath = join(root, "runtime-flags.json");
+  const seed = readFileSync(join(import.meta.dir, "..", "config", "runtime-flags.json"), "utf8");
+  writeFileSync(flagsPath, seed);
+  const home = collectFlagsHome(loadRuntimeConfig(flagsPath), [], { configPath: flagsPath, overridden: true, ticksPath });
+  check("flags home reports the path, version and file sha256 it read",
+    home.path === flagsPath && home.overridden && home.version === (JSON.parse(seed) as { version: number }).version
+      && home.sha256 === createHash("sha256").update(seed).digest("hex") && home.last_tick?.version === 15, JSON.stringify(home));
+  const renderedHome = renderObservatory({ ...fixtureSnapshot({}), alerts: [] });
+  check("board renders the authoritative flags path, version and sha",
+    renderedHome.includes(`flags: /etc/zouroboros/factory/runtime-flags.json (authoritative, FACTORY_RUNTIME_FLAGS_PATH) v12 sha256=${"a".repeat(64)}`));
+  check("board renders the last conveyor tick and flags drift against it",
+    renderedHome.includes("last conveyor tick: 2026-10-07T10:41:04.510Z v15 hash=8e2e33845ef0bc0b (differs from current flags)"));
+  const canarySnapshot = fixtureSnapshot({});
+  canarySnapshot.modes.surfaces = deriveSurfaces(enforceConfig, { panelPath: join(panelDir, "absent.json") });
+  check("board renders the persona canary label", renderObservatory({ ...canarySnapshot, alerts: [] }).includes("[CANARY     ] Persona Diversity of Thought review — canary (low-risk only)"));
   const savedFirstPassMode = process.env.FIRST_PASS_VALIDATION_MODE;
   process.env.FIRST_PASS_VALIDATION_MODE = "shadow";
   const firstPassShadow = deriveSurfaces(fixtureConfig());
