@@ -22,7 +22,7 @@
     "verify": "bash scripts/verify.sh"
   },
   "type": "module",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "workspaces": [
     "packages/*",
     "factory/lane"
