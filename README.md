@@ -106,10 +106,12 @@ curl -fsSL https://raw.githubusercontent.com/marlandoj/muse-zouroboros/main/scri
 
 Before it touches git or disk, the installer checks the workshop's
 prerequisites — Bun, Node 22+, Python 3.11+, `git`, `jq` and `timeout`
-(GNU coreutils) — [full list](walkthrough/01-prerequisites.md). If any are
+(GNU coreutils), plus `unzip` when Bun is missing, since the Bun installer
+needs it — [full list](walkthrough/01-prerequisites.md). If any are
 missing or too old, it stops and prints the exact commands that install
-them on your Linux distro. It never installs them itself and never uses
-`sudo`: you run the commands, then run the installer again.
+them on your Linux distro, system packages first. It never installs them
+itself and never uses `sudo`: you run the commands, then run the installer
+again.
 
 (Already have Node? `npx -y muse-zouroboros@latest` runs the same
 installer. npx needs Node and npm installed first, so on a fresh machine

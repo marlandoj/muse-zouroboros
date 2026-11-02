@@ -79,6 +79,7 @@ pf_locate() {
 pf_check() {
   local t="$1" okfn="$2" want="$3" label="$1" v
   [ "$t" = timeout ] && label="timeout (GNU coreutils)"
+  [ "$t" = unzip ] && label="unzip (the bun installer needs it)"
   if ! pf_locate "$t" "$okfn"; then
     pf_bad "$label not found (looked on $PF_LOOKED)"; pf_need "$t" missing; return 0
   fi
@@ -106,6 +107,9 @@ pf_need() {
 pf_check_all() {
   PF_MISSING="" PF_NEED_BUN=0 PF_NEED_NODE=0 PF_NEED_SYS=0 PF_OLD_PY=""
   pf_check bun pf_any ""
+  # unzip is not a runtime prerequisite: only the bun.sh installer needs it,
+  # so it is checked (and reported) only when that installer will be printed.
+  [ "$PF_NEED_BUN" = 1 ] && pf_check unzip pf_any ""
   pf_check node pf_node_ok "22 or higher"
   pf_check python3 pf_py_ok "3.11 or higher"
   pf_check git pf_any ""
@@ -151,10 +155,17 @@ pf_print_fixes() {
     "Run the commands below yourself (already root? drop the \"sudo\")," \
     "then re-run: $PF_RERUN" \
     "================================================================"
-  if [ "$PF_NEED_BUN" = 1 ]; then
-    printf '\n# bun — official installer, every distro, no sudo needed\n'
-    printf '%s\n' 'curl -fsSL https://bun.sh/install | bash' \
-      'export PATH="$HOME/.bun/bin:$PATH"   # this shell; or just open a new shell'
+  if [ "$PF_NEED_SYS" = 1 ]; then
+    printf '\n# git, python3, jq, timeout (coreutils), unzip — one line covers them all;\n'
+    printf '# ones you already have are left as they are\n'
+    case "$PF_FAMILY" in
+      debian) printf '%s\n' 'sudo apt-get update && sudo apt-get install -y git python3 jq coreutils unzip' ;;
+      fedora) printf '%s\n' 'sudo dnf install -y git python3 jq coreutils unzip' ;;
+      arch) printf '%s\n' 'sudo pacman -Syu --needed git python jq coreutils unzip' ;;
+      *) printf '%s\n' '# packages: git, python3 (3.11 or newer), jq, coreutils (provides timeout), unzip' \
+           '# upstream: https://git-scm.com/downloads  https://www.python.org/downloads/' \
+           '#           https://jqlang.github.io/jq/download/  https://www.gnu.org/software/coreutils/' ;;
+    esac
   fi
   if [ "$PF_NEED_NODE" = 1 ]; then
     printf '\n# Node.js 22 or newer\n'
@@ -169,17 +180,11 @@ pf_print_fixes() {
     esac
     printf '%s\n' 'node --version   # must report v22 or higher'
   fi
-  if [ "$PF_NEED_SYS" = 1 ]; then
-    printf '\n# git, python3, jq, timeout (coreutils) — one line covers them all;\n'
-    printf '# ones you already have are left as they are\n'
-    case "$PF_FAMILY" in
-      debian) printf '%s\n' 'sudo apt-get update && sudo apt-get install -y git python3 jq coreutils' ;;
-      fedora) printf '%s\n' 'sudo dnf install -y git python3 jq coreutils' ;;
-      arch) printf '%s\n' 'sudo pacman -Syu --needed git python jq coreutils' ;;
-      *) printf '%s\n' '# packages: git, python3 (3.11 or newer), jq, coreutils (provides timeout)' \
-           '# upstream: https://git-scm.com/downloads  https://www.python.org/downloads/' \
-           '#           https://jqlang.github.io/jq/download/  https://www.gnu.org/software/coreutils/' ;;
-    esac
+  if [ "$PF_NEED_BUN" = 1 ]; then
+    printf '\n# bun — official installer, every distro, no sudo needed\n'
+    printf '# needs unzip (from the system-tools step above)\n'
+    printf '%s\n' 'curl -fsSL https://bun.sh/install | bash' \
+      'export PATH="$HOME/.bun/bin:$PATH"   # this shell; or just open a new shell'
   fi
   if [ -n "$PF_OLD_PY" ]; then
     printf '\n# python3 here is %s; the workshop needs 3.11 or newer.\n' "$PF_OLD_PY"

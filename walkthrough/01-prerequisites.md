@@ -10,27 +10,30 @@ host with the same shape works — the only hard assumption is a persistent
 
 Install Bun (memory system, swarm, factory lane), Node 22+ (hooks, verity's
 engine), and Python 3.11+ (wayfinder engine). Also needed: `git`, `jq`,
-`bash`, and `timeout` (GNU coreutils).
+`bash`, and `timeout` (GNU coreutils). To install Bun with its official
+installer you also need `unzip`, so install system packages first.
 
 You don't have to work out the install commands yourself. The installer
 (`quickstart.sh`, and `bootstrap.sh` when run directly) checks every one of
 these first. For anything missing or too old, it prints the exact commands
 for your distro family (Debian/Ubuntu, Fedora, Arch, or generic package
-names and upstream links). It never runs them and never uses `sudo`: you
-run them, then re-run the installer. For reference, on Debian/Ubuntu:
+names and upstream links), system packages first, then Node, then Bun.
+It also checks for `unzip` when Bun is missing, because the Bun installer
+needs it. It never runs them and never uses `sudo`: you run them, then
+re-run the installer. For reference, on Debian/Ubuntu:
 
 ```bash
-# bun: not in most distro package managers; the official installer puts
-# it in ~/.bun/bin
-curl -fsSL https://bun.sh/install | bash
-export PATH="$HOME/.bun/bin:$PATH"   # or open a new shell
+# git, python3, jq, timeout (coreutils), unzip (the Bun installer needs it)
+sudo apt-get update && sudo apt-get install -y git python3 jq coreutils unzip
 
 # Node 22 (NodeSource)
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt-get install -y nodejs
 
-# git, python3, jq, timeout (coreutils)
-sudo apt-get update && sudo apt-get install -y git python3 jq coreutils
+# bun: not in most distro package managers; the official installer puts
+# it in ~/.bun/bin (needs unzip from the system packages above)
+curl -fsSL https://bun.sh/install | bash
+export PATH="$HOME/.bun/bin:$PATH"   # or open a new shell
 ```
 
 The Bun installer adds `~/.bun/bin` to your *interactive* shell profile only.

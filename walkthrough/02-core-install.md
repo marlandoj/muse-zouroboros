@@ -10,12 +10,14 @@ bash scripts/bootstrap.sh
 What it does, in order:
 
 1. Checks for `bun`, `node` (22+), `python3` (3.11+), `git`, `jq` and
-   `timeout` (GNU coreutils). It looks on `PATH` first, then in `~/.bun/bin`,
+   `timeout` (GNU coreutils), plus `unzip` when Bun is missing (the Bun
+   installer needs it). It looks on `PATH` first, then in `~/.bun/bin`,
    `~/.local/bin` and `~/bin`, because the Bun installer only adds itself to
    interactive shells, so ssh and other non-interactive shells miss it.
    Anything found there is used for this run. If a tool is missing or too
    old, bootstrap stops and prints the exact install commands for your
-   distro (Debian/Ubuntu, Fedora, Arch, or generic package names). It never
+   distro (Debian/Ubuntu, Fedora, Arch, or generic package names), system
+   packages first, then Node, then Bun. It never
    installs them and never runs `sudo`. Run the commands, then re-run
    bootstrap.
 2. Creates `~/.zo/memory`, `~/.config/zouroboros`, `~/.wayfinder` with
