@@ -28,6 +28,10 @@ import { conveyorReleaseManifestPath, readConveyorReleaseManifest, type Conveyor
  *   bun runtime-config.ts rollback --by <who>         # Atomic swap to previous known-good
  *   bun runtime-config.ts status              # Human summary
  *
+ * Flags home: config/runtime-flags.json by default; FACTORY_RUNTIME_FLAGS_PATH
+ * (absolute .json path) moves the authoritative file and its .previous.json
+ * sibling out of the checkout. Ticks and transitions stay in the state root.
+ *
  * Exit codes: 0 ok · 1 divergence/rollback-unavailable · 2 usage · 3 invalid/missing config
  */
 
@@ -38,8 +42,37 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path";
 // ─── Paths ────────────────────────────────────────────────────────────────────
 
 const PROJECT_DIR = join(import.meta.dir, "..");
-export const CONFIG_PATH = join(PROJECT_DIR, "config", "runtime-flags.json");
-export const PREVIOUS_PATH = join(PROJECT_DIR, "config", "runtime-flags.previous.json");
+/** In-repo default flags file (used when no authoritative override is set). */
+export const REPO_CONFIG_PATH = join(PROJECT_DIR, "config", "runtime-flags.json");
+/**
+ * Authoritative flags-home override. When set, set, export-env, check,
+ * validate, status and rollback read and write this file (and its
+ * `<name>.previous.json` sibling) instead of the in-repo copy, so a host can
+ * keep its flags outside every repo checkout (e.g. a root-owned
+ * /etc/zouroboros/factory/runtime-flags.json). The transitions log and ticks
+ * stay in the factory state root. Must be an absolute path to a .json file;
+ * anything else fails closed at load.
+ */
+export const RUNTIME_FLAGS_PATH_ENV = "FACTORY_RUNTIME_FLAGS_PATH" as const;
+
+export function resolveRuntimeFlagsPaths(
+  env: Record<string, string | undefined> = process.env,
+): { configPath: string; previousPath: string; overridden: boolean } {
+  const raw = env[RUNTIME_FLAGS_PATH_ENV];
+  if (raw === undefined || raw === "") {
+    return { configPath: REPO_CONFIG_PATH, previousPath: join(PROJECT_DIR, "config", "runtime-flags.previous.json"), overridden: false };
+  }
+  if (!isAbsolute(raw) || !raw.endsWith(".json") || raw.includes("\0")) {
+    throw new Error(`${RUNTIME_FLAGS_PATH_ENV} must be an absolute path to a .json file, got ${JSON.stringify(raw)}`);
+  }
+  const configPath = resolve(raw);
+  return { configPath, previousPath: configPath.replace(/\.json$/, ".previous.json"), overridden: true };
+}
+
+const RESOLVED_FLAGS_PATHS = resolveRuntimeFlagsPaths();
+export const CONFIG_PATH = RESOLVED_FLAGS_PATHS.configPath;
+export const PREVIOUS_PATH = RESOLVED_FLAGS_PATHS.previousPath;
+export const CONFIG_PATH_OVERRIDDEN = RESOLVED_FLAGS_PATHS.overridden;
 export const CONVEYOR_PARITY_PREIMAGE_PATH = factoryStatePath("conveyor-runner", "releases", "activation-preimage.json");
 export const TICKS_PATH = factoryStatePath("config-ticks.jsonl");
 export const TRANSITIONS_PATH = factoryStatePath("config-transitions.log");
@@ -941,7 +974,7 @@ function main(): void {
   if (cmd === "validate") {
     const loaded = loadRuntimeConfig();
     if (!loaded.ok) fail(loaded.errors, 3);
-    console.log(`valid: v${loaded.config.version} hash=${loaded.hash} flags=${Object.keys(loaded.config.flags).length} updated_by="${loaded.config.updated_by}"`);
+    console.log(`valid: v${loaded.config.version} hash=${loaded.hash} flags=${Object.keys(loaded.config.flags).length} updated_by="${loaded.config.updated_by}" path=${CONFIG_PATH}`);
     process.exit(0);
   }
 
@@ -1066,6 +1099,7 @@ function main(): void {
   if (cmd === "status") {
     const snap = runtimeConfigSnapshot();
     console.log(`Runtime config : ${snap.present ? (snap.valid ? "VALID" : "INVALID") : "MISSING"}`);
+    console.log(`  Path      : ${CONFIG_PATH}${CONFIG_PATH_OVERRIDDEN ? ` (${RUNTIME_FLAGS_PATH_ENV})` : " (in-repo default)"}`);
     if (snap.valid) {
       console.log(`  Version   : v${snap.version}`);
       console.log(`  Hash      : ${snap.hash}`);

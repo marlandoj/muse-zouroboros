@@ -730,6 +730,65 @@ describe("cross-process boundary proof", () => {
   });
 });
 
+describe("authoritative flags home override (FACTORY_RUNTIME_FLAGS_PATH)", () => {
+  const cli = join(import.meta.dir, "runtime-config.ts");
+  const sha = (p: string) => new Bun.CryptoHasher("sha256").update(readFileSync(p)).digest("hex");
+
+  function run(args: string[], env: Record<string, string>): { code: number; out: string } {
+    const proc = Bun.spawnSync(["bun", cli, ...args], { env: { ...process.env, ...env }, stdout: "pipe", stderr: "pipe" });
+    return { code: proc.exitCode ?? -1, out: proc.stdout.toString() + proc.stderr.toString() };
+  }
+
+  test("set, export-env, status and rollback read and write the override; repo file and state root placement hold", () => {
+    const d = tempDir();
+    const home = join(d, "etc-factory");
+    const stateDir = join(d, "state");
+    mkdirSync(home);
+    mkdirSync(stateDir);
+    const flagsPath = writeConfig(home, validConfig());
+    const repoConfigPath = join(import.meta.dir, "..", "config", "runtime-flags.json");
+    const repoBefore = existsSync(repoConfigPath) ? sha(repoConfigPath) : null;
+    const env = { FACTORY_RUNTIME_FLAGS_PATH: flagsPath, FACTORY_STATE_MODE: "test", FACTORY_STATE_DIR: stateDir };
+
+    const status = run(["status"], env);
+    expect(status.code).toBe(0);
+    expect(status.out).toContain(`Path      : ${flagsPath} (FACTORY_RUNTIME_FLAGS_PATH)`);
+    expect(status.out).toContain("Version   : v1");
+
+    const set = run(["set", "FACTORY_PERSONA_ROUTING_MODE", "shadow", "--by", "test"], env);
+    expect(set.code).toBe(0);
+    expect(JSON.parse(readFileSync(flagsPath, "utf8")).version).toBe(2);
+    expect(JSON.parse(readFileSync(join(home, "runtime-flags.previous.json"), "utf8")).version).toBe(1);
+    expect(run(["export-env"], env).out).toContain("export FACTORY_PERSONA_ROUTING_MODE='shadow'");
+
+    const rb = run(["rollback", "--by", "test"], env);
+    expect(rb.code).toBe(0);
+    const restored = JSON.parse(readFileSync(flagsPath, "utf8"));
+    expect(restored.version).toBe(3);
+    expect(restored.flags.FACTORY_PERSONA_ROUTING_MODE).toBe(validConfig().flags.FACTORY_PERSONA_ROUTING_MODE);
+    expect(run(["validate"], env).out).toContain(`path=${flagsPath}`);
+
+    const transitions = readFileSync(join(stateDir, "config-transitions.log"), "utf8");
+    expect(transitions).toContain("set FACTORY_PERSONA_ROUTING_MODE=shadow by test | v1 → v2");
+    expect(transitions).toContain("rollback by test");
+    expect(existsSync(join(home, "config-transitions.log"))).toBe(false);
+    if (repoBefore !== null) expect(sha(repoConfigPath)).toBe(repoBefore);
+  });
+
+  test("a relative or non-json override fails closed", () => {
+    for (const bad of ["config/runtime-flags.json", "/etc/zouroboros/factory/runtime-flags"]) {
+      const r = run(["validate"], { FACTORY_RUNTIME_FLAGS_PATH: bad, FACTORY_STATE_MODE: "test" });
+      expect(r.code).not.toBe(0);
+      expect(r.out).toContain("FACTORY_RUNTIME_FLAGS_PATH must be an absolute path to a .json file");
+    }
+  });
+
+  test("unset override keeps the in-repo default", () => {
+    const r = run(["status"], { FACTORY_RUNTIME_FLAGS_PATH: "", FACTORY_STATE_MODE: "test" });
+    expect(r.out).toContain("(in-repo default)");
+  });
+});
+
 describe("live seed sanity", () => {
   test("the checked-in production seed is valid and hashes", () => {
     const r = loadRuntimeConfig(CONFIG_PATH);
