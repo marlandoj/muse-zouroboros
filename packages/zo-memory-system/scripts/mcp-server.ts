@@ -228,7 +228,8 @@ export async function toolMemorySearch(args: {
         sources: ["rrf"],
       };
     });
-    const boosted = computeGraphBoost(db, scored);
+    // Scope invariant: only links whose both endpoints are visible to the caller count.
+    const boosted = computeGraphBoost(db, scored, scope);
     const topIds = boosted
       .sort((a, b) => b.composite - a.composite)
       .slice(0, 3)
