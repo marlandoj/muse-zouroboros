@@ -89,7 +89,7 @@ function testNoLinks() {
 
   const results = computeGraphBoost(db, [
     { id: idA, rrfScore: 0.016, freshness: 1.0, confidence: 1.0, sources: ["fts"] },
-  ]);
+  ], { personas: ["shared"] });
 
   assert(results.length === 1, "Returns 1 result");
   assert(results[0].graphBoost === 0, "Graph boost is 0 when no links");
@@ -117,7 +117,7 @@ function testWithLinks() {
     { id: idA, rrfScore: 0.016, freshness: 1.0, confidence: 1.0, sources: ["fts"] },
     { id: idB, rrfScore: 0.015, freshness: 1.0, confidence: 1.0, sources: ["fts"] },
     { id: idC, rrfScore: 0.014, freshness: 1.0, confidence: 1.0, sources: ["fts"] },
-  ]);
+  ], { personas: ["shared"] });
 
   assert(results.length === 3, "Returns 3 results");
 
@@ -151,7 +151,7 @@ function testWeightedLinks() {
     { id: idA, rrfScore: 0.016, freshness: 1.0, confidence: 1.0, sources: ["fts"] },
     { id: idB, rrfScore: 0.015, freshness: 1.0, confidence: 1.0, sources: ["fts"] },
     { id: idC, rrfScore: 0.014, freshness: 1.0, confidence: 1.0, sources: ["fts"] },
-  ]);
+  ], { personas: ["shared"] });
 
   const resultB = results.find(r => r.id === idB)!;
   const resultC = results.find(r => r.id === idC)!;
@@ -193,7 +193,7 @@ function testEmptyResults() {
   console.log("\n--- Test: Empty Results ---");
   db = setupDb();
 
-  const results = computeGraphBoost(db, []);
+  const results = computeGraphBoost(db, [], { personas: ["shared"] });
   assert(results.length === 0, "Returns empty array for empty input");
 
   const neighbors = findGraphNeighbors(db, [], new Set(), 3, { personas: ["shared"] });

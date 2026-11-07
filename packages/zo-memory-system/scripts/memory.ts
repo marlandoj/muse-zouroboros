@@ -685,7 +685,8 @@ export async function hybridSearch(
   }
 
   // Apply graph boost (reweights composite scores when links exist)
-  const boosted = computeGraphBoost(db, preBoosted);
+  // Scope invariant: only links whose both endpoints are visible to the caller count.
+  const boosted = computeGraphBoost(db, preBoosted, scope);
 
   // Inject graph-discovered neighbors (facts linked to top results but not in
   // current set). Scope-leak fix: the neighbor fetch is scope-filtered — a

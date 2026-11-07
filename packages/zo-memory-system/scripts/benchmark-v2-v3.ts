@@ -403,7 +403,7 @@ function runV2Scoring(scored: Array<{ id: string; rrfScore: number; freshness: n
 }
 
 function runV3Scoring(db: Database, scored: Array<{ id: string; rrfScore: number; freshness: number; confidence: number; sources: string[] }>): Array<{ id: string; composite: number; graphBoost: number; sources: string[] }> {
-  const boosted = computeGraphBoost(db, scored);
+  const boosted = computeGraphBoost(db, scored, { personas: ["shared"] }); // fixtures are persona=shared
   return boosted.sort((a, b) => b.composite - a.composite).map(r => ({
     id: r.id, composite: r.composite, graphBoost: r.graphBoost,
     sources: r.graphBoost > 0 ? [...r.sources, "graph"] : r.sources,

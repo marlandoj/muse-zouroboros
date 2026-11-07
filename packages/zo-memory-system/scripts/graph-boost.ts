@@ -75,29 +75,99 @@ export interface GraphNeighbor {
   title?: string;
 }
 
+/** Whether this db has a vault_files table (vault_links endpoints may be vault files).
+ *  Checked per call, not cached: a stale cached "true" would make the query throw. */
+function hasVaultFiles(db: Database): boolean {
+  try {
+    return !!db.prepare(
+      "SELECT 1 FROM sqlite_master WHERE type='table' AND name='vault_files' LIMIT 1"
+    ).get();
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * SQL predicate: `column` names a fact the caller may see — the fact exists,
+ * is unexpired, is in scope and is not reversibly forgotten. These are the
+ * exact predicates resolveNode()/findGraphNeighbors() apply to graph
+ * neighbors (scopeSql + notForgottenSql + expiry).
+ */
+function visibleFactSql(
+  column: string,
+  alias: string,
+  scope: GraphScope,
+  nowSec: number,
+): { sql: string; params: Array<string | number> } {
+  const scoped = scopeSql(scope, `${alias}.persona`);
+  return {
+    sql: `EXISTS (SELECT 1 FROM facts ${alias} WHERE ${alias}.id = ${column}` +
+      ` AND (${alias}.expires_at IS NULL OR ${alias}.expires_at > ?)` +
+      ` AND ${scoped.sql} AND ${notForgottenSql(`${alias}.id`)})`,
+    params: [nowSec, ...scoped.params],
+  };
+}
+
 /**
  * Compute graph-boosted composite scores for hybrid search results.
  *
  * For each result, queries fact_links for 1-hop neighbors.
  * If a neighbor is also in the result set, both get a graph boost.
  *
+ * SCOPE INVARIANT (hard, not configurable): a link contributes only when BOTH
+ * endpoints are visible to the caller — each endpoint must be a fact that
+ * exists, is unexpired, is in `scope` and is not forgotten (for vault_links,
+ * an endpoint may instead be an indexed vault file, as in resolveNode()).
+ * A link to an out-of-scope, forgotten, expired or missing (dangling) fact is
+ * dropped before scoring, so it can never change the score or rank of the
+ * visible end: per-item scores are printed by memory_search, and a one-ended
+ * boost would let an actor detect links to facts it cannot see.
+ * Do not add a config key or flag to relax this.
+ *
  * @param db - SQLite database handle
  * @param results - Scored results from RRF fusion (pre-composite)
+ * @param scope - Caller visibility scope (REQUIRED; build with resolveScope())
  * @returns Results with graphBoost and reweighted composite scores
  */
-export function computeGraphBoost<T extends ScoredResult>(db: Database, results: T[]): BoostedResult<T>[] {
+export function computeGraphBoost<T extends ScoredResult>(
+  db: Database,
+  results: T[],
+  scope: GraphScope,
+): BoostedResult<T>[] {
   if (results.length === 0) return [];
+  if (!scope || !Array.isArray(scope.personas) || scope.personas.length === 0) {
+    throw new Error("computeGraphBoost: a non-empty visibility scope is required");
+  }
 
+  ensureIntelligencePlaneSchema(db);
+  const nowSec = Math.floor(Date.now() / 1000);
   const resultIds = new Set(results.map(r => r.id));
 
-  // Batch-query all links where source OR target is in our result set
+  // Batch-query all links where source OR target is in our result set, and
+  // keep only links whose two endpoints are both visible to the caller.
   const placeholders = results.map(() => "?").join(",");
   const ids = results.map(r => r.id);
-  const baseSQL = `SELECT source_id, target_id, relation, weight FROM fact_links WHERE source_id IN (${placeholders}) OR target_id IN (${placeholders})`;
-  const sql = hasVaultLinks(db)
-    ? `${baseSQL} UNION ALL SELECT source_id, target_id, relation, weight FROM vault_links WHERE source_id IN (${placeholders}) OR target_id IN (${placeholders})`
-    : baseSQL;
-  const params = hasVaultLinks(db) ? [...ids, ...ids, ...ids, ...ids] : [...ids, ...ids];
+  const fSrc = visibleFactSql("l.source_id", "vs", scope, nowSec);
+  const fTgt = visibleFactSql("l.target_id", "vt", scope, nowSec);
+  const baseSQL =
+    `SELECT l.source_id, l.target_id, l.relation, l.weight FROM fact_links l` +
+    ` WHERE (l.source_id IN (${placeholders}) OR l.target_id IN (${placeholders}))` +
+    ` AND ${fSrc.sql} AND ${fTgt.sql}`;
+  const baseParams: Array<string | number> = [...ids, ...ids, ...fSrc.params, ...fTgt.params];
+
+  let sql = baseSQL;
+  let params = baseParams;
+  if (hasVaultLinks(db)) {
+    const vSrc = visibleFactSql("l.source_id", "ws", scope, nowSec);
+    const vTgt = visibleFactSql("l.target_id", "wt", scope, nowSec);
+    const vf = hasVaultFiles(db);
+    const vfSrc = vf ? ` OR EXISTS (SELECT 1 FROM vault_files xs WHERE xs.id = l.source_id)` : "";
+    const vfTgt = vf ? ` OR EXISTS (SELECT 1 FROM vault_files xt WHERE xt.id = l.target_id)` : "";
+    sql = `${baseSQL} UNION ALL SELECT l.source_id, l.target_id, l.relation, l.weight FROM vault_links l` +
+      ` WHERE (l.source_id IN (${placeholders}) OR l.target_id IN (${placeholders}))` +
+      ` AND (${vSrc.sql}${vfSrc}) AND (${vTgt.sql}${vfTgt})`;
+    params = [...baseParams, ...ids, ...ids, ...vSrc.params, ...vTgt.params];
+  }
   const links = db.prepare(sql).all(...params) as FactLink[];
 
   // If no links exist for any result, return with original scoring weights
