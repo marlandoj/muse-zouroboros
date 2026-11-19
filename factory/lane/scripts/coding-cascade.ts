@@ -5,7 +5,7 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, realpathSync, renameSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { appendWorktreeLedger } from "./execution-repository";
-import { factoryWorktreesRoot, loadFactoryPathProfile } from "../../../packages/zo-swarm-orchestrator/src/transport/factory-path-profile";
+import { factoryWorktreesRoot, loadFactoryPathProfile } from "../../../packages/swarm-orchestrator/src/transport/factory-path-profile";
 import type { ExecutionPolicy } from "./model-policy";
 
 export type CodingCascadeMode = "off" | "shadow" | "enforce";

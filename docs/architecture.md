@@ -36,7 +36,7 @@ rule. It is the whole architecture in three lines.
 Zouroboros is not one program. It is five working systems plus the seams
 between them:
 
-### 1. Swarm orchestrator (`packages/zo-swarm-orchestrator`)
+### 1. Swarm orchestrator (`packages/swarm-orchestrator`)
 
 Multi-model DAG execution. You describe tasks and dependencies; the
 orchestrator routes each task to the best healthy executor, with circuit
@@ -46,7 +46,7 @@ Entry point: `bun scripts/orchestrate-v5.ts` (`doctor`, `status` subcommands
 for health and state). Also exposes an MCP server (`mcp` / `mcp-http` scripts)
 so Muse itself can dispatch and inspect runs.
 
-### 2. Local executors (`packages/zo-swarm-executors`)
+### 2. Local executors (`packages/swarm-executors`)
 
 The other end of the orchestrator: bridge scripts and a registry describing
 the AI CLIs installed on the machine — Claude Code, Codex, OpenCode, Hermes,
@@ -62,7 +62,7 @@ bash <bridge> "<prompt>" [workdir]
 skips whatever is missing or broken. You don't need all seven — any subset
 works, and the fallback chain degrades to whatever is healthy.
 
-### 3. Memory system (`packages/zo-memory-system`)
+### 3. Memory system (`packages/memory-system`)
 
 One shared knowledge substrate for every harness. Hybrid SQLite + vector
 store: episodic memory ("what happened"), procedural memory (versioned

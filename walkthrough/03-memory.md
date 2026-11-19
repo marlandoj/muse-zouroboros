@@ -3,7 +3,7 @@
 ## Initialize the database
 
 ```bash
-cd ~/workspace/zouroboros-for-muse/packages/zo-memory-system
+cd ~/workspace/zouroboros-for-muse/packages/memory-system
 bash scripts/install.sh
 ```
 
@@ -44,8 +44,8 @@ same):
   "mcpServers": {
     "zouroboros-memory": {
       "command": "bun",
-      "args": ["$HOME/workspace/zouroboros-for-muse/packages/zo-memory-system/scripts/mcp-server.ts"],
-      "env": { "ZO_MEMORY_DB": "$HOME/.zo/memory/shared-facts.db" }
+      "args": ["$HOME/workspace/zouroboros-for-muse/packages/memory-system/scripts/mcp-server.ts"],
+      "env": { "ZOUROBOROS_MEMORY_DB": "$HOME/.zo/memory/shared-facts.db" }
     }
   }
 }

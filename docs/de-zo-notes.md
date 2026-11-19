@@ -200,3 +200,7 @@ always. Left untouched to keep the diff reviewable, per the precedent in
   paths. `marlandoj.zo.computer` remains only in `SKILL.md` frontmatter
   (same as the other vendored packages) and `marlandoj` only as fixture
   provenance in `data/calibration/*`.
+
+## Addendum: package renames (2026-11-19)
+
+Renamed the three `zo-*` package directories to `memory-system`, `swarm-orchestrator`, and `swarm-executors`. The memory MCP server is now `zouroboros-memory`; `ZOUROBOROS_MEMORY_DB` is primary, with `ZO_MEMORY_DB` retained as a deprecated fallback alias. Historical content above is unchanged.

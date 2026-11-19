@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { canonicalize, CONTRACT_ID } from "./run-receipt-contract.ts";
 
 // Local copy of the swarm's portability contract
-// (packages/zo-swarm-orchestrator/src/executor/portability.ts). That module
+// (packages/swarm-orchestrator/src/executor/portability.ts). That module
 // cannot load in this distribution — it imports the non-vendored
 // zouroboros-core package — so the small stable surface is duplicated here.
 // PORTABLE_HARNESS_IDS membership is asserted exactly below, so any upstream

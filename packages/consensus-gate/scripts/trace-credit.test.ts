@@ -11,7 +11,7 @@ import { test, expect, beforeEach, afterEach } from "bun:test";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { captureOutcome, readOutcomes, getOutcomesPath } from "../../../packages/zo-swarm-orchestrator/src/standalone/trace-outcome";
+import { captureOutcome, readOutcomes, getOutcomesPath } from "../../../packages/swarm-orchestrator/src/standalone/trace-outcome";
 import { computeReputationFrom } from "./reputation";
 
 let tmpHome: string;

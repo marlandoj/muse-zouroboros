@@ -13,7 +13,7 @@
  *      review independence at all — three seats served by the same vendor and
  *      failure domain are one reviewer, not three.
  *   2. It ran seats through `callModel(seat.id)` on the Zo model layer, which
- *      bypasses the harness layer entirely. `packages/zo-swarm-orchestrator` already ships a
+ *      bypasses the harness layer entirely. `packages/swarm-orchestrator` already ships a
  *      full ACP harness registry (executor-registry.json), an `ExecutorClient`,
  *      and a fallback topology in `selector/executor-selector.ts`. None of it was
  *      reachable from here.
@@ -167,9 +167,9 @@ export const PANEL_ROSTER: ReadonlyArray<{
 
 const REGISTRY_CANDIDATES = [
   // Sibling package in this repo checkout.
-  path.join(import.meta.dir, "..", "..", "zo-swarm-executors", "registry", "executor-registry.json"),
+  path.join(import.meta.dir, "..", "..", "swarm-executors", "registry", "executor-registry.json"),
   // Muse VM workspace convention (portable across Muse VMs).
-  "/home/workspace/Skills/zo-swarm-executors/registry/executor-registry.json",
+  "/home/workspace/Skills/swarm-executors/registry/executor-registry.json",
 ];
 
 /** CLI binary each executor id resolves to on PATH. */
