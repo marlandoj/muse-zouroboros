@@ -62,7 +62,7 @@ bash <bridge> "<prompt>" [workdir]
 skips whatever is missing or broken. You don't need all seven — any subset
 works, and the fallback chain degrades to whatever is healthy.
 
-### 3. zo-memory (`packages/zo-memory-system`)
+### 3. Memory system (`packages/zo-memory-system`)
 
 One shared knowledge substrate for every harness. Hybrid SQLite + vector
 store: episodic memory ("what happened"), procedural memory (versioned
@@ -70,7 +70,7 @@ workflow patterns), a typed knowledge graph, auto-capture from work sessions,
 contradiction detection with supersession, and a 5-tier decay system.
 
 Every harness — and Muse — talks to the same database through one MCP server
-(`zo-memory`, stdio). Facts learned in a Codex session are searchable from
+(the memory MCP server, stdio). Facts learned in a Codex session are searchable from
 Claude Code. Retrieval is BM25 + vector + graph with RRF fusion; without an
 embeddings key it falls back to FTS5 keyword search and keeps working.
 

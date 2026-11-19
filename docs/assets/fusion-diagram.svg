@@ -84,7 +84,7 @@
     <g font-size="17" fill="#c9d1e0">
       <text x="1000" y="408">&#8226;  Swarm - multi-harness dispatch on subs you already pay for</text>
       <text x="1000" y="446">&#8226;  Software factory - contract &gt; build &gt; verified PR</text>
-      <text x="1000" y="484">&#8226;  zo-memory - shared knowledge substrate, MCP-wired</text>
+      <text x="1000" y="484">&#8226;  memory system - shared knowledge substrate, MCP-wired</text>
       <text x="1000" y="522">&#8226;  Consensus panel - shadow review, already caught a bug</text>
       <text x="1000" y="560">&#8226;  Command Center - operator console, terminal on phone</text>
       <text x="1000" y="598">&#8226;  Decision ledger - hash-chained proof of agent actions</text>

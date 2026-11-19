@@ -31,7 +31,7 @@ that's fine, keyword search works. (If you expected full mode, see
 
 ## Wire the MCP server into one harness
 
-Pick the harness you use most. Add the `zo-memory` stdio server to its MCP
+Pick the harness you use most. Add the memory stdio server to its MCP
 config (adjust the config shape to your harness; the server command is the
 same):
 
@@ -42,7 +42,7 @@ same):
 ```json
 {
   "mcpServers": {
-    "zo-memory": {
+    "zouroboros-memory": {
       "command": "bun",
       "args": ["$HOME/workspace/zouroboros-for-muse/packages/zo-memory-system/scripts/mcp-server.ts"],
       "env": { "ZO_MEMORY_DB": "$HOME/.zo/memory/shared-facts.db" }

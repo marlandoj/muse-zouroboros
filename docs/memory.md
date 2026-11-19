@@ -1,4 +1,4 @@
-# zo-memory: the shared substrate
+# Memory: the shared substrate
 
 ## What it is
 
@@ -71,7 +71,7 @@ Each harness gets the same stdio server. Add to the harness's MCP config
 ```json
 {
   "mcpServers": {
-    "zo-memory": {
+    "zouroboros-memory": {
       "command": "bun",
       "args": ["<repo>/packages/zo-memory-system/scripts/mcp-server.ts"],
       "env": { "ZO_MEMORY_DB": "~/.zo/memory/shared-facts.db" }
