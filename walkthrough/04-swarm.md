@@ -60,7 +60,7 @@ attributed.
 ## Wire the dispatch seam (optional, recommended)
 
 `bun scripts/mcp-server.ts` (stdio) exposes the orchestrator as an MCP
-server. Add it to Muse's MCP config like you did for `zo-memory` in step
+server. Add it to Muse's MCP config like you did for the memory server in step
 03. This is the **dispatch bridge**: from here on, "run this across the
 workshop" is something Muse can do without you leaving chat.
 

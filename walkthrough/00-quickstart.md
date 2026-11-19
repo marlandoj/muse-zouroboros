@@ -122,7 +122,7 @@ bun scripts/memory.ts search "quickstart"
 
 The fact you just stored comes back. That database is now the shared well
 for every harness you wire up. The cross-harness part — Claude Code stores
-a fact, Codex recalls it — needs the `zo-memory` MCP server added to each
+a fact, Codex recalls it — needs the memory MCP server added to each
 harness's config; that's [walkthrough 03](03-memory.md), about ten
 minutes, and it's the single highest-leverage step in the whole system.
 
