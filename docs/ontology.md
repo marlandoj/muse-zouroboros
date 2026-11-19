@@ -48,7 +48,7 @@ Muse and the workshop share no personal state; three bridges carry status, work 
 | `Workshop` | Zouroboros as packaged here: memory, swarm, hooks, factory, review panel | runs on the user's machine | `README.md` |
 | `Bridge` | A narrow connector from Muse into the workshop | carries status and work requests only | `docs/architecture.md` |
 | `StatusBridge ⊑ Bridge` | Read-only health check Muse can run | sections `memory`, `executors`, `orchestrator`, `factory`, `hooks`; text or `--json` | `examples/workshop-status.sh` |
-| `MemoryReadBridge ⊑ Bridge` | One-way read of the shared work memory | via CLI or the `zo-memory-system` MCP server | `docs/architecture.md` |
+| `MemoryReadBridge ⊑ Bridge` | One-way read of the shared work memory | via CLI or the `memory-system` MCP server | `docs/architecture.md` |
 | `DispatchBridge ⊑ Bridge` | Hands building work to the workshop | swarm MCP tools, or a factory ticket using the five-field contract | `docs/architecture.md` |
 | `WorkshopEnv` | The private file holding API keys | `~/.config/zouroboros/workshop.env`, mode 0600 | `scripts/bootstrap.sh`, `docs/security.md` |
 | `VerificationScript` | One command that probes every system and names the unhappy one | memory, executor doctor, orchestrator doctor, hooks, factory smoke, `OPENAI_API_KEY` | `scripts/verify.sh` |
@@ -59,7 +59,7 @@ One SQLite database, `~/.zo/memory/shared-facts.db`, is the well that Claude Cod
 
 | Class | Definition | Key attributes | Realized in |
 | --- | --- | --- | --- |
-| `Fact` | An entity/key/value statement (`facts`) | `persona` (default `shared`), `category`, `decay_class` (default `stable`), `importance`, `confidence`, `expires_at` | `packages/zo-memory-system/scripts/schema.sql` |
+| `Fact` | An entity/key/value statement (`facts`) | `persona` (default `shared`), `category`, `decay_class` (default `stable`), `importance`, `confidence`, `expires_at` | `packages/memory-system/scripts/schema.sql` |
 | `DecayClass` | How long a fact lives and how fast it fades | `permanent` (no TTL), `stable` 90 d, `active` 14 d, `session` 24 h, `checkpoint` 4 h | `schema.sql` (`ttl_defaults`), `unified-decay.ts` |
 | `FactEmbedding` | Vector for semantic search | `model` default `text-embedding-3-small` | `schema.sql` |
 | `FactLink` | Typed, weighted edge between facts | `relation` (`depends_on`, `supersedes`, `caused_by`, `part_of`, `implements`, `blocks`, `related_to`), `weight` | `schema.sql`, `graph-traversal.ts` |
@@ -70,7 +70,7 @@ One SQLite database, `~/.zo/memory/shared-facts.db`, is the well that Claude Cod
 | `SourceChunk` / `Topic` | Cited source text and topical grouping of facts | `chunk_md5`, `cited_text`; `slug`, `fact_count` | `schema.sql` |
 | `CaptureLog` | Record of one transcript-to-facts extraction | `facts_extracted`, `facts_skipped`, `contradictions`, `model` | `schema.sql` |
 | `MemoryGate` | Decides at prompt time whether background memory is needed | exit 0 found, 2 not needed, 3 needed but missing, 1 error; methods include `continuation`, `keyword_heuristic`, `llm_classifier` | `memory-gate.ts` |
-| `MemoryMcpServer` | stdio server `zo-memory-system` v3.2.0 | tools `memory_search`, `memory_store` (both accept an optional `actor`; default `shared`), `memory_episodes`, `memory_procedures`, `cognitive_profile`; HTTP variant adds `memory_delete`, `memory_prune` (also actor-optional) | `mcp-server.ts` |
+| `MemoryMcpServer` | stdio server `memory-system` v3.2.0 | tools `memory_search`, `memory_store` (both accept an optional `actor`; default `shared`), `memory_episodes`, `memory_procedures`, `cognitive_profile`; HTTP variant adds `memory_delete`, `memory_prune` (also actor-optional) | `mcp-server.ts` |
 | `Scope` | Actor-resolved visibility (own persona + shared pool); the single choke point for every persona predicate | `actor`, `personas`; absent identity resolves to `shared` | `scope.ts` |
 | `MemoryAudit` | One row per scoped memory access | `actor`, `scope`, `action` (`store`, `search`, `search_vector`, `get`, `delete`, `forget`, `restore`, `purge`, `promotion_stage`, `review_decision`), `call_id` | `scope.ts` |
 | `FactPromotion` | Append-only promotion ledger; a fact's stage is its latest row | `stage` (`capture`, `extraction`, `review`, `promotion`), `decided_by`, `contradiction_of` | `promotion.ts` |
@@ -82,18 +82,18 @@ The swarm spreads a campaign's tasks across seven AI coding harnesses the user a
 
 | Class | Definition | Key attributes | Realized in |
 | --- | --- | --- | --- |
-| `Campaign` | A set of tasks run together (`SwarmCampaign`); on disk a bare task array | `status` (`pending`, `running`, `completed`, `failed`), `config` | `zo-swarm-orchestrator/src/types.ts`, `campaigns/*.json` |
+| `Campaign` | A set of tasks run together (`SwarmCampaign`); on disk a bare task array | `status` (`pending`, `running`, `completed`, `failed`), `config` | `swarm-orchestrator/src/types.ts`, `campaigns/*.json` |
 | `Task` | One unit of work | `priority` (`critical`, `high`, `medium`, `low`), `dependsOn[]`, `executor`, `fallbackExecutors[]`, `memoryStrategy`, `timeoutSeconds` | `src/types.ts` |
 | `SwarmConfig` | Run settings | `localConcurrency` 8, `timeoutSeconds` 600, `maxRetries` 3, `dagMode` (`streaming`, `waves`), `pipelineGates` | `config.json`, `src/types.ts` |
-| `Executor` | A registered harness | `claude-code`, `hermes`, `gemini`, `codex`, `opencode`, `kimi` (ACP); `pi` (bridge) | `zo-swarm-executors/registry/executor-registry.json` |
+| `Executor` | A registered harness | `claude-code`, `hermes`, `gemini`, `codex`, `opencode`, `kimi` (ACP); `pi` (bridge) | `swarm-executors/registry/executor-registry.json` |
 | `Service` | A non-executor DAG node in the registry | `mimir` (memory context, health on port 7820) | `executor-registry.json` |
-| `Transport` | How an executor is reached | `acp` (persistent session) or `bridge` (one-shot script in `bridges/*-bridge.sh`) | `zo-swarm-executors/` |
+| `Transport` | How an executor is reached | `acp` (persistent session) or `bridge` (one-shot script in `bridges/*-bridge.sh`) | `swarm-executors/` |
 | `Role` | A job seeded onto an executor with SOP fields | `senior-architect` → claude-code, `backend-developer` → codex, `ui-developer` → gemini, `researcher` → hermes, and three more | `src/db/schema.ts` (`swarm_roles`) |
 | `RouteDecision` | The chosen executor for a task | `compositeScore`, `breakdown`, `method` (`composite`, `fallback`) | `src/routing/engine.ts` |
 | `RoutingSignal` | One scored routing input | six: `capability`, `health`, `complexityFit`, `history`, `procedure`, `temporal`; eight adds `budget`, `role` | `src/routing/engine.ts` |
 | `CircuitBreaker` | Per-executor health | `CLOSED`, `OPEN`, `HALF_OPEN`; 30 s base cooldown doubling to a 300 s cap | `src/circuit/breaker.ts` |
 | `Budget` | Spend envelope for a swarm | `total_budget_usd`, alert at 80 %, `hard_cap_action` (`pause`, `abort`, `downgrade`; default `downgrade`) | `src/budget/governor.ts` |
-| `SwarmMcpServer` | `zo-swarm-orchestrator` v4.6.0 over stdio and HTTP (port 48401) | `swarm_execute`, `swarm_status`, `swarm_results`, `swarm_benchmark`, `swarm_list` | `mcp-server.ts`, `mcp-server-http.ts` |
+| `SwarmMcpServer` | `swarm-orchestrator` v4.6.0 over stdio and HTTP (port 48401) | `swarm_execute`, `swarm_status`, `swarm_results`, `swarm_benchmark`, `swarm_list` | `mcp-server.ts`, `mcp-server-http.ts` |
 
 ## Prompt-time hooks
 
@@ -214,7 +214,7 @@ Known gaps between docs and code, worth fixing or modeling explicitly:
 | The HTTP swarm MCP server binds `0.0.0.0` with no auth when `ZO_SWARM_MCP_TOKEN` is unset, contrary to the security doc. | `mcp-server-http.ts` |
 | Runtime flags allow review mode `off`, but the review gate throws on anything except `shadow` or `enforce`. | `runtime-config.ts`, `factory-review-gate.ts` |
 | Docs say hooks fail open, but Verity in `live` fails closed. | `docs/hooks.md`, `verity-hook.sh` |
-| The two executor registry copies disagree on `transportFallback`. | `zo-swarm-executors/`, `zo-swarm-orchestrator/` |
+| The two executor registry copies disagree on `transportFallback`. | `swarm-executors/`, `swarm-orchestrator/` |
 
 ## Package and file map
 
@@ -222,9 +222,9 @@ Seven packages and one factory lane realize the classes; the walkthrough install
 
 | Repo path | Domain | Main classes | Version |
 | --- | --- | --- | --- |
-| `packages/zo-memory-system` | Shared memory | `Fact`, `DecayClass`, `Episode`, `Procedure`, `OpenLoop`, `MemoryGate`, `MemoryMcpServer` | 3.2.0 |
-| `packages/zo-swarm-orchestrator` (`zouroboros-swarm`) | Swarm | `Campaign`, `Task`, `RouteDecision`, `CircuitBreaker`, `Budget`, `DecisionRow`, `SwarmMcpServer` | 5.1.1 |
-| `packages/zo-swarm-executors` | Swarm | `Executor` registry, bridge scripts | unversioned |
+| `packages/memory-system` | Shared memory | `Fact`, `DecayClass`, `Episode`, `Procedure`, `OpenLoop`, `MemoryGate`, `MemoryMcpServer` | 3.2.0 |
+| `packages/swarm-orchestrator` (`zouroboros-swarm`) | Swarm | `Campaign`, `Task`, `RouteDecision`, `CircuitBreaker`, `Budget`, `DecisionRow`, `SwarmMcpServer` | 5.1.1 |
+| `packages/swarm-executors` | Swarm | `Executor` registry, bridge scripts | unversioned |
 | `packages/wayfinder` | Hooks | `Wayfinder` | unversioned |
 | `packages/verity` | Hooks | `Verity` | unversioned |
 | `packages/sift` (`@marlandoj/sift`) | Hooks | `Sift` | 0.1.0 |

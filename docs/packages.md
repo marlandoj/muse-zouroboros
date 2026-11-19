@@ -9,7 +9,7 @@ workspace root (a platform convention, portable across Muse VMs). `$HOME`
 in JSON configs means the installing user's home; `scripts/bootstrap.sh`
 expands it.
 
-## `packages/zo-memory-system` — shared memory substrate
+## `packages/memory-system` — shared memory substrate
 
 Hybrid SQLite + vector persona memory. Episodic memory with temporal queries,
 graph-boosted hybrid search, BFS path finding, knowledge-gap analysis,
@@ -37,7 +37,7 @@ adaptive decay, and per-workload model routing.
 - **Maturity:** production in the reference deployment. Full guide:
   `docs/memory.md`.
 
-## `packages/zo-swarm-orchestrator` — multi-model DAG execution
+## `packages/swarm-orchestrator` — multi-model DAG execution
 
 Task orchestration across local harness executors: DAG definition, 6-signal
 composite routing, circuit-breaker health checks, fallback chains, budget
@@ -54,7 +54,7 @@ executor trust model in `SECURITY.md`.
 - **Maturity:** production. The 2-task DAG smoke test passes with mutation
   verification. Full guide: `docs/swarm.md`.
 
-## `packages/zo-swarm-executors` — the executor layer
+## `packages/swarm-executors` — the executor layer
 
 Bridges, health checks, and registry metadata for the CLIs the orchestrator
 can dispatch to: Claude Code, Hermes, Gemini, Codex, OpenCode, Kimi, and

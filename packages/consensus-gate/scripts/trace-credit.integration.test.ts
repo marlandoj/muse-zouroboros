@@ -62,7 +62,7 @@ describe("trace credit subprocess boundary", () => {
 
     const outcome = Bun.spawnSync([
       "bun",
-      join(REPO_ROOT, "packages/zo-swarm-orchestrator/src/standalone/trace-outcome.ts"),
+      join(REPO_ROOT, "packages/swarm-orchestrator/src/standalone/trace-outcome.ts"),
       "capture",
       "--trace-id",
       traceId,

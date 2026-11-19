@@ -14,25 +14,25 @@ bad()  { printf '  \033[0;31m✘\033[0m %s\n' "$1"; RED=$((RED+1)); }
 head() { printf '\n\033[1m%s\033[0m\n' "$1"; }
 
 head "memory"
-if [ -f "${ZO_MEMORY_DB:-$HOME/.zo/memory/shared-facts.db}" ]; then
-  ok "database exists: ${ZO_MEMORY_DB:-$HOME/.zo/memory/shared-facts.db}"
-  if (cd "$REPO/packages/zo-memory-system" && timeout 30 bun scripts/memory.ts stats >/dev/null 2>&1); then
+if [ -f "${ZOUROBOROS_MEMORY_DB:-${ZO_MEMORY_DB:-$HOME/.zo/memory/shared-facts.db}}" ]; then
+  ok "database exists: ${ZOUROBOROS_MEMORY_DB:-${ZO_MEMORY_DB:-$HOME/.zo/memory/shared-facts.db}}"
+  if (cd "$REPO/packages/memory-system" && timeout 30 bun scripts/memory.ts stats >/dev/null 2>&1); then
     ok "memory CLI round-trip works"
-  else bad "memory CLI failed — run: cd packages/zo-memory-system && bun scripts/memory.ts stats"; fi
+  else bad "memory CLI failed — run: cd packages/memory-system && bun scripts/memory.ts stats"; fi
 else bad "no database — run walkthrough step 03"; fi
-if (timeout 60 bun "$REPO/scripts/mcp-check.mjs" "$REPO/packages/zo-memory-system" bun scripts/mcp-server.ts >/dev/null 2>&1); then
+if (timeout 60 bun "$REPO/scripts/mcp-check.mjs" "$REPO/packages/memory-system" bun scripts/mcp-server.ts >/dev/null 2>&1); then
   ok "zo-memory MCP server answers initialize"
-else bad "zo-memory MCP server does not start — run: cd packages/zo-memory-system && bun scripts/mcp-server.ts"; fi
+else bad "zo-memory MCP server does not start — run: cd packages/memory-system && bun scripts/mcp-server.ts"; fi
 
 head "swarm executors"
-if (cd "$REPO/packages/zo-swarm-executors" && timeout 120 bun scripts/doctor.ts 2>/dev/null | grep -qiE 'healthy|ok'); then
+if (cd "$REPO/packages/swarm-executors" && timeout 120 bun scripts/doctor.ts 2>/dev/null | grep -qiE 'healthy|ok'); then
   ok "executor doctor reports healthy executors"
-else bad "no healthy executors — run: cd packages/zo-swarm-executors && bun scripts/doctor.ts"; fi
+else bad "no healthy executors — run: cd packages/swarm-executors && bun scripts/doctor.ts"; fi
 
 head "swarm orchestrator"
-if (cd "$REPO/packages/zo-swarm-orchestrator" && timeout 60 bun scripts/orchestrate-v5.ts doctor >/dev/null 2>&1); then
+if (cd "$REPO/packages/swarm-orchestrator" && timeout 60 bun scripts/orchestrate-v5.ts doctor >/dev/null 2>&1); then
   ok "orchestrator doctor passes"
-else bad "orchestrator doctor failed — run: cd packages/zo-swarm-orchestrator && bun scripts/orchestrate-v5.ts doctor"; fi
+else bad "orchestrator doctor failed — run: cd packages/swarm-orchestrator && bun scripts/orchestrate-v5.ts doctor"; fi
 
 head "hooks (shadow)"
 for h in wayfinder verity sift; do

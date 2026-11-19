@@ -134,7 +134,7 @@ Kimi and Gemini ledgers are named `claude-kimi-<id>` / `claude-gemini-<id>` beca
 ## Swarm gate (orchestrator-run)
 
 The hooks above gate an interactive session from inside the harness. The swarm
-(`packages/zo-swarm-orchestrator/scripts/orchestrate-v5.ts`) cannot rely on
+(`packages/swarm-orchestrator/scripts/orchestrate-v5.ts`) cannot rely on
 them: executors run as detached bridges, three harnesses have no hook at all,
 and an agent's own report of "tests pass" is not evidence. So the orchestrator
 runs Verity itself, in two phases, with the workspace diff as the ledger:
@@ -195,7 +195,7 @@ node engine/cli.js verify   --cwd <workspace> --base <base.json> --json
   credential.
 
 Orchestrator side (mode resolution, shadow/live, retry semantics, the
-operator policy file, rollout): `packages/zo-swarm-orchestrator/docs/verity-swarm-gate.md`.
+operator policy file, rollout): `packages/swarm-orchestrator/docs/verity-swarm-gate.md`.
 
 ## Supervising wrapper: `verity run`, `verity gate`, the push guard (hybrid Phase 2, shadow)
 

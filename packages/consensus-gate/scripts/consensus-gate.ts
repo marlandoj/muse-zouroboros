@@ -66,7 +66,7 @@ const attestationKeyPath = process.env.CONSENSUS_ATTESTATION_KEY_PATH || `${proc
 
 // Per-call cost ledger — swarm.db cost_ledger, the same table the /dashboard
 // Costs tab reads for its main panels (totals/byModel/byProvider/daily/single).
-// Identical DDL to packages/zo-swarm-orchestrator/src/db/schema.ts so whichever writer opens the
+// Identical DDL to packages/swarm-orchestrator/src/db/schema.ts so whichever writer opens the
 // DB first creates the table. Each real vendor round-trip records billed cost
 // when the provider reports it (Opencode top-level `cost`, OpenRouter
 // `usage.cost`) or a catalog/static estimate otherwise (synthetic.new, x.ai).

@@ -1,5 +1,5 @@
 import { getActiveModels } from "./quarantine";
-import { readSharedCatalog } from "../../../packages/zo-swarm-orchestrator/src/routing/shared-catalog";
+import { readSharedCatalog } from "../../../packages/swarm-orchestrator/src/routing/shared-catalog";
 import {
   isLineupProfile,
   loadPersistedLineup,

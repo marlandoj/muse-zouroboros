@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { factoryWorktreeReadRoots, factoryWorktreesRoot, loadFactoryPathProfile } from "../../../packages/zo-swarm-orchestrator/src/transport/factory-path-profile";
+import { factoryWorktreeReadRoots, factoryWorktreesRoot, loadFactoryPathProfile } from "../../../packages/swarm-orchestrator/src/transport/factory-path-profile";
 
 import {
   appendFileSync,

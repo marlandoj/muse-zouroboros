@@ -2,8 +2,8 @@
 
 ## What it is
 
-The orchestrator (`packages/zo-swarm-orchestrator`) takes a task DAG and runs
-it across the AI CLIs installed on your machine (`packages/zo-swarm-executors`
+The orchestrator (`packages/swarm-orchestrator`) takes a task DAG and runs
+it across the AI CLIs installed on your machine (`packages/swarm-executors`
 describes them). Each task is routed to the best *healthy* executor by a
 6-signal composite router (capability match, cost, latency history, procedure
 memory, temporal signals, load), with circuit breakers, fallback chains, a
@@ -37,7 +37,7 @@ skips the rest.
 Check health:
 
 ```bash
-cd packages/zo-swarm-executors
+cd packages/swarm-executors
 bun scripts/doctor.ts          # health of every registered executor
 bun scripts/test-harness.ts    # sends a live prompt through each bridge
 bun scripts/register.ts list   # what the registry sees
@@ -52,7 +52,7 @@ export SWARM_EXECUTOR_REGISTRY="$PWD/registry/executor-registry.json"
 ## Running work
 
 ```bash
-cd packages/zo-swarm-orchestrator
+cd packages/swarm-orchestrator
 bun scripts/orchestrate-v5.ts doctor   # executor health via the orchestrator
 bun scripts/orchestrate-v5.ts status   # queue / run state
 ```

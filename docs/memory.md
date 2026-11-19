@@ -43,7 +43,7 @@ episodes, and the graph work fully; embeddings, HyDE, and the gate warn and
 fall back.
 
 ```bash
-cd packages/zo-memory-system
+cd packages/memory-system
 bash scripts/install.sh        # creates ~/.zo/memory, runs migrations
 ```
 
@@ -73,8 +73,8 @@ Each harness gets the same stdio server. Add to the harness's MCP config
   "mcpServers": {
     "zouroboros-memory": {
       "command": "bun",
-      "args": ["<repo>/packages/zo-memory-system/scripts/mcp-server.ts"],
-      "env": { "ZO_MEMORY_DB": "~/.zo/memory/shared-facts.db" }
+      "args": ["<repo>/packages/memory-system/scripts/mcp-server.ts"],
+      "env": { "ZOUROBOROS_MEMORY_DB": "~/.zo/memory/shared-facts.db" }
     }
   }
 }

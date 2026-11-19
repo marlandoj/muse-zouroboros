@@ -22,9 +22,9 @@ mode="text"
 
 sec_memory() {
   echo "== memory =="
-  db="${ZO_MEMORY_DB:-$HOME/.zo/memory/shared-facts.db}"
+  db="${ZOUROBOROS_MEMORY_DB:-${ZO_MEMORY_DB:-$HOME/.zo/memory/shared-facts.db}}"
   if [ ! -f "$db" ]; then echo "  unavailable (no database — walkthrough step 03)"; return 0; fi
-  out=$(cd "$REPO/packages/zo-memory-system" && timeout 30 bun scripts/memory.ts stats 2>/dev/null) \
+  out=$(cd "$REPO/packages/memory-system" && timeout 30 bun scripts/memory.ts stats 2>/dev/null) \
     || { echo "  unavailable (cli failed)"; return 0; }
   echo "$out" | head -8 | sed 's/^/  /'
   if [ -n "${OPENAI_API_KEY:-}" ]; then echo "  mode: full (embeddings on)"; else echo "  mode: FTS5-only (no OPENAI_API_KEY)"; fi
@@ -32,7 +32,7 @@ sec_memory() {
 
 sec_executors() {
   echo "== swarm executors =="
-  out=$(cd "$REPO/packages/zo-swarm-executors" && timeout 120 bun scripts/doctor.ts 2>/dev/null) \
+  out=$(cd "$REPO/packages/swarm-executors" && timeout 120 bun scripts/doctor.ts 2>/dev/null) \
     || { echo "  unavailable (doctor failed)"; return 0; }
   echo "$out" | grep -iE 'healthy|unhealthy|ok|fail|✔|✘' | head -12 | sed 's/^/  /'
   [ -z "$(echo "$out" | grep -iE 'healthy|✔' | head -1)" ] && echo "  (no healthy executors reported)"
@@ -40,7 +40,7 @@ sec_executors() {
 
 sec_orchestrator() {
   echo "== orchestrator =="
-  out=$(cd "$REPO/packages/zo-swarm-orchestrator" && timeout 60 bun scripts/orchestrate-v5.ts status 2>/dev/null) \
+  out=$(cd "$REPO/packages/swarm-orchestrator" && timeout 60 bun scripts/orchestrate-v5.ts status 2>/dev/null) \
     || { echo "  unavailable (status failed)"; return 0; }
   echo "$out" | head -10 | sed 's/^/  /'
 }
@@ -74,12 +74,12 @@ def run(cmd, cwd, timeout=30):
     except Exception as e:
         return {"ok": False, "out": f"unavailable: {e}"}
 home = os.path.expanduser("~")
-db = os.environ.get("ZO_MEMORY_DB", os.path.join(home, ".zo/memory/shared-facts.db"))
+db = os.environ.get("ZOUROBOROS_MEMORY_DB") or os.environ.get("ZO_MEMORY_DB") or os.path.join(home, ".zo/memory/shared-facts.db")
 print(json.dumps({
     "memory": {"db_exists": os.path.isfile(db),
                "fts5_only": not bool(os.environ.get("OPENAI_API_KEY"))},
-    "executors": run(["bun", "scripts/doctor.ts"], os.path.join(repo, "packages/zo-swarm-executors"), 120)["ok"],
-    "orchestrator": run(["bun", "scripts/orchestrate-v5.ts", "status"], os.path.join(repo, "packages/zo-swarm-orchestrator"), 60)["ok"],
+    "executors": run(["bun", "scripts/doctor.ts"], os.path.join(repo, "packages/swarm-executors"), 120)["ok"],
+    "orchestrator": run(["bun", "scripts/orchestrate-v5.ts", "status"], os.path.join(repo, "packages/swarm-orchestrator"), 60)["ok"],
     "hooks": {h: os.path.isdir(os.path.join(repo, "packages", h)) for h in ["wayfinder", "verity", "sift"]},
 }, indent=2))
 PYEOF
