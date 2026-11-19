@@ -77,20 +77,21 @@ This repo is the self-hosted path — same software, your hardware, your respons
 
 **Community Edition** — this repository. Open source (MIT), self-hosted, and free forever: the memory system, all 7 executors, the swarm orchestrator, and Verity verification. Maintained with security and install fixes.
 
-**Hosted Workshop** — the same core, running on a dedicated VPS we manage for you, plus the full governance and intelligence stack: the decision factory (every consequential action proposed, tiered, and recorded before it runs) and the intelligence plane. Those two components are hosted-only and are not part of this repository.
+**Hosted Workshop** — the same core, running on a dedicated VPS we manage for you, plus the hosted-only intelligence stack: the intelligence plane (on every hosted plan) and the decision factory (Pro and Team; on hosted plans it records consequential actions, proposed and tiered, rather than blocking them). Those two components are hosted-only and are not part of this repository.
 
 ## What you get: the MCP workshop
 
-A hosted workshop is an MCP server your Muse connects to. Everything below is a tool Muse can call — 28 in all.
+A hosted workshop is an MCP server your Muse connects to. Everything below is a tool Muse can call — 46 in all.
 
 - **Memory** — `memory_search`: search everything the workshop remembers; `memory_store`: save a fact or decision; `memory_episodes`: recall past work sessions; `memory_procedures`: how-to knowledge that accumulates; `cognitive_profile`: the workshop's model of how you work.
-- **Swarm** — `swarm_dispatch`: hand a task to the AI build team (Claude Code, Codex, Gemini, and more, routed automatically); `swarm_status`: check running work; `swarm_results`: collect finished work; `swarm_executors`: see the team roster and health; `swarm_doctor`: diagnose the team.
+- **Swarm** — `swarm_dispatch`: hand a task to the AI build team (Claude Code, Codex, Gemini, and more, routed automatically); `swarm_status`: check running work; `swarm_results`: collect finished work; `swarm_artifacts`: fetch a finished campaign's artifacts; `swarm_cancel`: stop a running campaign; `swarm_workspace_files`: download a campaign workspace as one archive, or upload a file into it, even while it runs; `swarm_executors`: see the team roster and health; `swarm_doctor`: diagnose the team.
 - **Factory** — `factory_run`: run the spec-to-build-to-verified lane; `factory_smoke`: quick end-to-end check; `factory_status`: lane status; `factory_queue`: every task bundle shipped to the factory — title, state (queued/running/done/failed), ship and finish times.
-- **Workshop** — `workshop_guide`: how to use the workshop; `onboarding_status`: setup progress; `workshop_update`: pull the latest release.
-- **Make it yours** — `workshop_add_executor`: connect another AI subscription; `workshop_set_model`: choose models per executor; `workshop_add_skill`: adopt a new skill (security-scanned first); `workshop_add_mcp`: adopt another MCP server (probed and classified first).
-- **Manage** — `workshop_memory_config`: memory retention and forgetting controls; `workshop_schedule`: recurring jobs on timers; `workshop_team`: seats and invites.
+- **Workshop** — `workshop_guide`: how to use the workshop; `onboarding_status`: setup progress; `workshop_update`: pull the latest release; `workshop_capabilities`: what this workshop can do; `workshop_whoami`: which workshop and account you're connected as.
+- **Make it yours** — `workshop_add_executor`: connect another AI subscription; `workshop_install_executor`: install an executor program; `workshop_signin_executor`: sign an installed executor in; `workshop_set_model`: choose models per executor; `workshop_add_skill`: adopt a new skill (security-scanned first); `workshop_add_mcp`: adopt another MCP server (probed and classified first); `workshop_remove_adopted`: remove an adopted skill or MCP server.
+- **Manage** — `workshop_memory_config`: memory retention and forgetting controls; `workshop_schedule`: recurring jobs on timers; `workshop_team`: seats and invites; `workshop_model_health`: model health evidence, including flagged or stalling models, and the owner's decisions on them; `workshop_keys`: manage the workshop's keys; `workshop_add_provider`: connect a custom model provider.
+- **Library** — `workshop_library_list`: what's in your library; `workshop_library_add`: add a book (a document collection) to it; `workshop_library_refresh`: re-index a book; `workshop_library_remove`: remove a book; `workshop_library_search`: search across the library.
 - **Live views** — `workshop_status`: the whole workshop in one call — VPS service states, executor roster, swarm activity, memory stats; `bridge_inbox_list`: task bundles waiting in the factory-dispatch bridge inbox (read-only).
-- **API & data** — `workshop_api_key`: mint API keys for automation; `workshop_export`: export everything — repo, memory, configs (secrets redacted) — as a tarball or GitHub branch; password re-auth required. No lock-in.
+- **API & data** — `workshop_api_key`: mint API keys for automation; `workshop_export`: export everything — repo, memory, configs (secrets redacted) — as a tarball or GitHub branch; password re-auth required. No lock-in; `client_capabilities_register`: tell the workshop what the connected client can do; `client_capabilities_query`: read back what a client registered.
 
 **Prefer API access?** Create an API key in chat (shown once; only a hash is stored) and call the same MCP endpoint with a Bearer key from scripts, cron jobs, or other agent orchestrators — no browser login needed. OAuth 2.0 with PKCE remains the standard sign-in for Muse.
 
