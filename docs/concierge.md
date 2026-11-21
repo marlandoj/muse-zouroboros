@@ -87,7 +87,7 @@ decision tree at once — one red at a time, in this order:
      Google, finish the browser step, `/quit`, then re-run bootstrap."
 
 3. **`no database` (memory)** — normal on a fresh install, two minutes:
-   `cd <repo>/packages/zo-memory-system && bash scripts/install.sh`,
+   `cd <repo>/packages/memory-system && bash scripts/install.sh`,
    then prove it: `bun scripts/memory.ts store --persona shared --entity
    "workshop" --key "hello" --value "concierge was here" --decay session`
    and `bun scripts/memory.ts search "concierge"`. This is also win #1

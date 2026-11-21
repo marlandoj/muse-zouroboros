@@ -59,8 +59,8 @@ HIT  product launch video with voiceover and captions        → academy-video-p
 
 Every miss is a **Zo-internal skill**. Hits are `heygen-avatar`, `tier-resolver`,
 `automation-resilience`, `daily-top5`, `ux-laws` — skills whose descriptions use
-language a general-purpose MS MARCO model has seen. Misses are `zo-swarm-orchestrator`,
-`zo-memory-system`, `ponytail-audit` — skills whose vocabulary is factory jargon
+language a general-purpose MS MARCO model has seen. Misses are `swarm-orchestrator`,
+`memory-system`, `ponytail-audit` — skills whose vocabulary is factory jargon
 (*seed yaml, wave, worker pool, churn*).
 
 Cross-encoder score distribution over the labeled set (240 scored passages):
@@ -72,7 +72,7 @@ above cross_floor 0.0004 → 20 / 240
 
 The floor was tuned on the 2026-09-23 diagnostic against a different catalog. On this
 one it sits in a near-empty band: most correct answers score either far above it
-(0.5–0.98) or far below (1e-05). `zo-swarm-orchestrator` scores `4.4e-05` on
+(0.5–0.98) or far below (1e-05). `swarm-orchestrator` scores `4.4e-05` on
 "run the swarm for this seed yaml" — 10× under the floor — while the wrong
 `visual-verifier` scores `0.002586`, 6× over it. Lowering the floor does not fix this;
 the ranking order itself is wrong on factory vocabulary.
@@ -88,7 +88,7 @@ factory prompt and injects nothing.
 
 Two things would justify promoting to live:
 
-1. A labeled set weighted toward `zo-swarm-*`, `zo-memory-system`, and
+1. A labeled set weighted toward `swarm-*`, `memory-system`, and
    `zo-ask-governor`, with the re-ranked `zo-*` descriptions reaching top-1.
 2. Option A above: add the *category aliases* a factory operator actually says
    (`swarm`, `seed`, `wave`, `worker pool`, `closure`, `eval`, `gates`) to the

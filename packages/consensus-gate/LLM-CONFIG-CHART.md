@@ -2,7 +2,7 @@
 
 Snapshot of every model, provider, and failover rung wired into the two consumers.
 Source of truth: `scripts/consensus-gate.ts`, `scripts/catalog*.ts`, and
-`../zo-memory-system/scripts/model-client.ts`. Account state: Opencode Zen **funded**, all
+`../memory-system/scripts/model-client.ts`. Account state: Opencode Zen **funded**, all
 failover rungs **on by default**.
 
 ---

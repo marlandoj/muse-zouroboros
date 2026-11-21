@@ -23,12 +23,12 @@ What it does, in order:
 2. Creates `~/.zo/memory`, `~/.config/zouroboros`, `~/.wayfinder` with
    owner-only permissions.
 3. Expands `$HOME` in
-   `packages/zo-swarm-orchestrator/src/executor/registry/executor-registry.json`
+   `packages/swarm-orchestrator/src/executor/registry/executor-registry.json`
    to your home directory (the vendored copy ships with `$HOME`
    placeholders; the installer writes a working copy — your edits to the
    working copy are yours, the vendored one stays pristine).
 4. Writes `~/.config/zouroboros/workshop.env` with the paths the components
-   expect (`ZO_MEMORY_DB`, `SWARM_EXECUTOR_REGISTRY`, `SWARM_WORKSPACE`) and
+   expect (`ZOUROBOROS_MEMORY_DB`, `SWARM_EXECUTOR_REGISTRY`, `SWARM_WORKSPACE`) and
    sources it from your shell profile.
 5. Installs package dependencies where needed (`bun install` in the memory
    system and orchestrator; `pip install` of wayfinder's requirements into
@@ -47,13 +47,13 @@ registry edits or your database.
 | `~/.zo/memory/` | The memory database and persona files (created; populated in step 03) |
 | `~/.config/zouroboros/` | `apis.env` (your keys), `model.env` (per-workload model overrides), `workshop.env` (paths) |
 | `~/.wayfinder/` | Wayfinder state (populated in step 05) |
-| `packages/zo-swarm-orchestrator/src/executor/registry/executor-registry.json` | Working copy with your `$HOME` expanded |
+| `packages/swarm-orchestrator/src/executor/registry/executor-registry.json` | Working copy with your `$HOME` expanded |
 
 ## Prove it
 
 - [ ] `bash scripts/bootstrap.sh` exits 0
 - [ ] `ls -la ~/.zo/memory ~/.config/zouroboros` shows owner-only dirs
-- [ ] `echo $ZO_MEMORY_DB` prints your memory DB path in a new shell
-- [ ] `grep -c '/home/hatch' packages/zo-swarm-orchestrator/src/executor/registry/executor-registry.json` prints `0`
+- [ ] `echo $ZOUROBOROS_MEMORY_DB` prints your memory DB path in a new shell
+- [ ] `grep -c '/home/hatch' packages/swarm-orchestrator/src/executor/registry/executor-registry.json` prints `0`
 
 Next: [03 — Memory](03-memory.md).

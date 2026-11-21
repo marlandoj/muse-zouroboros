@@ -108,7 +108,7 @@ The most Muse-like magic in the system: teach something to one AI tool,
 and every other tool knows it.
 
 ```bash
-cd packages/zo-memory-system
+cd packages/memory-system
 bash scripts/install.sh
 ```
 
@@ -132,7 +132,7 @@ This is the win the factory exists for, and it has exactly one
 prerequisite: **a healthy executor.** Check yours:
 
 ```bash
-cd ../zo-swarm-executors
+cd ../swarm-executors
 bun scripts/doctor.ts
 ```
 

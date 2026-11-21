@@ -3,7 +3,7 @@
 ## Check executor health
 
 ```bash
-cd ~/workspace/zouroboros-for-muse/packages/zo-swarm-executors
+cd ~/workspace/zouroboros-for-muse/packages/swarm-executors
 bun scripts/doctor.ts
 ```
 
@@ -23,9 +23,9 @@ ones they'll be for real work.
 ## Let the orchestrator see them
 
 ```bash
-cd ../zo-swarm-orchestrator
+cd ../swarm-orchestrator
 bun install
-export SWARM_EXECUTOR_REGISTRY="$HOME/workspace/zouroboros-for-muse/packages/zo-swarm-executors/registry/executor-registry.json"
+export SWARM_EXECUTOR_REGISTRY="$HOME/workspace/zouroboros-for-muse/packages/swarm-executors/registry/executor-registry.json"
 bun scripts/orchestrate-v5.ts doctor
 ```
 

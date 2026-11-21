@@ -29,7 +29,7 @@ Failure handling (VERITY-ADOPTED amendment, 2026-09-29): **shadow** answers `{}`
 
 ## Swarm gate (orchestrator-run)
 
-The interactive hooks above gate a *session*. The swarm path is gated differently: `scripts/orchestrate-v5.ts` runs `engine/cli.js snapshot` before a task's first attempt and `engine/cli.js verify` after a declared success, diffing the workspace (committed, staged, unstaged and untracked work) and running the trusted check itself. No harness hook is involved, so it covers Hermes, Pi and OpenCode too. See `README.md` → "Swarm gate" and `packages/zo-swarm-orchestrator/docs/verity-swarm-gate.md`.
+The interactive hooks above gate a *session*. The swarm path is gated differently: `scripts/orchestrate-v5.ts` runs `engine/cli.js snapshot` before a task's first attempt and `engine/cli.js verify` after a declared success, diffing the workspace (committed, staged, unstaged and untracked work) and running the trusted check itself. No harness hook is involved, so it covers Hermes, Pi and OpenCode too. See `README.md` → "Swarm gate" and `packages/swarm-orchestrator/docs/verity-swarm-gate.md`.
 
 ## Supervising wrapper (hybrid Phase 2, shadow)
 

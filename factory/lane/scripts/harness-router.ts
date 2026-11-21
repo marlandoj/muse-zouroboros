@@ -3,7 +3,7 @@
  * ZOU-436 SF-P3 — Multi-harness router for the SF-003 coder pool.
  *
  * The pool currently rotates /zo/ask MODELS (pool-worker.ts MODEL_FALLBACK_CHAIN).
- * ECC-007 shipped an executor registry + ACP transport (packages/zo-swarm-orchestrator) that makes
+ * ECC-007 shipped an executor registry + ACP transport (packages/swarm-orchestrator) that makes
  * real coder HARNESSES — Claude Code, OpenCode, Codex, Gemini, Pi, and Kimi —
  * dispatchable. This module
  * is the pure routing + health-preflight seam that pool-worker.ts wires in behind
@@ -17,7 +17,7 @@
 
 import { join } from "node:path";
 import { enterFactoryExecutorGuard, loadHostResourcePolicy, waitForMemoryHeadroom } from "./host-resource-guard";
-import { readLastKnownGoodCatalog, readSharedCatalog, selectShared } from "../../../packages/zo-swarm-orchestrator/src/routing/shared-catalog";
+import { readLastKnownGoodCatalog, readSharedCatalog, selectShared } from "../../../packages/swarm-orchestrator/src/routing/shared-catalog";
 
 /** Every coder harness the factory is allowed to dispatch to. */
 export const KNOWN_CODER_HARNESSES: ReadonlyArray<string> = [
@@ -146,7 +146,7 @@ export async function selectHarness(args: SelectHarnessArgs): Promise<HarnessDec
 
 // ─── Real-binary seam (lazy) ────────────────────────────────────────────────────
 
-// Fixed repo-relative paths into packages/zo-swarm-orchestrator. NOT env-derived on purpose: the
+// Fixed repo-relative paths into packages/swarm-orchestrator. NOT env-derived on purpose: the
 // executor-client path is fed to a dynamic import(), so an env-controlled path would
 // be an arbitrary-module-load / RCE surface. The module's location is a fixed repo
 // fact, not an operator knob.
@@ -170,7 +170,7 @@ function swarmExecutorClientPath(): string {
 }
 
 /**
- * The real health probe: lazy-imports ExecutorClient from packages/zo-swarm-orchestrator source
+ * The real health probe: lazy-imports ExecutorClient from packages/swarm-orchestrator source
  * (Bun runs the TS directly — no dist needed) and calls .health(), which for ACP
  * executors is a cheap side-effect-free `which <bin>` (it does NOT start a session).
  * Any failure to import/instantiate/probe is folded into { healthy:false }.

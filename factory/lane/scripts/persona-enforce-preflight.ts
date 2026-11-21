@@ -13,7 +13,7 @@ import {
   resolveModelVendor,
   selectIndependentReviewerModel,
   type SpecialistReviewerPolicy,
-} from "../../../packages/zo-swarm-orchestrator/src/persona/specialist-consult";
+} from "../../../packages/swarm-orchestrator/src/persona/specialist-consult";
 
 interface PreflightOptions {
   personaName: string;

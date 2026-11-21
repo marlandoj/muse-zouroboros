@@ -79,7 +79,7 @@ import {
   type CodingCascadeMode,
 } from "./coding-cascade";
 import { executionWorkspaceRoot } from "./execution-repository";
-import { factoryWorktreesRoot } from "../../../packages/zo-swarm-orchestrator/src/transport/factory-path-profile";
+import { factoryWorktreesRoot } from "../../../packages/swarm-orchestrator/src/transport/factory-path-profile";
 import {
   DISPATCH_OPERATOR_OVERRIDE_ENV,
   dispatchOperatorIdentity,

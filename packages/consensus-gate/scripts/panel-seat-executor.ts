@@ -28,7 +28,7 @@
  * - Shadow only. This executes reviews; it does not change the gate's
  *   `enforcement: "disabled"` / `profileStatus: "shadow"` posture.
  */
-import { ExecutorClient } from "../../zo-swarm-orchestrator/src/client/executor-client";
+import { ExecutorClient } from "../../swarm-orchestrator/src/client/executor-client";
 import type { MoaCallResult } from "./moa-runtime";
 import type { PanelSeat, PersonaPanelArtifact } from "./persona-panel";
 

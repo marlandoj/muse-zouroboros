@@ -1,5 +1,5 @@
-import { factoryProfileEnv, factoryWorktreesRoot } from "../../../packages/zo-swarm-orchestrator/src/transport/factory-path-profile";
-import { readManagedFactoryBoundary } from "../../../packages/zo-swarm-orchestrator/src/transport/factory-systemd-containment";
+import { factoryProfileEnv, factoryWorktreesRoot } from "../../../packages/swarm-orchestrator/src/transport/factory-path-profile";
+import { readManagedFactoryBoundary } from "../../../packages/swarm-orchestrator/src/transport/factory-systemd-containment";
 import { factoryStatePath, factoryStatePathForProject, factoryStateRoot, resolveFactoryStateOverride } from "./factory-state-root";
 import { randomUUID } from "node:crypto";
 import {

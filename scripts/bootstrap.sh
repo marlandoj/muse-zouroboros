@@ -222,7 +222,7 @@ chmod 700 "$ZMEM" "$ZCFG" "$HOME/.wayfinder"
 pass "$ZMEM, $ZCFG"
 
 info "3/5 — Expanding \$HOME in the orchestrator registry"
-REG="$REPO/packages/zo-swarm-orchestrator/src/executor/registry/executor-registry.json"
+REG="$REPO/packages/swarm-orchestrator/src/executor/registry/executor-registry.json"
 if grep -q '\$HOME' "$REG"; then
   sed -i "s|\$HOME|$HOME|g" "$REG"
   pass "registry paths expanded to $HOME"
@@ -233,8 +233,8 @@ fi
 info "4/5 — Writing workshop.env and wiring shell profile"
 cat > "$ZCFG/workshop.env" <<EOF
 # Zouroboros workshop paths — written by bootstrap.sh, safe to re-run.
-export ZO_MEMORY_DB="\$HOME/.zo/memory/shared-facts.db"
-export SWARM_EXECUTOR_REGISTRY="$REPO/packages/zo-swarm-executors/registry/executor-registry.json"
+export ZOUROBOROS_MEMORY_DB="\${ZOUROBOROS_MEMORY_DB:-\${ZO_MEMORY_DB:-\$HOME/.zo/memory/shared-facts.db}}"
+export SWARM_EXECUTOR_REGISTRY="$REPO/packages/swarm-executors/registry/executor-registry.json"
 export SWARM_WORKSPACE="$REPO"
 EOF
 chmod 600 "$ZCFG/workshop.env"
@@ -262,14 +262,14 @@ for rc in "${RCS[@]}"; do
   fi
 done
 pass "workshop.env written: ${ZCFG/#"$HOME"/\~}/workshop.env"
-# Prove it: a brand-new login shell must see ZO_MEMORY_DB.
+# Prove it: a brand-new login shell must see ZOUROBOROS_MEMORY_DB.
 EXPECT_DB="$HOME/.zo/memory/shared-facts.db"
-GOT_DB="$(env -i HOME="$HOME" PATH="$PATH" SHELL="${SHELL:-/bin/bash}" bash -lc 'printf %s "${ZO_MEMORY_DB:-}"' 2>/dev/null || true)"
+GOT_DB="$(env -i HOME="$HOME" PATH="$PATH" SHELL="${SHELL:-/bin/bash}" bash -lc 'printf %s "${ZOUROBOROS_MEMORY_DB:-}"' 2>/dev/null || true)"
 if [ "$GOT_DB" = "$EXPECT_DB" ]; then
   pass "sourced from:$WIRED — verified in a new shell"
   status "shell_env: ok"
 else
-  warn "profile wiring added to:$WIRED but a new shell does not see ZO_MEMORY_DB — add this line to your shell profile: $SRC_LINE"
+  warn "profile wiring added to:$WIRED but a new shell does not see ZOUROBOROS_MEMORY_DB — add this line to your shell profile: $SRC_LINE"
   status "shell_env: unverified"
 fi
 
@@ -283,11 +283,11 @@ else
   warn "bun install failed — run: cd $REPO && bun install"
 fi
 # Don't trust the install: prove the memory MCP server answers initialize.
-if [ "$DEPS_OK" = "1" ] && MCP_MSG="$(ZO_MEMORY_DB="$EXPECT_DB" timeout 60 bun "$REPO/scripts/mcp-check.mjs" "$REPO/packages/zo-memory-system" bun scripts/mcp-server.ts 2>&1)"; then
+if [ "$DEPS_OK" = "1" ] && MCP_MSG="$(ZOUROBOROS_MEMORY_DB="$EXPECT_DB" timeout 60 bun "$REPO/scripts/mcp-check.mjs" "$REPO/packages/memory-system" bun scripts/mcp-server.ts 2>&1)"; then
   pass "zo-memory MCP server starts ($MCP_MSG)"
   status "memory_mcp: ok"
 else
-  warn "zo-memory MCP server does not start — run: cd $REPO/packages/zo-memory-system && bun scripts/mcp-server.ts"
+  warn "zo-memory MCP server does not start — run: cd $REPO/packages/memory-system && bun scripts/mcp-server.ts"
   [ -n "${MCP_MSG:-}" ] && printf '%s\n' "$MCP_MSG" | sed 's/^/      /'
   status "memory_mcp: failed"
 fi
@@ -326,7 +326,7 @@ ask() {
 
 info "6/6 — Executor check (the builders)"
 HEALTHY=0
-if (cd "$REPO/packages/zo-swarm-executors" && timeout 120 bun scripts/doctor.ts 2>/dev/null | grep -qE '✓.*health-command'); then
+if (cd "$REPO/packages/swarm-executors" && timeout 120 bun scripts/doctor.ts 2>/dev/null | grep -qE '✓.*health-command'); then
   HEALTHY=1
   pass "at least one executor is healthy"
 fi
@@ -377,7 +377,7 @@ if [ "$HEALTHY" = "0" ]; then
       info "step, then exit the CLI (/quit). It takes about a minute."
       info ""
       if ask "Have you finished the Gemini login? [y/N]" "n"; then
-        if (cd "$REPO/packages/zo-swarm-executors" && timeout 120 bun scripts/doctor.ts 2>/dev/null | grep -qE '✓.*health-command'); then
+        if (cd "$REPO/packages/swarm-executors" && timeout 120 bun scripts/doctor.ts 2>/dev/null | grep -qE '✓.*health-command'); then
           pass "gemini executor is healthy"
           if ! grep -q "SWARM_FREE_TIER" "$ZCFG/workshop.env" 2>/dev/null; then
             echo 'export SWARM_FREE_TIER="1"' >> "$ZCFG/workshop.env"
