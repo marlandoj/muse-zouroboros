@@ -406,6 +406,100 @@ export function snapshot({ cwd, maxDepth = DEFAULT_MAX_DEPTH, exclude = [], shad
   };
 }
 
+/**
+ * Pre-flight contamination scan: runs before the first executor attempt of a
+ * campaign. Scans all files outside the candidate base (loose files in the
+ * workspace, e.g. scratch, debris, and any untracked files in pre-existing
+ * repos) for secret shapes using findSecrets.
+ *
+ * If contamination is found, returns decision: "fail", errorKind: "contamination",
+ * contaminated: true, findings [...], and exit code 1.
+ * If clean, returns decision: "pass", contaminated: false, findings: [], exit 0.
+ */
+export function preflight({ cwd, maxDepth = DEFAULT_MAX_DEPTH, exclude = [] } = {}) {
+  const t0 = Date.now();
+  const root = path.resolve(String(cwd || ""));
+  if (!cwd || !isDir(root)) throw new UsageError(`preflight: --cwd is not a directory: ${cwd}`);
+  const discovered = discoverRepos(root, maxDepth);
+  const loose = looseManifest(root, { repos: discovered, exclude });
+  const findings = [];
+
+  // 1. Scan loose files outside all repos
+  for (const f of loose.files) {
+    if (f.size > MAX_LOOSE_SCAN_BYTES) continue;
+    let buf;
+    try {
+      buf = fs.readFileSync(path.join(root, f.path));
+    } catch {
+      continue;
+    }
+    if (buf.subarray(0, 8192).includes(0)) continue; // binary
+    for (const s of findSecrets(buf.toString("utf8"))) {
+      findings.push({
+        rule: "secret",
+        path: f.path,
+        label: s.label,
+        fingerprint: hash16(s.value),
+        loose: true,
+        inDiff: false,
+      });
+    }
+  }
+
+  // 2. Scan untracked files inside pre-existing repos (not part of the committed base)
+  for (const rel of discovered) {
+    const abs = rel === "." ? root : path.join(root, rel);
+    const untracked = (gitTry(abs, ["ls-files", "--others", "--exclude-standard", "-z"]) || "").split("\0").filter(Boolean);
+    for (const u of untracked) {
+      const fullPath = path.join(abs, u);
+      let st;
+      try { st = fs.statSync(fullPath); } catch { continue; }
+      if (!st.isFile() || st.size > MAX_LOOSE_SCAN_BYTES) continue;
+      let buf;
+      try { buf = fs.readFileSync(fullPath); } catch { continue; }
+      if (buf.subarray(0, 8192).includes(0)) continue;
+      const disp = displayPath(rel, u);
+      for (const s of findSecrets(buf.toString("utf8"))) {
+        findings.push({
+          rule: "secret",
+          path: disp,
+          label: s.label,
+          fingerprint: hash16(s.value),
+          loose: false,
+          inDiff: false,
+        });
+      }
+    }
+  }
+
+  const durationMs = Date.now() - t0;
+  if (findings.length > 0) {
+    const paths = [...new Set(findings.map((f) => f.path))];
+    return {
+      schema: VERDICT_SCHEMA,
+      phase: "preflight",
+      decision: "fail",
+      errorKind: "contamination",
+      contaminated: true,
+      findings,
+      paths,
+      message: `Verity pre-flight: workspace is contaminated with secrets outside candidate base: ${paths.join(", ")}`,
+      durationMs,
+    };
+  }
+
+  return {
+    schema: VERDICT_SCHEMA,
+    phase: "preflight",
+    decision: "pass",
+    contaminated: false,
+    findings: [],
+    paths: [],
+    message: "Verity pre-flight: clean workspace (no contamination outside candidate base)",
+    durationMs,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // diff → ledger
 // ---------------------------------------------------------------------------
@@ -577,6 +671,7 @@ function checkDefinitionChanges(abs, entries, baseTree, postTree, command) {
  * are shown under `repoPath` ("." = no prefix).
  */
 export function diffRules({ repoPath = ".", abs, entries, added, untracked = new Set(), baseTree, postTree, ignoreGlobs = DEFAULT_IGNORE, allowSecrets = false, allowTestDeletion = false, allowCheckEdits = false, command = null }) {
+  const isCandidateRepo = !(repoPath.startsWith("base") || repoPath.startsWith("scratch") || repoPath.startsWith("live"));
   const findings = [];
   const code = [];
   const deletedTests = [];
@@ -588,7 +683,7 @@ export function diffRules({ repoPath = ".", abs, entries, added, untracked = new
     if (e.status === "D") {
       if (looksLikeTestFile(e.path) && !allowTestDeletion) {
         deletedTests.push(disp);
-        findings.push({ rule: "test_deletion", path: disp });
+        findings.push({ rule: "test_deletion", path: disp, inDiff: isCandidateRepo });
       }
       if (isCodeFile(e.path) && !isIgnored(e.path, ignoreGlobs)) code.push(disp);
       else nonCodeCount++;
@@ -597,7 +692,7 @@ export function diffRules({ repoPath = ".", abs, entries, added, untracked = new
     if (e.status === "R" && e.from && looksLikeTestFile(e.from) && !looksLikeTestFile(e.path) && !allowTestDeletion) {
       const from = displayPath(repoPath, e.from);
       deletedTests.push(from);
-      findings.push({ rule: "test_deletion", path: from, renamedTo: disp });
+      findings.push({ rule: "test_deletion", path: from, renamedTo: disp, inDiff: isCandidateRepo });
     }
     if (isCodeFile(e.path) && !isIgnored(e.path, ignoreGlobs)) {
       code.push(disp);
@@ -607,7 +702,7 @@ export function diffRules({ repoPath = ".", abs, entries, added, untracked = new
   if (!allowSecrets) {
     for (const [p, lines] of added) {
       for (const s of findSecrets(lines.join("\n"))) {
-        findings.push({ rule: "secret", path: displayPath(repoPath, p), label: s.label, fingerprint: hash16(s.value) });
+        findings.push({ rule: "secret", path: displayPath(repoPath, p), label: s.label, fingerprint: hash16(s.value), inDiff: isCandidateRepo });
       }
     }
   }
@@ -615,12 +710,12 @@ export function diffRules({ repoPath = ".", abs, entries, added, untracked = new
     for (const p of checkDefinitionChanges(abs, entries, baseTree, postTree, command)) {
       const disp = displayPath(repoPath, p);
       checkDefinitionChanged.push(disp);
-      findings.push({ rule: "check_definition_changed", path: disp, ...(allowCheckEdits ? { allowed: true } : {}) });
+      findings.push({ rule: "check_definition_changed", path: disp, inDiff: isCandidateRepo, ...(allowCheckEdits ? { allowed: true } : {}) });
     }
   }
   for (const [p, lines] of added) {
     if (!looksLikeTestFile(p)) continue;
-    for (const m of findSkipMarkers(lines)) findings.push({ rule: "test_skipped", path: displayPath(repoPath, p), label: m.label, severity: "info" });
+    for (const m of findSkipMarkers(lines)) findings.push({ rule: "test_skipped", path: displayPath(repoPath, p), label: m.label, severity: "info", inDiff: isCandidateRepo });
   }
   return { findings, code, nonCodeCount, deletedTests, untrackedCode, checkDefinitionChanged };
 }
@@ -969,19 +1064,23 @@ export async function verify(opts) {
       }
       if (buf.subarray(0, 8192).includes(0)) continue; // binary
       scanned++;
-      for (const s of findSecrets(buf.toString("utf8"))) findings.push({ rule: "secret", path: f.path, label: s.label, fingerprint: hash16(s.value), loose: true });
+      for (const s of findSecrets(buf.toString("utf8"))) findings.push({ rule: "secret", path: f.path, label: s.label, fingerprint: hash16(s.value), loose: true, inDiff: false });
     }
     loose = { files: now.files.length, changed, scanned, truncated: now.truncated || base.loose.truncated === true };
   }
 
   // 5. decide.
   const blocking = blockingFindings(findings);
+  const allOutsideDiff = blocking.length > 0 && blocking.every((f) => f.inDiff === false);
   const messages = [];
   for (const f of blocking) {
     if (f.rule === "secret") messages.push(`Verity: ${f.path} would contain what looks like ${f.label}. Read the value from the environment or a git-ignored env file instead of writing it into the file.`);
     else if (f.rule === "test_deletion") messages.push(`Verity: ${f.path} was removed from the tests${f.renamedTo ? ` (moved to ${f.renamedTo})` : ""}. Tests are only removed or skipped when the user asked for it. Fix the code the test covers instead.`);
     else if (f.rule === "check_definition_changed") messages.push(`Verity: ${f.path} redefines the trusted check (\`${command}\`) in the same change it is meant to verify, so the check cannot vouch for this change. Leave the check's definition alone, or have the dispatcher record allowCheckEdits.`);
     else if (f.rule === "repo_removed") messages.push(`Verity: the repository at ${f.path} that existed before the task is gone.`);
+  }
+  if (allOutsideDiff) {
+    messages.unshift("Verity: workspace contamination detected outside candidate diff (findings are outside candidate diff).");
   }
   const uniqMessages = [...new Set(messages)];
 
@@ -1057,6 +1156,8 @@ export async function verify(opts) {
     },
     changes: { code, nonCodeCount, deletedTests, untrackedCode, checkDefinitionChanged: checkDefinitionChanged.length > 0, excludeChanged, truncated: truncated || (loose ? loose.truncated : false), ...(shadowTruncated ? { truncatedReason: shadowTruncated.reason } : {}) },
     findings,
+    allOutsideDiff,
+    verdictClass: allOutsideDiff ? "contamination" : (blocking.length > 0 ? "defect" : (decision === "pass" ? "clean" : "unverifiable")),
     check,
     allow: { secrets: allowSecrets, testDeletion: allowTestDeletion, checkEdits: allowCheckEdits },
     ignore: ignoreGlobs,

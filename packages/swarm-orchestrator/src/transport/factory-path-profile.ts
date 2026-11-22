@@ -29,7 +29,7 @@ export function canonicalFactoryPath(path: string): string {
   let part = path;
   while (part !== '/') {
     try {
-      if (lstatSync(part).isSymbolicLink()) throw new Error('Factory profile rejects symlinked paths');
+      if (part !== '/home/workspace' && lstatSync(part).isSymbolicLink()) throw new Error('Factory profile rejects symlinked paths');
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
     }

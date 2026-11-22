@@ -34,9 +34,14 @@ export interface Registry {
 
 export function loadRegistry(customPath?: string): Registry {
   const fullPath = resolveExecutorRegistryPath(customPath);
-  if (existsSync(fullPath)) {
+  const installedPath = join(dirname(fileURLToPath(import.meta.url)), '..', 'executor', 'registry', 'executor-registry.json');
+  const targetPath = !existsSync(fullPath) && !customPath && !process.env.SWARM_EXECUTOR_REGISTRY
+    ? installedPath
+    : fullPath;
+
+  if (existsSync(targetPath)) {
     try {
-      const content = readFileSync(fullPath, 'utf-8');
+      const content = readFileSync(targetPath, 'utf-8');
       const parsed = JSON.parse(content) as Registry & {
         executors: Array<ExecutorRegistryEntry & { best_for?: string[] }>;
       };
@@ -51,7 +56,7 @@ export function loadRegistry(customPath?: string): Registry {
         }),
       };
     } catch (err) {
-      console.warn(`Failed to load registry from ${fullPath}:`, err);
+      console.warn(`Failed to load registry from ${targetPath}:`, err);
     }
   }
 

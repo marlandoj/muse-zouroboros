@@ -67,6 +67,7 @@ describe("hierarchical status summary", () => {
         env: {
           ...process.env,
           HOME: homeDir,
+          SWARM_DIR: swarmDir,
         },
         encoding: "utf8",
       });

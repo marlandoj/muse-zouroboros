@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 
-import { readdirSync, statSync } from "fs";
+import { existsSync, readdirSync, statSync } from "fs";
 import { resolve, relative, dirname, extname, join } from "path";
 
 // ============================================================================
@@ -60,20 +60,20 @@ function parseImports(filePath: string, content: string, rootDir: string): strin
     const base = resolve(dirname(filePath), raw);
 
     // Direct file match
-    try { if (statSync(base).isFile()) { imports.push(relative(rootDir, base)); continue; } } catch {}
+    if (existsSync(base) && statSync(base).isFile()) { imports.push(relative(rootDir, base)); continue; }
 
     // TS convention: import './foo.js' → resolve to './foo.ts'
     const baseExt = extname(base);
     if (JS_TO_TS[baseExt]) {
       const tsEquiv = base.slice(0, -baseExt.length) + JS_TO_TS[baseExt];
-      try { if (statSync(tsEquiv).isFile()) { imports.push(relative(rootDir, tsEquiv)); continue; } } catch {}
+      if (existsSync(tsEquiv) && statSync(tsEquiv).isFile()) { imports.push(relative(rootDir, tsEquiv)); continue; }
     }
 
     // Extension probing
     let resolved = false;
     for (const probe of RESOLVE_EXTS) {
       const candidate = base + probe;
-      try { statSync(candidate); imports.push(relative(rootDir, candidate)); resolved = true; break; } catch {}
+      if (existsSync(candidate) && statSync(candidate).isFile()) { imports.push(relative(rootDir, candidate)); resolved = true; break; }
     }
     if (!resolved) { /* external package */ }
   }

@@ -53,6 +53,7 @@ interface RoleResolution {
  */
 const PERSONA_TOOL_RESTRICTIONS_FALLBACK: Record<string, string[]> = {
   "financial-advisor": ["shellExec", "fileWrite"],
+  "zourobench-t3": [],
 };
 
 /** Capability keys the selector understands (mirrors ExecutorCapabilities). */
@@ -217,7 +218,7 @@ export function selectExecutor(
 
   const nativeCatalog=readSharedCatalog();
   const qualifiedHarnesses = new Set(selectShared('swarm',{catalog:nativeCatalog}).map(route => route.harness));
-  if (nativeCatalog && (!task.executor || task.executor === 'auto')) {
+  if (nativeCatalog && qualifiedHarnesses.size > 0 && (!task.executor || task.executor === 'auto')) {
     restrictedExecutors ??= new Set<string>();
     for (const id of availableIds) if (!qualifiedHarnesses.has(id) && id !== roleResolution?.executorId) restrictedExecutors.add(id);
     if (![...availableIds].some(id => !restrictedExecutors!.has(id) && isHealthy(health[id]))) {
@@ -226,7 +227,7 @@ export function selectExecutor(
   }
   // Helper: filter fallback chain to registered, permitted, healthy executors.
   const safeFallbacks = (chain: string[]): string[] =>
-    chain.filter(id => id !== 'cursor' && (!nativeCatalog || qualifiedHarnesses.has(id)) && availableIds.has(id) && !restrictedExecutors?.has(id) && isHealthy(health[id]));
+    chain.filter(id => id !== 'cursor' && (!nativeCatalog || qualifiedHarnesses.size === 0 || qualifiedHarnesses.has(id)) && availableIds.has(id) && !restrictedExecutors?.has(id) && isHealthy(health[id]));
 
   // Priority 1: Explicit executorId in task (backward compat)
   if (task.executor && task.executor !== 'auto') {

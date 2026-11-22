@@ -30,6 +30,9 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync, unlinkSync } from "
 import { join, dirname } from "path";
 import { spawn } from "child_process";
 import { Database } from "bun:sqlite";
+import { captureSalvageRecord, type SalvageRecord } from "../src/executor/salvage-record.js";
+import { BudgetSignalMonitor } from "../src/executor/budget-signal.js";
+import { resumePromptBlock, TIER_ATTEMPT_TIMEOUT_S } from "../src/executor/attempt-policy.js";
 import { randomUUID } from "crypto";
 import {
   evaluateDelegation,
@@ -2421,6 +2424,17 @@ class SwarmOrchestrator {
         recordHistory(exid, cat, false, duration);
 
         recentOutputs.push(errorStr);
+
+        if (classified.type === "timeout" || classified.type === "stalled" || errorStr.toLowerCase().includes("timeout")) {
+          const salvage = captureSalvageRecord({
+            workspaceDir: WORKSPACE,
+            taskId: task.id,
+            attempt: retries + 1,
+            executor: exid,
+            errorType: classified.type === "stalled" ? "stalled" : "timeout",
+          });
+          lastSalvageRecord = salvage;
+        }
 
         console.log(`  ⚠️  [${task.id}] ${exid} failed (${classified.type}): ${errorStr.slice(0, 80)}`);
         this.logger.log("task_error", {

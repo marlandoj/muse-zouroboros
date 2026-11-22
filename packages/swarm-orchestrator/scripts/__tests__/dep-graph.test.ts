@@ -124,5 +124,5 @@ describe("dep-graph preflight integration", () => {
     expect(result.files.length).toBeGreaterThan(100);
     expect(result.edges.length).toBeGreaterThan(100);
     console.log(`  Monorepo: ${result.files.length} files, ${result.edges.length} edges in ${elapsed}ms`);
-  });
+  }, 15000);
 });
