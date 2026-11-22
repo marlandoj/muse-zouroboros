@@ -32,7 +32,7 @@ import { trustCwd } from "./config.js";
 import { resolveMode } from "./mode.js";
 import { feedbackMain, gateMain, runMain } from "./run.js";
 import { prepushMain } from "./prepush.js";
-import { DEFAULT_CHECK_TIMEOUT_S, DEFAULT_MAX_DEPTH, EXIT, GateError, VERDICT_SCHEMA, engineFingerprint, exitCodeFor, snapshot, verify } from "./swarm.js";
+import { DEFAULT_CHECK_TIMEOUT_S, DEFAULT_MAX_DEPTH, EXIT, GateError, VERDICT_SCHEMA, engineFingerprint, exitCodeFor, preflight, snapshot, verify } from "./swarm.js";
 
 const HOME = resolveHome();
 migrateIfNeeded(HOME);
@@ -268,6 +268,20 @@ function cmdSnapshot(args) {
   }
 }
 
+function cmdPreflight(args) {
+  let o;
+  try {
+    o = parseSwarmArgs(args);
+    if (!o.cwd) throw new GateError("preflight needs --cwd", EXIT.USAGE);
+    const report = preflight({ cwd: o.cwd, maxDepth: o.maxDepth ?? DEFAULT_MAX_DEPTH, exclude: o.exclude });
+    report.engine = engineFingerprint();
+    process.stdout.write(JSON.stringify(report) + "\n");
+    process.exitCode = exitCodeFor(report.decision);
+  } catch (err) {
+    swarmFailure(err);
+  }
+}
+
 async function cmdVerify(args) {
   try {
     const o = parseSwarmArgs(args);
@@ -335,6 +349,9 @@ function help() {
 
 const [, , cmd, ...rest] = process.argv;
 switch (cmd) {
+  case "preflight":
+    cmdPreflight(rest);
+    break;
   case "snapshot":
     cmdSnapshot(rest);
     break;

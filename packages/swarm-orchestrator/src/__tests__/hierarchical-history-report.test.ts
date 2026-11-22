@@ -55,6 +55,7 @@ describe("hierarchical history report", () => {
         env: {
           ...process.env,
           HOME: homeDir,
+          SWARM_DIR: swarmDir,
         },
         encoding: "utf8",
       });

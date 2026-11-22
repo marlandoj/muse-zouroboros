@@ -79,6 +79,7 @@ function runHarness(args: string[]): { stdout: string; stderr: string; status: n
       ...process.env,
       ZOUROBOROS_T3_MAX_USD: '5',
       ZOUROBOROS_WORKSPACE_ROOT: '/tmp/zb-empty-registry',
+      SWARM_EXECUTOR_REGISTRY: '/tmp/zb-empty-registry/missing-executor-registry.json',
       // Point the consensus-gate at a missing path so the gate-on path takes
       // the fast 'skipped' branch — keeps the test hermetic (no real LLM
       // calls) and deterministic regardless of runner layout.

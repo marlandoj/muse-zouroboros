@@ -126,6 +126,49 @@ export interface Task {
   specialistMode?: SpecialistConsultMode;
 }
 
+
+export interface TestRunOutcome {
+  testFile?: string;
+  command?: string;
+  passed: boolean;
+  numTests?: number;
+  passedCount?: number;
+  failedCount?: number;
+  outputSummary?: string;
+}
+
+export interface ChangedFilesSummary {
+  added: string[];
+  modified: string[];
+  removed: string[];
+  total: number;
+}
+
+export interface SalvageRecord {
+  taskId: string;
+  attempt: number;
+  executor: string;
+  errorType: 'timeout' | 'stalled';
+  filesChanged: ChangedFilesSummary;
+  testsRun: TestRunOutcome[];
+  lastActivity: {
+    timestamp: string;
+    kind: string;
+  };
+  progressNote: string | null;
+  salvagedAt: string;
+}
+
+export interface BudgetSignal {
+  attemptBudgetSeconds: number;
+  elapsedSeconds: number;
+  remainingSeconds: number;
+  tierCeilingSeconds: number;
+  percentElapsed: number;
+  milestone?: 'init' | '50%' | '70%' | '90%' | 'ceiling' | 'tick';
+  updatedAt: string;
+}
+
 export interface TaskResult {
   task: Task;
   success: boolean;
@@ -149,6 +192,7 @@ export interface TaskResult {
   delegated?: boolean;
   modelUsed?: string;
   modelProvenance?: ModelProvenance;
+  salvageRecord?: SalvageRecord;
   effectiveExecutor?: string;
   /** Number of fallback executors tried before success/final failure */
   fallbacksAttempted?: number;

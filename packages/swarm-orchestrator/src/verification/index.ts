@@ -34,3 +34,5 @@ export type {
   FsProbe,
   VerifyTraceOptions,
 } from './trace-verify.js';
+
+export * from './verity-gate.js';

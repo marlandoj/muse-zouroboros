@@ -50,7 +50,7 @@ function bwrapFunctional(): boolean {
   }
 }
 
-const containmentAvailable = bwrapFunctional();
+const containmentAvailable = existsSync('/usr/bin/bwrap') && existsSync('/usr/bin/setpriv') && (process.getuid ? process.getuid() === 0 : false);
   test.skipIf(!containmentAvailable)('binds only assigned linked Git metadata read-only', () => {
     const item = fixture();
     const repo = join(item.root, 'repo');

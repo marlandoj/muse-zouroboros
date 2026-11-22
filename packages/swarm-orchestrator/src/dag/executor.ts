@@ -21,6 +21,8 @@ import type { ContextSharingManager } from '../context/sharing.js';
 import { join } from 'path';
 import { storeSwarmTaskEval, storeToolReflection, classifyFailure } from 'zouroboros-selfheal';
 import { getWorkspaceRoot } from 'zouroboros-core';
+import { captureSalvageRecord, formatSalvageForResume } from '../executor/salvage-record.js';
+import { BudgetSignalMonitor } from '../executor/budget-signal.js';
 
 export type ExecutionMode = 'streaming' | 'waves';
 
@@ -307,16 +309,43 @@ export class DAGExecutor {
             console.log(`  [FALLBACK] Task "${taskId}": retrying with executor "${currentExecutorId}" (attempt ${i + 1}/${executorChain.length})`);
           }
 
-          const resolvedModel = this.context.resolveModel?.(task, currentExecutorId) ?? task.model;
-          const result = await executor.execute(task, {
-            timeoutMs,
-            ...(resolvedModel ? { env: { SWARM_RESOLVED_MODEL: resolvedModel } } : {}),
-            ...(taskContext ? { context: taskContext } : {}),
-            headers: { 'x-swarm-origin': swarmOrigin, 'x-swarm-depth': String(this.context.loopDepth ?? 0) },
+          const workspaceDir = getWorkspaceRoot();
+          const attemptBudgetSeconds = Math.round(timeoutMs / 1000);
+          const budgetMonitor = new BudgetSignalMonitor({
+            workspaceDir,
+            attemptBudgetSeconds,
           });
+          budgetMonitor.start();
+
+          let result: TaskResult;
+          try {
+            const resolvedModel = this.context.resolveModel?.(task, currentExecutorId) ?? task.model;
+            result = await executor.execute(task, {
+              timeoutMs,
+              ...(resolvedModel ? { env: { SWARM_RESOLVED_MODEL: resolvedModel } } : {}),
+              ...(taskContext ? { context: taskContext } : {}),
+              headers: { 'x-swarm-origin': swarmOrigin, 'x-swarm-depth': String(this.context.loopDepth ?? 0) },
+            });
+          } finally {
+            budgetMonitor.stop();
+          }
 
           result.effectiveExecutor = currentExecutorId;
           result.fallbacksAttempted = fallbacksAttempted;
+
+          if (!result.success) {
+            const errLower = (result.error || '').toLowerCase();
+            if (errLower.includes('timeout') || errLower.includes('stall') || errLower.includes('timed out')) {
+              result.salvageRecord = captureSalvageRecord({
+                workspaceDir,
+                taskId,
+                attempt: 1 + fallbacksAttempted,
+                executor: currentExecutorId,
+                errorType: errLower.includes('stall') ? 'stalled' : 'timeout',
+              });
+            }
+          }
+
           lastResult = result;
 
           if (result.success) {
@@ -337,14 +366,49 @@ export class DAGExecutor {
               if (!retry) break;
               retryCount++;
               await new Promise(r => setTimeout(r, backoffMs));
-              const retryResult = await executor.execute(task, {
-                timeoutMs,
-                ...(taskContext ? { context: taskContext } : {}),
-                headers: { 'x-swarm-origin': swarmOrigin, 'x-swarm-depth': String(this.context.loopDepth ?? 0) },
+
+              let retryTask = task;
+              if (lastResult?.salvageRecord) {
+                const salvageBlock = formatSalvageForResume(lastResult.salvageRecord);
+                retryTask = {
+                  ...task,
+                  task: `<resume-context>\n${salvageBlock}\n</resume-context>\n\n${task.task}`,
+                };
+              }
+
+              const retryBudgetMonitor = new BudgetSignalMonitor({
+                workspaceDir,
+                attemptBudgetSeconds,
               });
+              retryBudgetMonitor.start();
+
+              let retryResult: TaskResult;
+              try {
+                retryResult = await executor.execute(retryTask, {
+                  timeoutMs,
+                  ...(taskContext ? { context: taskContext } : {}),
+                  headers: { 'x-swarm-origin': swarmOrigin, 'x-swarm-depth': String(this.context.loopDepth ?? 0) },
+                });
+              } finally {
+                retryBudgetMonitor.stop();
+              }
+
               retryResult.effectiveExecutor = currentExecutorId;
               retryResult.retries = retryCount;
               retryResult.fallbacksAttempted = fallbacksAttempted;
+
+              if (!retryResult.success) {
+                const rErrLower = (retryResult.error || '').toLowerCase();
+                if (rErrLower.includes('timeout') || rErrLower.includes('stall') || rErrLower.includes('timed out')) {
+                  retryResult.salvageRecord = captureSalvageRecord({
+                    workspaceDir,
+                    taskId,
+                    attempt: 1 + fallbacksAttempted + retryCount,
+                    executor: currentExecutorId,
+                    errorType: rErrLower.includes('stall') ? 'stalled' : 'timeout',
+                  });
+                }
+              }
 
               if (retryResult.success) {
                 this.results.set(taskId, retryResult);
@@ -516,15 +580,42 @@ export class DAGExecutor {
               console.log(`  [FALLBACK/WAVE] Task "${taskId}": trying executor "${currentExecutorId}" (attempt ${i + 1})`);
             }
 
-            const resolvedModel = this.context.resolveModel?.(task, currentExecutorId) ?? task.model;
-            const result = await executor.execute(task, {
-              timeoutMs,
-              ...(resolvedModel ? { env: { SWARM_RESOLVED_MODEL: resolvedModel } } : {}),
-              ...(taskContext ? { context: taskContext } : {}),
-              headers: { 'x-swarm-origin': swarmOrigin, 'x-swarm-depth': String(this.context.loopDepth ?? 0) },
+            const workspaceDir = getWorkspaceRoot();
+            const attemptBudgetSeconds = Math.round(timeoutMs / 1000);
+            const budgetMonitor = new BudgetSignalMonitor({
+              workspaceDir,
+              attemptBudgetSeconds,
             });
+            budgetMonitor.start();
+
+            let result: TaskResult;
+            try {
+              const resolvedModel = this.context.resolveModel?.(task, currentExecutorId) ?? task.model;
+              result = await executor.execute(task, {
+                timeoutMs,
+                ...(resolvedModel ? { env: { SWARM_RESOLVED_MODEL: resolvedModel } } : {}),
+                ...(taskContext ? { context: taskContext } : {}),
+                headers: { 'x-swarm-origin': swarmOrigin, 'x-swarm-depth': String(this.context.loopDepth ?? 0) },
+              });
+            } finally {
+              budgetMonitor.stop();
+            }
+
             result.effectiveExecutor = currentExecutorId;
             result.fallbacksAttempted = fallbacksAttempted;
+
+            if (!result.success) {
+              const errLower = (result.error || '').toLowerCase();
+              if (errLower.includes('timeout') || errLower.includes('stall') || errLower.includes('timed out')) {
+                result.salvageRecord = captureSalvageRecord({
+                  workspaceDir,
+                  taskId,
+                  attempt: 1 + fallbacksAttempted,
+                  executor: currentExecutorId,
+                  errorType: errLower.includes('stall') ? 'stalled' : 'timeout',
+                });
+              }
+            }
 
             if (result.success) {
               finalResult = result;

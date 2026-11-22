@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- Timeout and stall rework mitigation (Fix A):
+  - Added structured partial-progress Salvage Record capture (`src/executor/salvage-record.ts`) on timeout or stall errors.
+  - Added executor-visible Budget Signal maintenance (`src/executor/budget-signal.ts` and `src/budget/budget-signal.ts`) maintaining `BUDGET.json` and `.swarm/budget.json` with milestone updates at 50%, 70%, and 90% of attempt budget.
+  - Added per-attempt timeout policy and resume prompt formatting with salvage record inclusion (`src/executor/attempt-policy.ts`).
+  - Integrated budget signal monitoring and salvage capture in DAG execution (`src/dag/executor.ts`) and script runtime (`scripts/orchestrate-v5.ts`).
+  - Added test suite in `src/__tests__/salvage-budget-signal.test.ts`.
+- Verity Gate integration and gate hygiene (Fix B):
+  - Added `VerityGate` client (`src/verification/verity-gate.ts`) supporting pre-flight contamination checks, base snapshots, and verification with verdict attribution (`inDiff`, `allOutsideDiff`, `verdictClass: "contamination"`).
+  - Added unit test suite in `src/__tests__/verity-gate.test.ts`.
+- Reliability and registry hardening (residue from t_b95b0538):
+  - Added installed package fallback in `src/registry/loader.ts`.
+  - Added `"zourobench-t3"` capability profile and catalog fallback filtering in `src/selector/executor-selector.ts`.
+  - Handled symlink check exception for `/home/workspace` in `src/transport/factory-path-profile.ts`.
+  - Hardened dep-graph file probing and test timeout in `scripts/dep-graph.ts` and `scripts/__tests__/dep-graph.test.ts`.
+
 - Portable host roots (`src/host-roots.ts`, ported from hermes-zouroboros): workspace/state/logs/runtime/factory/model-routing paths now resolve from `ZOUROBOROS_*` env vars (legacy `ZO_*` honored), then XDG, then home fallbacks — no more hard-coded `/home/workspace` or `/var/lib/zouroboros` in the central resolvers. **Migration note:** hosts that relied on the old implicit defaults without setting env vars now resolve to XDG (`~/.local/state/zouroboros`). Set `ZOUROBOROS_STATE_DIR=/var/lib/zouroboros` and `ZOUROBOROS_WORKSPACE=/home/workspace` to keep the legacy layout. Resolved roots are logged at orchestrator startup.
 - Decision gate: added the four #850 intent patterns (`use a/the swarm`, `launch/start/kick off/spin up a swarm`, `swarm campaign`, `as/via a swarm`).
 

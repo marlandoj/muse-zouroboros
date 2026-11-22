@@ -220,3 +220,39 @@ export type {
   GapSeverity,
   GapCategory,
 } from './verification/index.js';
+
+// Salvage Record & Budget Signal
+export {
+  captureSalvageRecord,
+  formatSalvageForResume,
+  detectChangedFiles,
+  extractTestOutcomes,
+  extractProgressNote,
+  snapshotWorkspaceTree,
+} from './executor/salvage-record.js';
+export type {
+  SalvageRecord,
+  TestRunOutcome,
+  ChangedFilesSummary,
+  CaptureSalvageOptions,
+} from './executor/salvage-record.js';
+
+export {
+  BudgetSignalMonitor,
+  writeBudgetSignal,
+  readBudgetSignal,
+  BUDGET_FILE_NAME,
+  SWARM_BUDGET_FILE_NAME,
+} from './executor/budget-signal.js';
+export type {
+  BudgetSignal,
+  BudgetSignalOptions,
+} from './executor/budget-signal.js';
+
+export {
+  TIER_ATTEMPT_TIMEOUT_S,
+  DEFAULT_ATTEMPT_TIMEOUT_S,
+  tierAttemptTimeout,
+  resumePromptBlock,
+} from './executor/attempt-policy.js';
+
