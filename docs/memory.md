@@ -3,11 +3,12 @@
 ## What it is
 
 One SQLite database plus an optional vector index that every agent harness on
-your machine — Claude Code, Codex, OpenCode, Hermes, and Muse itself — reads
-and writes through a single MCP server. Facts learned in one harness are
-searchable from all the others. It is the workshop's long-term memory; Muse's
-own curated personal memory stays separate and unsynced by design (personal
-facts about *you* vs. working facts about *the work*).
+your machine — Claude Code, Codex, OpenCode, Hermes, and the AI client you
+chat with — reads and writes through a single MCP server. Facts learned in
+one harness are searchable from all the others. It is the workshop's
+long-term memory; your AI client's own personal memory stays separate and
+unsynced by design (personal facts about *you* vs. working facts about *the
+work*).
 
 Capabilities: episodic memory ("what happened", with outcomes and temporal
 queries like "last week"), procedural memory (versioned workflow patterns
@@ -91,10 +92,13 @@ persona/seat. When omitted, the call operates on the `shared` pool. Results
 are scoped to the actor's persona + the shared pool and include the resolved
 scope, and every access lands in the `memory_audit` table.
 
-For Muse itself, this is the **memory read seam**: point Muse at the CLI or
-the MCP server for build context. One-way read is the recommended starting
-posture — Muse reads work facts; it doesn't write personal facts into the
-shared DB.
+For the AI client you chat with, this is the **memory read seam**: point it
+at the MCP server (any client, per [connect.md](connect.md)) or, if it has a
+shell on this machine, the CLI, for build context. One-way read is the
+recommended starting posture — your client reads work facts; it doesn't
+write personal facts into the shared DB. That posture is a convention you
+ask the client to keep: the MCP server is read-write and serves
+`memory_store` alongside the search tools.
 
 ## Model routing
 

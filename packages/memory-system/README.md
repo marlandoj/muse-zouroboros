@@ -4,9 +4,9 @@
 
 ---
 
-> Give your Zo Computer personas persistent memory with semantic understanding, a knowledge graph, and automatic fact extraction. Generation and embedding workloads both route through hosted providers.
+> Give your AI personas and harnesses persistent memory with semantic understanding, a knowledge graph, and automatic fact extraction. Generation and embedding workloads both route through hosted providers.
 >
-> Part of the [Zouroboros](https://github.com/marlandoj) ecosystem — self-improving AI development tools for Zo Computer.
+> Part of the [Zouroboros](https://github.com/marlandoj) ecosystem — self-improving AI development tools. (Zo Computer, the platform it was first built for, was retired on 2026-10-03; the status note above predates that.)
 
 [![Version](https://img.shields.io/badge/version-3.2.0-blue?style=flat-square)](https://github.com/marlandoj/zouroboros-memory-system)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)

@@ -3,7 +3,7 @@
 ## Run the full check
 
 ```bash
-cd ~/workspace/zouroboros-for-muse
+cd ~/workspace/muse-zouroboros
 bash scripts/verify.sh
 ```
 
@@ -15,13 +15,16 @@ baseline for "did something break?" later.
 
 ## Install the read bridge
 
-`examples/workshop-status.sh` is a small script Muse can run anytime: swarm
-health, factory queue state, recent hook verdicts, harness versions, memory
-fact count. Each section degrades independently — a downed factory doesn't
-break the memory check.
+`examples/workshop-status.sh` is a small script any AI client with a shell
+on this machine can run anytime: swarm health, factory queue state, recent
+hook verdicts, harness versions, memory fact count. Each section degrades
+independently — a downed factory doesn't break the memory check.
 
-Point Muse at it. From now on, "is the workshop healthy?" is a question
-Muse answers by running a script, not by asking you.
+Point your assistant at it. From now on, "is the workshop healthy?" is a
+question your assistant answers by running a script, not by asking you.
+That works for the terminal agents and the agent terminals in Cursor and
+VS Code; desktop and web clients without a shell cannot run it, because no
+MCP tool wraps it yet (see the seams in [docs/connect.md](../docs/connect.md)).
 
 ## Make the shadow → live decisions
 
@@ -58,8 +61,8 @@ not failure, that's the system working.
 
 Keep this where you'll see it:
 
-- **Muse:** you, your relationships, your schedule, notifications,
-  approvals, personal memory.
+- **Your AI client:** you, your relationships, your schedule,
+  notifications, approvals, personal memory.
 - **Workshop:** building, multi-model execution, verified delivery,
   harness knowledge, code review.
 - **The bridge carries status and work requests. Never credentials.**

@@ -63,18 +63,25 @@ label semantics, the puller's reaping rules, contract validation details,
 seed authoring, the approval gate, rollback, and the run receipts that make
 every build auditable. Read it before labeling your first real ticket.
 
-## Filing from Muse (the dispatch bridge)
+## Filing from your AI client (the dispatch bridge)
 
-The intended Muse integration: instead of a long inline coding session, Muse
-drafts the 5-field contract from your request, you approve it, and Muse files
-the ticket (Linear issue + `factory-ready` label, or a seed YAML dropped in
-the lane's intake). The lane builds, verifies, and reports back; Muse
-surfaces the PR. Sketches and one-offs stay in chat — the factory is for
-work with acceptance criteria.
+The intended client integration: instead of a long inline coding session,
+your AI client drafts the 5-field contract from your request, you approve
+it, and the ticket is filed as a Linear issue with the `factory-ready`
+label. The lane builds, verifies, and reports back; the PR comes back to
+you. Sketches and one-offs stay in chat — the factory is for work with
+acceptance criteria.
 
-What Muse needs for this: Linear access (your connector or the lane's
-`line-config.json`), the contract schema from `factory/lane/contracts/`, and
-the repo + base commit the seed pins.
+Who files it: **no Community MCP tool files a factory ticket.** The lane's
+intake is the Linear Intake project. Your client can file the issue only
+if it has Linear access of its own (a Linear connector or Linear MCP);
+otherwise it drafts the contract and you file the issue in Linear. What
+filing needs: Linear access plus the lane's Linear settings in
+`line-config.json`, the contract schema from `factory/lane/contracts/`, and
+the repo + base commit the seed pins. A seed YAML is the build spec a
+ticket carries, or one you author and run by hand (OPERATORS_MANUAL §3);
+the Community lane has no watched drop folder that files a seed for you.
+Per-client connection steps: [connect.md](connect.md).
 
 ## Operating notes
 

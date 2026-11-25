@@ -168,7 +168,8 @@ export const PANEL_ROSTER: ReadonlyArray<{
 const REGISTRY_CANDIDATES = [
   // Sibling package in this repo checkout.
   path.join(import.meta.dir, "..", "..", "swarm-executors", "registry", "executor-registry.json"),
-  // Muse VM workspace convention (portable across Muse VMs).
+  // Source-platform workspace convention (absent on a generic Linux host;
+  // the sibling path above is tried first).
   "/home/workspace/Skills/swarm-executors/registry/executor-registry.json",
 ];
 

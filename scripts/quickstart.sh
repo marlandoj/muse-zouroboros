@@ -19,8 +19,9 @@
 #   1. Clones (or updates) the repo to ~/workspace/muse-zouroboros
 #   2. Runs scripts/bootstrap.sh (interactive — it will ask you questions)
 #   3. Runs scripts/verify.sh
-#   4. Prints a CONCIERGE HANDOFF block — paste the whole block to Muse,
-#      and Muse walks you through whatever is red.
+#   4. Prints a CONCIERGE HANDOFF block — paste the whole block to your AI
+#      assistant (connected per docs/connect.md, with the concierge playbook
+#      loaded), and it walks you through whatever is red.
 #
 # What it never does: no sudo, no installing prerequisites (it prints the
 # commands; you run them), no keys leave your machine, no background
@@ -293,7 +294,9 @@ cat <<EOF
 
 ================================================================
 ZOUROBOROS CONCIERGE HANDOFF — paste everything between the
-markers below to Muse, and Muse will walk you through the rest.
+markers below to your AI assistant, and it will walk you through
+the rest. Not connected yet? Connect your client first, with the
+concierge playbook loaded: $TARGET/docs/connect.md
 ================================================================
 --- BEGIN HANDOFF ---
 repo: $TARGET
@@ -315,15 +318,22 @@ if [ "$BOOTSTRAP_RC" -ne 0 ]; then
 What just happened: the workshop is NOT installed — bootstrap stopped
 (exit $BOOTSTRAP_RC). Fix what it marked ✘ above (for a missing
 prerequisite it prints the exact install commands), and re-run this
-installer. Paste the handoff to Muse if you want help with the fix.
+installer. Paste the handoff to your AI assistant if you want help with
+the fix.
 EOF
   exit "$BOOTSTRAP_RC"
 fi
 
 cat <<EOF
 
-What just happened: the workshop is installed. Paste the handoff to
-Muse — Muse reads what's green and red, and guides you through your
-first three wins (shared memory, a factory ticket, health at a glance).
+What just happened: the workshop is installed. Next, connect your AI
+client to it — one tested path per client, local or web:
+  $TARGET/docs/connect.md
+  (bash $TARGET/scripts/connect-config.sh --list prints the config for yours)
+Then paste the handoff to that client. With the concierge playbook loaded
+it reads what's green and red, and guides you through your first three
+wins (shared memory, a factory ticket, health at a glance). The factory
+ticket is a Linear issue labelled factory-ready: no workshop tool files
+it, so your client needs Linear access, or you file it yourself.
 Full manual, if you ever want it: $TARGET/walkthrough/00-quickstart.md
 EOF

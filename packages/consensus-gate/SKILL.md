@@ -4,7 +4,7 @@ description: |
   RETIRED model-based Consensus Gate. Historical reference and explicitly
   authorized operator-only experiments; not production review or routing.
   Use persona-based Diversity of Thought after deterministic checks.
-compatibility: Created for Zo Computer
+compatibility: Originally created for Zo Computer (retired 2026-10-03); runs on any Linux host as part of the Zouroboros workshop.
 metadata:
   author: marlandoj.zo.computer
   version: 2.6.1

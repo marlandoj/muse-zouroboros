@@ -4,10 +4,14 @@ Every package in this repo is a vendored snapshot — copied from a working
 deployment, with machine-specific paths and dead platform references removed.
 `docs/de-zo-notes.md` lists every functional change made during vendoring.
 
-Conventions: `/home/workspace` paths in these packages refer to the Muse VM
-workspace root (a platform convention, portable across Muse VMs). `$HOME`
-in JSON configs means the installing user's home; `scripts/bootstrap.sh`
-expands it.
+Conventions: `/home/workspace` paths in these packages are a leftover of the
+platform the code was extracted from, where that was the workspace root. A
+generic Linux host has no `/home/workspace`, so those paths do not resolve
+there. Some call sites try a repo-relative or `$HOME` path first; not all
+of them have been checked. Over a hundred non-test files still carry such a
+path; treat any feature that depends on one as not portable until it is
+converted. `$HOME` in JSON configs means the
+installing user's home; `scripts/bootstrap.sh` expands it.
 
 ## `packages/memory-system` — shared memory substrate
 
@@ -166,4 +170,4 @@ gate).
   They exist upstream but are operationally heavy; get the five systems
   above stable first.
 - **Hetzner/Modal overflow executors and MoA consensus.** Retired upstream
-  as mitigations for a flaky platform era — not needed on a Muse VM.
+  as mitigations for a flaky platform era — not part of the workshop core.

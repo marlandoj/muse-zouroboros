@@ -3,7 +3,7 @@
 ## Run the bootstrap
 
 ```bash
-cd ~/workspace/zouroboros-for-muse
+cd ~/workspace/muse-zouroboros
 bash scripts/bootstrap.sh
 ```
 

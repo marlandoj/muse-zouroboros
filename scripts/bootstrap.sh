@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# bootstrap.sh — Zouroboros for Muse: core installer.
+# bootstrap.sh — Zouroboros workshop (Community Edition): core installer.
 # Idempotent. Safe to re-run. Never touches your memory DB or API keys.
 set -euo pipefail
 

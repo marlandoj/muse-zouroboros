@@ -310,9 +310,13 @@ function checkAuth(req: Request): boolean {
 }
 
 // --- Bun HTTP server ---
+// Without ZO_SWARM_MCP_TOKEN the server is unauthenticated, so it binds
+// loopback only. A network bind (0.0.0.0, or ZO_SWARM_MCP_HOST) requires the
+// token. For web clients use the OAuth remote mode (packages/workshop-remote).
+const HOSTNAME = BEARER_TOKEN ? (process.env.ZO_SWARM_MCP_HOST || "0.0.0.0") : "127.0.0.1";
 const server = Bun.serve({
   port: PORT,
-  hostname: "0.0.0.0",
+  hostname: HOSTNAME,
   idleTimeout: 0,
   async fetch(req: Request): Promise<Response> {
     const url = new URL(req.url);
@@ -354,5 +358,5 @@ const server = Bun.serve({
   },
 });
 
-console.error(`[swarm-mcp] HTTP server on http://0.0.0.0:${PORT}/mcp`);
-console.error(`[swarm-mcp] Auth: ${BEARER_TOKEN ? "required" : "none"}`);
+console.error(`[swarm-mcp] HTTP server on http://${HOSTNAME}:${PORT}/mcp`);
+console.error(`[swarm-mcp] Auth: ${BEARER_TOKEN ? "required" : "none — loopback only (set ZO_SWARM_MCP_TOKEN to bind a network interface)"}`);

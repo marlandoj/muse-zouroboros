@@ -3,7 +3,7 @@
 ## Check executor health
 
 ```bash
-cd ~/workspace/zouroboros-for-muse/packages/swarm-executors
+cd ~/workspace/muse-zouroboros/packages/swarm-executors
 bun scripts/doctor.ts
 ```
 
@@ -25,7 +25,7 @@ ones they'll be for real work.
 ```bash
 cd ../swarm-orchestrator
 bun install
-export SWARM_EXECUTOR_REGISTRY="$HOME/workspace/zouroboros-for-muse/packages/swarm-executors/registry/executor-registry.json"
+export SWARM_EXECUTOR_REGISTRY="$HOME/workspace/muse-zouroboros/packages/swarm-executors/registry/executor-registry.json"
 bun scripts/orchestrate-v5.ts doctor
 ```
 
@@ -60,9 +60,14 @@ attributed.
 ## Wire the dispatch seam (optional, recommended)
 
 `bun scripts/mcp-server.ts` (stdio) exposes the orchestrator as an MCP
-server. Add it to Muse's MCP config like you did for the memory server in step
-03. This is the **dispatch bridge**: from here on, "run this across the
-workshop" is something Muse can do without you leaving chat.
+server, `zouroboros-swarm`. If you followed step 03 and the
+[connect guide](../docs/connect.md), your client already has it: the guide
+wires both servers into every client (`bash scripts/connect-config.sh
+<client>` prints the swarm block too). This is the **dispatch bridge**:
+from here on, "run this across the workshop" is something your AI client
+can do without you leaving chat. Web clients get the swarm tools over
+remote mode only if you set `ZO_REMOTE_EXPOSE_SWARM=1`, because
+`swarm_execute` starts local coding agents.
 
 ## Prove it
 

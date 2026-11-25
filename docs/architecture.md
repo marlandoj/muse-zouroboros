@@ -2,8 +2,9 @@
 
 ## The problem this solves
 
-Muse is an excellent personal agent, but it is one model family doing
-everything inline: it writes your code, remembers your preferences, runs your
+Your AI client — the assistant you chat with every day — is good at being a
+personal agent, but it is usually one model family doing everything inline:
+it writes your code, remembers your preferences, keeps track of your
 schedule, and talks to your apps. That coherence is its strength — and its
 ceiling. Some jobs want a different shape:
 
@@ -21,12 +22,12 @@ Zouroboros is the layer that does those jobs. It is not a second assistant.
 ## The rule
 
 > If it's about **you** — conversation, relationships, schedule, notifications,
-> approvals, personal memory — it lives in **Muse**.
+> approvals, personal memory — it lives in **your AI client**.
 >
 > If it's about **building** — multi-model execution, verified delivery,
 > harness knowledge, code review — it lives in **Zouroboros**.
 >
-> **Muse calls into the workshop; the workshop reports back to Muse.**
+> **Your client calls into the workshop; the workshop reports back to your client.**
 
 Every future decision about where a feature goes gets filtered through that
 rule. It is the whole architecture in three lines.
@@ -44,7 +45,7 @@ breakers, fallback chains, and a budget governor.
 
 Entry point: `bun scripts/orchestrate-v5.ts` (`doctor`, `status` subcommands
 for health and state). Also exposes an MCP server (`mcp` / `mcp-http` scripts)
-so Muse itself can dispatch and inspect runs.
+so your AI client itself can dispatch and inspect runs.
 
 ### 2. Local executors (`packages/swarm-executors`)
 
@@ -69,10 +70,11 @@ store: episodic memory ("what happened"), procedural memory (versioned
 workflow patterns), a typed knowledge graph, auto-capture from work sessions,
 contradiction detection with supersession, and a 5-tier decay system.
 
-Every harness — and Muse — talks to the same database through one MCP server
-(the memory MCP server, stdio). Facts learned in a Codex session are searchable from
-Claude Code. Retrieval is BM25 + vector + graph with RRF fusion; without an
-embeddings key it falls back to FTS5 keyword search and keeps working.
+Every harness — and the AI client you chat with — talks to the same database
+through one MCP server (the memory MCP server, stdio). Facts learned in a
+Codex session are searchable from Claude Code. Retrieval is BM25 + vector +
+graph with RRF fusion; without an embeddings key it falls back to FTS5
+keyword search and keeps working.
 
 ### 4. Software factory (`factory/lane`)
 
@@ -104,30 +106,41 @@ All three install in **shadow mode**: they log what they *would* have done
 and change nothing. You read the reports, then flip individual harnesses or
 checks to live. A hook that crashes answers `{}` — the agent never notices.
 
-## The seams (how Muse talks to the workshop)
+## The seams (how your AI client talks to the workshop)
 
-Three bridges, in order of adoption:
+Your client connects to the workshop's two MCP servers: local clients over
+stdio, web clients over the opt-in OAuth remote endpoint
+(`packages/workshop-remote`). Per-client steps, and what has been tested
+for each, are in [connect.md](connect.md). Three bridges, in order of
+adoption:
 
-1. **Read bridge.** A small script Muse can run anytime: swarm health,
-   factory queue state, recent verdicts, harness versions. Workshop status
-   starts appearing in briefings without anyone asking. See
-   `examples/workshop-status.sh`.
-2. **Memory read.** Muse gets one-way read access to the shared-facts DB for
-   build context ("what did the factory decide about X?"). Personal memory
-   stays in Muse; work memory stays in Zouroboros. No sync — the boundary is
-   deliberate.
+1. **Read bridge.** A small script any client with a shell on the install
+   machine can run anytime: swarm health, factory queue state, recent
+   verdicts, harness versions. Workshop status starts appearing in briefings
+   without anyone asking. See `examples/workshop-status.sh`. Clients
+   without a shell (desktop and web clients) cannot run it yet: no MCP tool
+   wraps it.
+2. **Memory read.** Your client reads the shared-facts DB through the memory
+   MCP server for build context ("what did the factory decide about X?").
+   One-way read is the recommended posture, by convention: the server is
+   read-write. Your client's personal memory stays in your client; work
+   memory stays in Zouroboros. No sync — the boundary is deliberate.
 3. **Dispatch bridge.** "Build X" becomes a factory ticket instead of an
-   inline coding session: Muse drafts the 5-field contract, files it, and the
+   inline coding session: your client drafts the 5-field contract, the
+   ticket is filed as a Linear issue labelled `factory-ready`, and the
    verified pipeline (multi-model build, mutation testing, PR) takes it from
-   there. Sketches and one-offs stay inline in chat.
+   there. No Community MCP tool files the ticket: your client files it only
+   if it has Linear access of its own, otherwise you file it. Swarm runs
+   (`swarm_execute`) need no ticket. Sketches and one-offs stay inline in
+   chat.
 
 ## The overlap map (what not to duplicate)
 
-| Capability | Muse's version | Zouroboros's version | Verdict |
+| Capability | A typical AI client | Zouroboros's version | Verdict |
 |---|---|---|---|
 | Memory | Curated personal memory: who you are, preferences, commitments | Shared-facts working memory: build facts, procedures, episodes | Complementary. Personal vs. work. Don't sync them. |
 | Delegation | Subagents, one model family, full context inheritance | Executors, many model families, health-routed fallback | Route by need: coherence vs. breadth/cost. |
-| Scheduling | Managed crons and hooks with history and chat delivery | Watchdog-style supervision of its own services | Muse is the scheduler. Factory runs are jobs, not a platform. |
+| Scheduling | Reminders, scheduled tasks or automations, where your client offers them | Watchdog-style supervision of its own services | Your client (or your own scheduler) owns the schedule. Factory runs are jobs, not a platform. |
 | Building | Inline code, artifacts, single-agent | Factory lane: contract → build → verify → PR | Factory wins for anything with acceptance criteria. |
 | Review | — | Persona-based consensus panel (shadow verdicts) | Workshop-only. Don't rebuild in chat. |
 
@@ -135,12 +148,13 @@ Three bridges, in order of adoption:
 
 - **Credentials never cross the bridge.** The read/dispatch seams carry
   status and work requests, never API keys, tokens, or OAuth grants. Keys live
-  in root-only files on the VM, loaded by the services that need them.
-- **Don't rebuild Muse inside Zouroboros.** No second scheduler, no second
-  notifications, no second personal memory. Every duplicate is maintenance
-  paid twice.
-- **Don't rebuild Zouroboros inside Muse.** The workshop keeps its unfair
-  advantages: your paid subscriptions and the verify gate.
+  in owner-only files (mode 600, owned by the installing user) on the
+  machine, loaded by the services that need them.
+- **Don't rebuild your AI client inside Zouroboros.** No second scheduler, no
+  second notifications, no second personal memory. Every duplicate is
+  maintenance paid twice.
+- **Don't rebuild Zouroboros inside your AI client.** The workshop keeps its
+  unfair advantages: your paid subscriptions and the verify gate.
 - **Cost routing, explicitly.** Heavy token work (builds, reviews, sweeps)
   goes to the workshop on subscriptions you already pay for. Chat usage stays
   for orchestration, conversation, and connectors.
@@ -149,9 +163,13 @@ Three bridges, in order of adoption:
 
 ## Visual reference
 
-The detailed vector diagram of this architecture (front door, workshop,
-dispatch and read-status bridges, rollout phases) lives at
-`docs/assets/fusion-diagram.svg`, with a PNG render alongside it.
+`docs/assets/fusion-diagram.svg` is an older vector diagram of this
+architecture (front door, workshop, dispatch and read-status bridges,
+rollout phases), and `docs/assets/fusion-diagram.png` is an older, separate
+drawing — not a render of the SVG. Both predate this edition's
+client-neutral framing and are due for a redraw. Read them as history, not
+as a component list: their workshop column shows operator-side components
+(a console and an action ledger) that are not part of this repository.
 
 ## Where the code lives
 

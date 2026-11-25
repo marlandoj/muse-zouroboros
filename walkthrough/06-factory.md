@@ -3,7 +3,7 @@
 ## Prove the lane before trusting it
 
 ```bash
-cd ~/workspace/zouroboros-for-muse/factory/lane
+cd ~/workspace/muse-zouroboros/factory/lane
 bun scripts/factory-mvp.ts smoke
 ```
 
@@ -43,13 +43,21 @@ gap audit → PR → Linear writeback.
 **Read the first five post-flights end to end.** They teach you what the
 lane considers "done" — which is the entire trust proposition.
 
-## The Muse seam
+## The client seam
 
-From here on, the intended pattern: you describe the work in chat, Muse
-drafts the 5-field contract, you approve it, Muse files the ticket. The lane
-builds and verifies; Muse surfaces the PR. What Muse needs: Linear access,
-the contract schema, and the repo + base commit for the seed. Sketches and
-one-offs stay in chat — the factory is for work with acceptance criteria.
+From here on, the intended pattern: you describe the work in chat, your AI
+client drafts the 5-field contract, you approve it, and the ticket is filed
+as a Linear issue labelled `factory-ready`. The lane builds and verifies;
+the PR comes back to you. Be clear about who files it: **no Community MCP
+tool files a factory ticket.** Your client can file it only if it has
+Linear access of its own (a Linear connector or Linear MCP) plus the
+contract schema and the repo + base commit for the seed; otherwise your
+client drafts the contract and you file the issue in Linear yourself. A
+seed YAML is the build spec the ticket carries (or one you run by hand per
+the operator's manual §3) — there is no watched drop folder to file into.
+See [docs/connect.md — the seams](../docs/connect.md#what-the-connections-cannot-do-the-seams).
+Sketches and one-offs stay in chat — the factory is for work with
+acceptance criteria.
 
 ## Meet the review panel
 
