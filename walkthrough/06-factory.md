@@ -3,7 +3,7 @@
 ## Prove the lane before trusting it
 
 ```bash
-cd ~/workspace/zouroboros-for-muse/factory/lane
+cd ~/workspace/muse-zouroboros/factory/lane
 bun scripts/factory-mvp.ts smoke
 ```
 

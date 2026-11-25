@@ -8,7 +8,7 @@ come in step 07.
 ## wayfinder
 
 ```bash
-cd ~/workspace/zouroboros-for-muse/packages/wayfinder
+cd ~/workspace/muse-zouroboros/packages/wayfinder
 bash scripts/install.sh --dry-run   # review what it would touch
 bash scripts/install.sh             # idempotent; backs up configs first
 ```

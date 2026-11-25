@@ -93,7 +93,7 @@ ever touches a transcript, rotate it.
 
 ## Clone this repo
 
-Clone this repo to `~/workspace/zouroboros-for-muse` and `cd` into it.
+Clone this repo to `~/workspace/muse-zouroboros` and `cd` into it.
 
 ## Prove it
 

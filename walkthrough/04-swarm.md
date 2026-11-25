@@ -3,7 +3,7 @@
 ## Check executor health
 
 ```bash
-cd ~/workspace/zouroboros-for-muse/packages/swarm-executors
+cd ~/workspace/muse-zouroboros/packages/swarm-executors
 bun scripts/doctor.ts
 ```
 
@@ -25,7 +25,7 @@ ones they'll be for real work.
 ```bash
 cd ../swarm-orchestrator
 bun install
-export SWARM_EXECUTOR_REGISTRY="$HOME/workspace/zouroboros-for-muse/packages/swarm-executors/registry/executor-registry.json"
+export SWARM_EXECUTOR_REGISTRY="$HOME/workspace/muse-zouroboros/packages/swarm-executors/registry/executor-registry.json"
 bun scripts/orchestrate-v5.ts doctor
 ```
 

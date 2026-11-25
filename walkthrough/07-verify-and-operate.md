@@ -3,7 +3,7 @@
 ## Run the full check
 
 ```bash
-cd ~/workspace/zouroboros-for-muse
+cd ~/workspace/muse-zouroboros
 bash scripts/verify.sh
 ```
 

@@ -211,7 +211,7 @@ Known gaps between docs and code, worth fixing or modeling explicitly:
 | Gap | Where |
 | --- | --- |
 | The `procedure` routing signal queries columns the memory `procedures` table does not have, so it always falls back to 0.5. | `src/routing/signals.ts` |
-| The HTTP swarm MCP server binds `0.0.0.0` with no auth when `ZO_SWARM_MCP_TOKEN` is unset, contrary to the security doc. | `mcp-server-http.ts` |
+| (Fixed) The HTTP swarm MCP server used to bind `0.0.0.0` with no auth when `ZO_SWARM_MCP_TOKEN` was unset. It now binds `127.0.0.1` unless the token is set. Web clients use the OAuth remote mode (`packages/workshop-remote`), not this server. | `mcp-server-http.ts` |
 | Runtime flags allow review mode `off`, but the review gate throws on anything except `shadow` or `enforce`. | `runtime-config.ts`, `factory-review-gate.ts` |
 | Docs say hooks fail open, but Verity in `live` fails closed. | `docs/hooks.md`, `verity-hook.sh` |
 | The two executor registry copies disagree on `transportFallback`. | `swarm-executors/`, `swarm-orchestrator/` |

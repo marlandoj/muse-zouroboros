@@ -1,0 +1,19 @@
+{
+  "name": "workshop-remote",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Remote mode for the Community workshop: one OAuth-protected Streamable HTTP MCP endpoint for web clients (ChatGPT, Claude.ai, Muse). Off unless the operator enables it.",
+  "scripts": {
+    "start": "bun src/server.ts",
+    "init": "bash scripts/remote-init.sh",
+    "test": "bun test test/"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1"
+  },
+  "devDependencies": {
+    "bun-types": "^1.3.14",
+    "typescript": "^5.9.3"
+  }
+}

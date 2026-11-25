@@ -3,7 +3,7 @@
 ## Initialize the database
 
 ```bash
-cd ~/workspace/zouroboros-for-muse/packages/memory-system
+cd ~/workspace/muse-zouroboros/packages/memory-system
 bash scripts/install.sh
 ```
 
@@ -29,40 +29,44 @@ You should see the fact you just stored come back in the hybrid results. If
 that's fine, keyword search works. (If you expected full mode, see
 `docs/api-keys.md` — Troubleshooting.)
 
-## Wire the MCP server into one harness
+## Wire the MCP servers into your client
 
-Pick the harness you use most. Add the memory stdio server to its MCP
-config (adjust the config shape to your harness; the server command is the
-same):
+The workshop ships two stdio MCP servers, and every client should get both:
 
-- Claude Code: `~/.claude.json`
-- Codex CLI: `~/.codex/config.toml`
-- OpenCode: `~/.config/opencode/opencode.json`
+| Server | Command (paths the installer creates) | Env |
+|---|---|---|
+| `zouroboros-memory` | `bun ~/workspace/muse-zouroboros/packages/memory-system/scripts/mcp-server.ts` | `ZOUROBOROS_MEMORY_DB=~/.zo/memory/shared-facts.db` |
+| `zouroboros-swarm` | `bun ~/workspace/muse-zouroboros/packages/swarm-orchestrator/scripts/mcp-server.ts` | `ZOUROBOROS_MEMORY_DB`, `SWARM_EXECUTOR_REGISTRY`, `SWARM_WORKSPACE` |
 
-```json
-{
-  "mcpServers": {
-    "zouroboros-memory": {
-      "command": "bun",
-      "args": ["$HOME/workspace/zouroboros-for-muse/packages/memory-system/scripts/mcp-server.ts"],
-      "env": { "ZOUROBOROS_MEMORY_DB": "$HOME/.zo/memory/shared-facts.db" }
-    }
-  }
-}
+Each client has its own config format, and most do not expand `~` or
+`$HOME` inside MCP config, so don't hand-adapt a snippet. Print the exact
+block for your client, with this machine's absolute paths filled in:
+
+```bash
+cd ~/workspace/muse-zouroboros
+bash scripts/connect-config.sh --list      # claude-code codex gemini opencode hermes kimi pi claude-desktop cursor vscode
+bash scripts/connect-config.sh codex       # prints the block and says which file it goes in
 ```
+
+Paste it where it says, then load the concierge playbook in that client's
+own instructions form (the same output tells you how). The per-client
+details, the first check to run in each, and what has and has not been
+tested are in [docs/connect.md](../docs/connect.md). Web clients (ChatGPT,
+Claude.ai, Muse) cannot run a local command; they use the opt-in remote
+mode in `packages/workshop-remote` instead, also covered there.
 
 **Actor scoping:** `memory_store` and `memory_search` accept an optional
 `actor` argument naming the calling harness/persona; when omitted, the call
 operates on the `shared` pool. Tell each harness to pass its identity, e.g.:
 
 ```json
-{ "name": "memory_store", "arguments": { "actor": "claude-code", "entity": "workshop", "value": "wired up", "persona": "shared" } }
+{ "name": "memory_store", "arguments": { "actor": "codex", "entity": "workshop", "value": "wired up", "persona": "shared" } }
 ```
 
-**Prove it:** in that harness, ask it to store a fact through the MCP tools
+**Prove it:** in that client, ask it to store a fact through the MCP tools
 (`memory_store` with its own `actor`, `persona: "shared"`), then in a
-*different* harness (or a fresh session), search for it (`memory_search` with
-that harness's `actor`). Cross-harness recall on day one is the whole point
+*different* client (or a fresh session), search for it (`memory_search` with
+that client's `actor`). Cross-client recall on day one is the whole point
 — if it works now, the substrate is real. Then check the audit trail:
 `sqlite3 ~/.zo/memory/shared-facts.db "SELECT actor, action, scope FROM memory_audit ORDER BY id DESC LIMIT 5"`.
 
