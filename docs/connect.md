@@ -28,17 +28,20 @@ There are two kinds of client:
 
 ## 0. Before you start
 
-1. Install the workshop. The installer puts it at `~/workspace/muse-zouroboros`:
+1. Install the workshop. The installer puts it at `~/workspace/zouroboros-workshop`
+   (an install made before the repo's rename stays at `~/workspace/muse-zouroboros`;
+   the installer keeps using it, so read that path wherever this guide says
+   `zouroboros-workshop`):
    ```bash
-   curl -fsSL https://raw.githubusercontent.com/marlandoj/muse-zouroboros/main/scripts/quickstart.sh | bash
+   curl -fsSL https://raw.githubusercontent.com/marlandoj/zouroboros-workshop/main/scripts/quickstart.sh | bash
    ```
 2. Create the memory database (walkthrough step 03):
    ```bash
-   cd ~/workspace/muse-zouroboros/packages/memory-system && bash scripts/install.sh
+   cd ~/workspace/zouroboros-workshop/packages/memory-system && bash scripts/install.sh
    ```
 3. Print the config for your client. It comes out with **your** absolute paths filled in:
    ```bash
-   cd ~/workspace/muse-zouroboros
+   cd ~/workspace/zouroboros-workshop
    bash scripts/connect-config.sh --list
    bash scripts/connect-config.sh <client>
    ```
@@ -58,16 +61,16 @@ Cursor all read this exact shape:
   "mcpServers": {
     "zouroboros-memory": {
       "command": "/home/you/.bun/bin/bun",
-      "args": ["/home/you/workspace/muse-zouroboros/packages/memory-system/scripts/mcp-server.ts"],
+      "args": ["/home/you/workspace/zouroboros-workshop/packages/memory-system/scripts/mcp-server.ts"],
       "env": { "ZOUROBOROS_MEMORY_DB": "/home/you/.zo/memory/shared-facts.db" }
     },
     "zouroboros-swarm": {
       "command": "/home/you/.bun/bin/bun",
-      "args": ["/home/you/workspace/muse-zouroboros/packages/swarm-orchestrator/scripts/mcp-server.ts"],
+      "args": ["/home/you/workspace/zouroboros-workshop/packages/swarm-orchestrator/scripts/mcp-server.ts"],
       "env": {
         "ZOUROBOROS_MEMORY_DB": "/home/you/.zo/memory/shared-facts.db",
-        "SWARM_EXECUTOR_REGISTRY": "/home/you/workspace/muse-zouroboros/packages/swarm-executors/registry/executor-registry.json",
-        "SWARM_WORKSPACE": "/home/you/workspace/muse-zouroboros"
+        "SWARM_EXECUTOR_REGISTRY": "/home/you/workspace/zouroboros-workshop/packages/swarm-executors/registry/executor-registry.json",
+        "SWARM_WORKSPACE": "/home/you/workspace/zouroboros-workshop"
       }
     }
   }
@@ -89,23 +92,23 @@ point of the shared memory.
 ```toml
 [mcp_servers.zouroboros-memory]
 command = "/home/you/.bun/bin/bun"
-args = ["/home/you/workspace/muse-zouroboros/packages/memory-system/scripts/mcp-server.ts"]
+args = ["/home/you/workspace/zouroboros-workshop/packages/memory-system/scripts/mcp-server.ts"]
 
 [mcp_servers.zouroboros-memory.env]
 ZOUROBOROS_MEMORY_DB = "/home/you/.zo/memory/shared-facts.db"
 
 [mcp_servers.zouroboros-swarm]
 command = "/home/you/.bun/bin/bun"
-args = ["/home/you/workspace/muse-zouroboros/packages/swarm-orchestrator/scripts/mcp-server.ts"]
+args = ["/home/you/workspace/zouroboros-workshop/packages/swarm-orchestrator/scripts/mcp-server.ts"]
 
 [mcp_servers.zouroboros-swarm.env]
 ZOUROBOROS_MEMORY_DB = "/home/you/.zo/memory/shared-facts.db"
-SWARM_EXECUTOR_REGISTRY = "/home/you/workspace/muse-zouroboros/packages/swarm-executors/registry/executor-registry.json"
-SWARM_WORKSPACE = "/home/you/workspace/muse-zouroboros"
+SWARM_EXECUTOR_REGISTRY = "/home/you/workspace/zouroboros-workshop/packages/swarm-executors/registry/executor-registry.json"
+SWARM_WORKSPACE = "/home/you/workspace/zouroboros-workshop"
 ```
 
 **Playbook:** Codex reads `~/.codex/AGENTS.md`. It has no import syntax, so link or copy the file:
-`ln -s ~/workspace/muse-zouroboros/docs/concierge.md ~/.codex/AGENTS.md`. If you already have an
+`ln -s ~/workspace/zouroboros-workshop/docs/concierge.md ~/.codex/AGENTS.md`. If you already have an
 AGENTS.md, append to it instead: `cat …/docs/concierge.md >> ~/.codex/AGENTS.md`.
 
 **First check:** `codex mcp list` shows both servers `enabled`. Then run the memory round trip above.
@@ -121,12 +124,12 @@ Do this only for servers you trust. Leave the swarm server on prompts.
 **Config:** run the two commands `connect-config.sh claude-code` prints. They write user scope into `~/.claude.json`:
 
 ```bash
-claude mcp add-json --scope user zouroboros-memory '{"command":"/home/you/.bun/bin/bun","args":["/home/you/workspace/muse-zouroboros/packages/memory-system/scripts/mcp-server.ts"],"env":{"ZOUROBOROS_MEMORY_DB":"/home/you/.zo/memory/shared-facts.db"}}'
-claude mcp add-json --scope user zouroboros-swarm '{"command":"/home/you/.bun/bin/bun","args":["/home/you/workspace/muse-zouroboros/packages/swarm-orchestrator/scripts/mcp-server.ts"],"env":{"ZOUROBOROS_MEMORY_DB":"/home/you/.zo/memory/shared-facts.db","SWARM_EXECUTOR_REGISTRY":"/home/you/workspace/muse-zouroboros/packages/swarm-executors/registry/executor-registry.json","SWARM_WORKSPACE":"/home/you/workspace/muse-zouroboros"}}'
+claude mcp add-json --scope user zouroboros-memory '{"command":"/home/you/.bun/bin/bun","args":["/home/you/workspace/zouroboros-workshop/packages/memory-system/scripts/mcp-server.ts"],"env":{"ZOUROBOROS_MEMORY_DB":"/home/you/.zo/memory/shared-facts.db"}}'
+claude mcp add-json --scope user zouroboros-swarm '{"command":"/home/you/.bun/bin/bun","args":["/home/you/workspace/zouroboros-workshop/packages/swarm-orchestrator/scripts/mcp-server.ts"],"env":{"ZOUROBOROS_MEMORY_DB":"/home/you/.zo/memory/shared-facts.db","SWARM_EXECUTOR_REGISTRY":"/home/you/workspace/zouroboros-workshop/packages/swarm-executors/registry/executor-registry.json","SWARM_WORKSPACE":"/home/you/workspace/zouroboros-workshop"}}'
 ```
 
 **Playbook:** add this one import line to `~/.claude/CLAUDE.md`:
-`@/home/you/workspace/muse-zouroboros/docs/concierge.md`. Claude Code follows
+`@/home/you/workspace/zouroboros-workshop/docs/concierge.md`. Claude Code follows
 imports with absolute paths. This was tested: the playbook text reached the model.
 
 **First check:** `claude mcp list` shows both servers `✔ Connected`. Then run the memory round trip.
@@ -136,7 +139,7 @@ imports with absolute paths. This was tested: the playbook text reached the mode
 **Config:** merge block A into `~/.gemini/settings.json`.
 
 **Playbook:** link the file as `~/.gemini/GEMINI.md`:
-`ln -s ~/workspace/muse-zouroboros/docs/concierge.md ~/.gemini/GEMINI.md`. If you
+`ln -s ~/workspace/zouroboros-workshop/docs/concierge.md ~/.gemini/GEMINI.md`. If you
 already have a GEMINI.md, append to it instead. **Do not use an `@import` line**:
 Gemini refuses imports from outside `~/.gemini` ("Import failed … Path traversal
 attempt"). This was observed in testing.
@@ -158,22 +161,22 @@ directory you work in. This was observed in testing.
   "mcp": {
     "zouroboros-memory": {
       "type": "local",
-      "command": ["/home/you/.bun/bin/bun", "/home/you/workspace/muse-zouroboros/packages/memory-system/scripts/mcp-server.ts"],
+      "command": ["/home/you/.bun/bin/bun", "/home/you/workspace/zouroboros-workshop/packages/memory-system/scripts/mcp-server.ts"],
       "environment": { "ZOUROBOROS_MEMORY_DB": "/home/you/.zo/memory/shared-facts.db" },
       "enabled": true
     },
     "zouroboros-swarm": {
       "type": "local",
-      "command": ["/home/you/.bun/bin/bun", "/home/you/workspace/muse-zouroboros/packages/swarm-orchestrator/scripts/mcp-server.ts"],
+      "command": ["/home/you/.bun/bin/bun", "/home/you/workspace/zouroboros-workshop/packages/swarm-orchestrator/scripts/mcp-server.ts"],
       "environment": {
         "ZOUROBOROS_MEMORY_DB": "/home/you/.zo/memory/shared-facts.db",
-        "SWARM_EXECUTOR_REGISTRY": "/home/you/workspace/muse-zouroboros/packages/swarm-executors/registry/executor-registry.json",
-        "SWARM_WORKSPACE": "/home/you/workspace/muse-zouroboros"
+        "SWARM_EXECUTOR_REGISTRY": "/home/you/workspace/zouroboros-workshop/packages/swarm-executors/registry/executor-registry.json",
+        "SWARM_WORKSPACE": "/home/you/workspace/zouroboros-workshop"
       },
       "enabled": true
     }
   },
-  "instructions": ["/home/you/workspace/muse-zouroboros/docs/concierge.md"]
+  "instructions": ["/home/you/workspace/zouroboros-workshop/docs/concierge.md"]
 }
 ```
 
@@ -189,16 +192,16 @@ directory you work in. This was observed in testing.
 mcp_servers:
   zouroboros-memory:
     command: "/home/you/.bun/bin/bun"
-    args: ["/home/you/workspace/muse-zouroboros/packages/memory-system/scripts/mcp-server.ts"]
+    args: ["/home/you/workspace/zouroboros-workshop/packages/memory-system/scripts/mcp-server.ts"]
     env:
       ZOUROBOROS_MEMORY_DB: "/home/you/.zo/memory/shared-facts.db"
   zouroboros-swarm:
     command: "/home/you/.bun/bin/bun"
-    args: ["/home/you/workspace/muse-zouroboros/packages/swarm-orchestrator/scripts/mcp-server.ts"]
+    args: ["/home/you/workspace/zouroboros-workshop/packages/swarm-orchestrator/scripts/mcp-server.ts"]
     env:
       ZOUROBOROS_MEMORY_DB: "/home/you/.zo/memory/shared-facts.db"
-      SWARM_EXECUTOR_REGISTRY: "/home/you/workspace/muse-zouroboros/packages/swarm-executors/registry/executor-registry.json"
-      SWARM_WORKSPACE: "/home/you/workspace/muse-zouroboros"
+      SWARM_EXECUTOR_REGISTRY: "/home/you/workspace/zouroboros-workshop/packages/swarm-executors/registry/executor-registry.json"
+      SWARM_WORKSPACE: "/home/you/workspace/zouroboros-workshop"
 ```
 
 **Playbook:** Hermes reads `AGENTS.md` only from the directory it starts in.
@@ -207,7 +210,7 @@ commands `connect-config.sh hermes` prints are:
 
 ```bash
 mkdir -p ~/.hermes/skills/zouroboros-concierge
-{ printf -- '---\nname: zouroboros-concierge\ndescription: Use when the user asks to set up, install, verify or operate the Zouroboros workshop. Onboarding playbook.\n---\n\n'; cat ~/workspace/muse-zouroboros/docs/concierge.md; } > ~/.hermes/skills/zouroboros-concierge/SKILL.md
+{ printf -- '---\nname: zouroboros-concierge\ndescription: Use when the user asks to set up, install, verify or operate the Zouroboros workshop. Onboarding playbook.\n---\n\n'; cat ~/workspace/zouroboros-workshop/docs/concierge.md; } > ~/.hermes/skills/zouroboros-concierge/SKILL.md
 ```
 
 The skill shows up in Hermes's skill index. The model loads it when you ask
@@ -225,7 +228,7 @@ it. Kimi Code 2.4.1 keeps MCP servers in `~/.kimi-code/mcp.json`, or
 **Config:** block A, verbatim, as `~/.kimi-code/mcp.json`. If the file already has `mcpServers`, merge into it.
 
 **Playbook:** Kimi Code reads `~/.kimi-code/AGENTS.md`, with no import syntax:
-`ln -s ~/workspace/muse-zouroboros/docs/concierge.md ~/.kimi-code/AGENTS.md`. If you
+`ln -s ~/workspace/zouroboros-workshop/docs/concierge.md ~/.kimi-code/AGENTS.md`. If you
 already have one, append to it. This was tested: the playbook text reached the model.
 
 **First check:** run the memory round trip in a session (`kimi`, or
@@ -243,17 +246,17 @@ The format comes from the tool itself (`pi mcp add` writes it).
   "mcpServers": {
     "zouroboros-memory": {
       "command": "/home/you/.bun/bin/bun",
-      "args": ["/home/you/workspace/muse-zouroboros/packages/memory-system/scripts/mcp-server.ts"],
+      "args": ["/home/you/workspace/zouroboros-workshop/packages/memory-system/scripts/mcp-server.ts"],
       "env": { "ZOUROBOROS_MEMORY_DB": "/home/you/.zo/memory/shared-facts.db" },
       "exposure": "direct"
     },
     "zouroboros-swarm": {
       "command": "/home/you/.bun/bin/bun",
-      "args": ["/home/you/workspace/muse-zouroboros/packages/swarm-orchestrator/scripts/mcp-server.ts"],
+      "args": ["/home/you/workspace/zouroboros-workshop/packages/swarm-orchestrator/scripts/mcp-server.ts"],
       "env": {
         "ZOUROBOROS_MEMORY_DB": "/home/you/.zo/memory/shared-facts.db",
-        "SWARM_EXECUTOR_REGISTRY": "/home/you/workspace/muse-zouroboros/packages/swarm-executors/registry/executor-registry.json",
-        "SWARM_WORKSPACE": "/home/you/workspace/muse-zouroboros"
+        "SWARM_EXECUTOR_REGISTRY": "/home/you/workspace/zouroboros-workshop/packages/swarm-executors/registry/executor-registry.json",
+        "SWARM_WORKSPACE": "/home/you/workspace/zouroboros-workshop"
       },
       "exposure": "direct"
     }
@@ -264,7 +267,7 @@ The format comes from the tool itself (`pi mcp add` writes it).
 `"exposure": "direct"` gives the model the tools by name. Pi's default,
 `codemode`, wraps them behind its code tool. Only direct exposure was tested.
 
-**Playbook:** `ln -s ~/workspace/muse-zouroboros/docs/concierge.md ~/.pi/agent/AGENTS.md`.
+**Playbook:** `ln -s ~/workspace/zouroboros-workshop/docs/concierge.md ~/.pi/agent/AGENTS.md`.
 If you already have one, append to it.
 
 **First check:** `pi mcp list` shows `zouroboros-memory: connected, 6 tools` and
@@ -296,7 +299,7 @@ As with Claude Desktop, only a scripted MCP client read this file. The app itsel
 
 ```bash
 mkdir -p <project>/.cursor/rules
-{ printf -- '---\ndescription: Zouroboros concierge playbook\nalwaysApply: true\n---\n\n'; cat ~/workspace/muse-zouroboros/docs/concierge.md; } > <project>/.cursor/rules/zouroboros-concierge.mdc
+{ printf -- '---\ndescription: Zouroboros concierge playbook\nalwaysApply: true\n---\n\n'; cat ~/workspace/zouroboros-workshop/docs/concierge.md; } > <project>/.cursor/rules/zouroboros-concierge.mdc
 ```
 
 **First check:** Cursor Settings → MCP shows both servers with their tools. Then run the memory round trip in Agent mode.
@@ -314,24 +317,24 @@ it with **MCP: Open User Configuration**, or use `<project>/.vscode/mcp.json`:
     "zouroboros-memory": {
       "type": "stdio",
       "command": "/home/you/.bun/bin/bun",
-      "args": ["/home/you/workspace/muse-zouroboros/packages/memory-system/scripts/mcp-server.ts"],
+      "args": ["/home/you/workspace/zouroboros-workshop/packages/memory-system/scripts/mcp-server.ts"],
       "env": { "ZOUROBOROS_MEMORY_DB": "/home/you/.zo/memory/shared-facts.db" }
     },
     "zouroboros-swarm": {
       "type": "stdio",
       "command": "/home/you/.bun/bin/bun",
-      "args": ["/home/you/workspace/muse-zouroboros/packages/swarm-orchestrator/scripts/mcp-server.ts"],
+      "args": ["/home/you/workspace/zouroboros-workshop/packages/swarm-orchestrator/scripts/mcp-server.ts"],
       "env": {
         "ZOUROBOROS_MEMORY_DB": "/home/you/.zo/memory/shared-facts.db",
-        "SWARM_EXECUTOR_REGISTRY": "/home/you/workspace/muse-zouroboros/packages/swarm-executors/registry/executor-registry.json",
-        "SWARM_WORKSPACE": "/home/you/workspace/muse-zouroboros"
+        "SWARM_EXECUTOR_REGISTRY": "/home/you/workspace/zouroboros-workshop/packages/swarm-executors/registry/executor-registry.json",
+        "SWARM_WORKSPACE": "/home/you/workspace/zouroboros-workshop"
       }
     }
   }
 }
 ```
 
-**Playbook:** `cp ~/workspace/muse-zouroboros/docs/concierge.md <project>/.github/copilot-instructions.md`.
+**Playbook:** `cp ~/workspace/zouroboros-workshop/docs/concierge.md <project>/.github/copilot-instructions.md`.
 
 **First check:** **MCP: List Servers** shows both servers running. Then run the memory round trip in agent mode.
 
@@ -355,7 +358,7 @@ used. The steps below are what that test will be.
 ### Turn it on (off by default)
 
 ```bash
-cd ~/workspace/muse-zouroboros && bun install
+cd ~/workspace/zouroboros-workshop && bun install
 bash packages/workshop-remote/scripts/remote-init.sh     # creates ~/.config/zouroboros/remote-operator.secret (mode 600)
 cat ~/.config/zouroboros/remote-operator.secret          # put it in your password manager
 ```

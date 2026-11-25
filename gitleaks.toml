@@ -1,4 +1,4 @@
-# Gitleaks config for the public muse-zouroboros package.
+# Gitleaks config for the public zouroboros-workshop package (formerly muse-zouroboros).
 # See zouroboros-monorepo docs/security/secret-handling-policy.md §3b.
 # Extends default rules; allowlists ONLY paths audited 2026-10-16 to
 # contain synthetic test/calibration secrets. Production code must

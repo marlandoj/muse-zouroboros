@@ -144,7 +144,7 @@ def _provider(model):
     if orouter:
         bm = model[3:] if model.startswith("hf:") else model
         return OPENROUTER_API, {"Authorization": f"Bearer {orouter}", "content-type": "application/json",
-                                "HTTP-Referer": "https://github.com/marlandoj/muse-zouroboros",
+                                "HTTP-Referer": "https://github.com/marlandoj/zouroboros-workshop",
                                 "X-Title": "Zouroboros Prompt A/B"}, bm
     if oai:
         return OPENAI_API, {"Authorization": f"Bearer {oai}", "content-type": "application/json"}, "gpt-4o-mini"

@@ -120,7 +120,8 @@ operator experiments, not as a merge gate.
 2. OpenRouter `HTTP-Referer` headers (`scripts/consensus-gate.ts`,
    `scripts/moa-runtime.ts`, `scripts/prompt-ab.py`) pointed at the private
    upstream repo (`github.com/marlandoj/zouroboros`); now
-   `github.com/marlandoj/muse-zouroboros`.
+   `github.com/marlandoj/muse-zouroboros` (since the 2026-11-25 rename,
+   `github.com/marlandoj/zouroboros-workshop`).
 3. `scripts/consensus-lineup.ts` — import adapted per the repo's standing
    rule: `../../../packages/swarm/...` →
    `../../../packages/zo-swarm-orchestrator/...` (the target,

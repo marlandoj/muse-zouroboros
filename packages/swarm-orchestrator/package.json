@@ -18,7 +18,7 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/marlandoj/muse-zouroboros.git",
+    "url": "https://github.com/marlandoj/zouroboros-workshop.git",
     "directory": "packages/swarm-orchestrator"
   },
   "bin": {

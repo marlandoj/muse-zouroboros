@@ -94,7 +94,9 @@ ever touches a transcript, rotate it.
 
 ## Clone this repo
 
-Clone this repo to `~/workspace/muse-zouroboros` and `cd` into it.
+Clone this repo to `~/workspace/zouroboros-workshop` and `cd` into it. (Installed
+before the repo's rename? Your checkout is at `~/workspace/muse-zouroboros`;
+use that path wherever these pages say `zouroboros-workshop`.)
 
 ## Prove it
 

@@ -54,7 +54,7 @@ advertise CIMD.
 ## Run it
 
 ```bash
-cd ~/workspace/muse-zouroboros && bun install          # once, picks up this package
+cd ~/workspace/zouroboros-workshop && bun install          # once, picks up this package
 bash packages/workshop-remote/scripts/remote-init.sh   # writes ~/.config/zouroboros/remote-operator.secret (600)
 
 # expose 127.0.0.1:48410 over HTTPS with your tunnel or reverse proxy, then:

@@ -1,10 +1,10 @@
 # Zouroboros Workshop Ontology
 
-_As of 2026-10-11 · derived from `marlandoj/muse-zouroboros @ 22a82c4` · class names and axioms cite the files that enforce them._
+_As of 2026-10-11 · derived from `marlandoj/muse-zouroboros @ 22a82c4` (the repo was renamed `marlandoj/zouroboros-workshop` on 2026-11-25) · class names and axioms cite the files that enforce them._
 
 ## Purpose and scope
 
-This ontology names the things that exist in [marlandoj/muse-zouroboros](https://github.com/marlandoj/muse-zouroboros) (commit `22a82c4`), how they relate, and the rules the code enforces between them. It is derived from the repo's README, `docs/`, `walkthrough/`, the seven packages under `packages/`, and the factory lane under `factory/lane/`.
+This ontology names the things that exist in [marlandoj/zouroboros-workshop](https://github.com/marlandoj/zouroboros-workshop) (commit `22a82c4`), how they relate, and the rules the code enforces between them. It is derived from the repo's README, `docs/`, `walkthrough/`, the seven packages under `packages/`, and the factory lane under `factory/lane/`.
 
 The repo packages Zouroboros as a **workshop** behind the user's own **AI client** — any MCP-capable assistant, which acts as the front door. One rule splits the world in two: anything about the user (conversation, schedule, relationships, personal memory, approvals) lives in the client; anything about building (swarm work, work memory, review, delivery) lives in Zouroboros. The client reaches the workshop only through narrow bridges that carry work requests and status, never personal data or credentials.
 

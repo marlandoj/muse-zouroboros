@@ -269,7 +269,7 @@ export async function callMoaModel(model: string, prompt: string, options: MoaCa
     if (!openrouterKey) return failure(model, provider, "OPENROUTER_API_KEY not set");
     const vendorModel = model.replace(/^or:/, "");
     return callOpenAiCompatible(vendorModel, prompt, options, provider, OPENROUTER_URL, openrouterKey, {
-      "HTTP-Referer": "https://github.com/marlandoj/muse-zouroboros",
+      "HTTP-Referer": "https://github.com/marlandoj/zouroboros-workshop",
       "X-Title": "Zouroboros MoA",
     });
   }
@@ -282,7 +282,7 @@ export async function callMoaModel(model: string, prompt: string, options: MoaCa
   const openrouterModel = mapToOpenRouter(syntheticModel);
   if (openrouterKey && openrouterModel) {
     const failover = await callOpenAiCompatible(openrouterModel, prompt, options, "openrouter", OPENROUTER_URL, openrouterKey, {
-      "HTTP-Referer": "https://github.com/marlandoj/muse-zouroboros",
+      "HTTP-Referer": "https://github.com/marlandoj/zouroboros-workshop",
       "X-Title": "Zouroboros MoA",
     });
     if (failover.ok) return { ...failover, model };

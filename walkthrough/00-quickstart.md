@@ -18,7 +18,7 @@ Two moves: install, then connect your AI client and hand it the result.
 **Install.** One command, and it needs nothing but `bash` and `curl`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/marlandoj/muse-zouroboros/main/scripts/quickstart.sh | bash
+curl -fsSL https://raw.githubusercontent.com/marlandoj/zouroboros-workshop/main/scripts/quickstart.sh | bash
 ```
 
 (If Node is already installed, `npx -y muse-zouroboros@latest` runs the same
@@ -89,8 +89,8 @@ mode).
 ## Step 1 — Install (2 minutes)
 
 ```bash
-git clone https://github.com/marlandoj/muse-zouroboros.git
-cd muse-zouroboros
+git clone https://github.com/marlandoj/zouroboros-workshop.git
+cd zouroboros-workshop
 bash scripts/bootstrap.sh
 ```
 
