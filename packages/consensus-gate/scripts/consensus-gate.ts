@@ -902,7 +902,7 @@ Criteria: ${criteria}`;
   const orHeaders = {
     Authorization: `Bearer ${openrouterKey}`,
     "content-type": "application/json",
-    "HTTP-Referer": "https://github.com/marlandoj/muse-zouroboros",
+    "HTTP-Referer": "https://github.com/marlandoj/zouroboros-workshop",
     "X-Title": "Zouroboros Consensus Gate",
   };
   // opencode.ai/zen sits behind Cloudflare bot-protection that 403s (error 1010)

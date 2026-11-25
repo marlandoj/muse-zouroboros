@@ -1,9 +1,9 @@
 {
   "author": "Kevin Jackson",
   "bin": {
-    "muse-zouroboros": "scripts/quickstart.sh"
+    "zouroboros-workshop": "scripts/quickstart.sh"
   },
-  "description": "Zouroboros for Muse \u2014 the workshop behind your personal AI",
+  "description": "Zouroboros Workshop \u2014 the workshop behind your personal AI, driven from any MCP-capable AI client",
   "files": [
     "scripts/",
     "docs/",
@@ -12,17 +12,17 @@
     "LICENSE"
   ],
   "license": "MIT",
-  "name": "muse-zouroboros",
+  "name": "zouroboros-workshop",
   "repository": {
     "type": "git",
-    "url": "https://github.com/marlandoj/muse-zouroboros.git"
+    "url": "https://github.com/marlandoj/zouroboros-workshop.git"
   },
   "scripts": {
     "bootstrap": "bash scripts/bootstrap.sh",
     "verify": "bash scripts/verify.sh"
   },
   "type": "module",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "workspaces": [
     "packages/*",
     "factory/lane"

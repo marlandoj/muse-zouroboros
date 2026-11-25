@@ -3,8 +3,8 @@
 # install's real absolute paths filled in. Prints only; writes nothing.
 #
 # Usage:
-#   bash ~/workspace/muse-zouroboros/scripts/connect-config.sh <client>
-#   bash ~/workspace/muse-zouroboros/scripts/connect-config.sh --list
+#   bash ~/workspace/zouroboros-workshop/scripts/connect-config.sh <client>
+#   bash ~/workspace/zouroboros-workshop/scripts/connect-config.sh --list
 #
 # Clients: claude-code codex gemini opencode hermes kimi pi
 #          claude-desktop cursor vscode

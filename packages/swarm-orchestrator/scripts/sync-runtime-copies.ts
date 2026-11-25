@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
  * sync-runtime-copies.ts — keeps generated runtime copies in sync with the
- * canonical sources in THIS distribution (marlandoj/muse-zouroboros).
+ * canonical sources in THIS distribution (marlandoj/zouroboros-workshop).
  *
  * Public-package layout (contrast the monorepo, where the swarm package lives
  * at packages/swarm):

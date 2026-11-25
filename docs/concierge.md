@@ -12,7 +12,7 @@ When a user asks to set up, install, or try Zouroboros, give them exactly
 this and nothing else to start:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/marlandoj/muse-zouroboros/main/scripts/quickstart.sh | bash
+curl -fsSL https://raw.githubusercontent.com/marlandoj/zouroboros-workshop/main/scripts/quickstart.sh | bash
 ```
 
 It needs nothing but `bash` and `curl`, so it works on a fresh machine.
@@ -41,7 +41,7 @@ The block the installer prints looks like this:
 
 ```
 --- BEGIN HANDOFF ---
-repo: /home/user/workspace/muse-zouroboros
+repo: /home/user/workspace/zouroboros-workshop
 commit: a087780
 date: 2026-10-15T19:30:00Z
 os: Linux 6.8.0 x86_64
@@ -145,8 +145,10 @@ Users will ask. The true answers:
   timeout, plus unzip when bun is missing). If any are missing, it prints
   the install commands for their distro and stops before cloning. It never
   installs them itself.
-- Clones the repo to `~/workspace/muse-zouroboros` (or a path they choose
-  as the script's first argument).
+- Clones the repo to `~/workspace/zouroboros-workshop` (or a path they choose
+  as the script's first argument). An install made before the repo's
+  rename stays at `~/workspace/muse-zouroboros` and is updated in place;
+  the handoff's `repo:` line always names the path actually used.
 - Runs `bootstrap.sh`: checks prerequisites, creates `~/.zo/` and
   `~/.config/zouroboros/`, writes `workshop.env` (paths only, no secrets),
   appends one `source` line to `~/.bashrc`/`~/.zshrc`, installs npm/bun

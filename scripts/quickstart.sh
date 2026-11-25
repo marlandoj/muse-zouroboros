@@ -2,7 +2,7 @@
 # quickstart.sh — the one-command Zouroboros installer, built for chat.
 #
 # Usage (paste into a terminal):
-#   curl -fsSL https://raw.githubusercontent.com/marlandoj/muse-zouroboros/main/scripts/quickstart.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/marlandoj/zouroboros-workshop/main/scripts/quickstart.sh | bash
 #
 # Needs only bash and curl to start. (`npx -y muse-zouroboros@latest` runs
 # this same script, but npx itself needs Node already installed.)
@@ -16,7 +16,9 @@
 #      If anything is missing or too old it prints ONE block naming each
 #      tool with the exact install commands for your distro, then stops —
 #      no directory created, nothing cloned. It installs none of them.
-#   1. Clones (or updates) the repo to ~/workspace/muse-zouroboros
+#   1. Clones (or updates) the repo to ~/workspace/zouroboros-workshop.
+#      An install made before the rename, at ~/workspace/muse-zouroboros,
+#      is detected and updated in place: no second copy is cloned.
 #   2. Runs scripts/bootstrap.sh (interactive — it will ask you questions)
 #   3. Runs scripts/verify.sh
 #   4. Prints a CONCIERGE HANDOFF block — paste the whole block to your AI
@@ -29,8 +31,26 @@
 # Gemini CLI free tier (only if you say yes).
 set -uo pipefail
 
-REPO_URL="https://github.com/marlandoj/muse-zouroboros.git"
-TARGET="${1:-$HOME/workspace/muse-zouroboros}"
+REPO_URL="https://github.com/marlandoj/zouroboros-workshop.git"
+
+# Default install dir. The repo was renamed from muse-zouroboros on
+# 2026-11-25; an existing checkout at the old default path keeps being used
+# (and updated), so re-running the installer never orphans it or clones a
+# second copy. An explicit first argument always wins.
+NEW_DEFAULT="$HOME/workspace/zouroboros-workshop"
+OLD_DEFAULT="$HOME/workspace/muse-zouroboros"
+TARGET_NOTE=""
+if [ -n "${1:-}" ]; then
+  TARGET="$1"
+elif [ -d "$NEW_DEFAULT/.git" ]; then
+  TARGET="$NEW_DEFAULT"
+  [ -d "$OLD_DEFAULT/.git" ] && TARGET_NOTE="note: an older checkout also exists at $OLD_DEFAULT; it is not used or changed. Remove it once nothing points at it."
+elif [ -d "$OLD_DEFAULT/.git" ]; then
+  TARGET="$OLD_DEFAULT"
+  TARGET_NOTE="note: found your existing install at $OLD_DEFAULT (the repo's name before the rename); keeping it there."
+else
+  TARGET="$NEW_DEFAULT"
+fi
 
 say() { printf '%s\n' "$1"; }
 
@@ -236,6 +256,7 @@ fi
 say ""
 
 # 1. Clone or update
+[ -n "$TARGET_NOTE" ] && say "-- $TARGET_NOTE"
 if [ -d "$TARGET/.git" ]; then
   say "-- using existing checkout at $TARGET"
   git -C "$TARGET" pull --ff-only 2>/dev/null || say "-- (could not fast-forward; continuing with what's there)"

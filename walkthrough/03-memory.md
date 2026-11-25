@@ -3,7 +3,7 @@
 ## Initialize the database
 
 ```bash
-cd ~/workspace/muse-zouroboros/packages/memory-system
+cd ~/workspace/zouroboros-workshop/packages/memory-system
 bash scripts/install.sh
 ```
 
@@ -35,15 +35,15 @@ The workshop ships two stdio MCP servers, and every client should get both:
 
 | Server | Command (paths the installer creates) | Env |
 |---|---|---|
-| `zouroboros-memory` | `bun ~/workspace/muse-zouroboros/packages/memory-system/scripts/mcp-server.ts` | `ZOUROBOROS_MEMORY_DB=~/.zo/memory/shared-facts.db` |
-| `zouroboros-swarm` | `bun ~/workspace/muse-zouroboros/packages/swarm-orchestrator/scripts/mcp-server.ts` | `ZOUROBOROS_MEMORY_DB`, `SWARM_EXECUTOR_REGISTRY`, `SWARM_WORKSPACE` |
+| `zouroboros-memory` | `bun ~/workspace/zouroboros-workshop/packages/memory-system/scripts/mcp-server.ts` | `ZOUROBOROS_MEMORY_DB=~/.zo/memory/shared-facts.db` |
+| `zouroboros-swarm` | `bun ~/workspace/zouroboros-workshop/packages/swarm-orchestrator/scripts/mcp-server.ts` | `ZOUROBOROS_MEMORY_DB`, `SWARM_EXECUTOR_REGISTRY`, `SWARM_WORKSPACE` |
 
 Each client has its own config format, and most do not expand `~` or
 `$HOME` inside MCP config, so don't hand-adapt a snippet. Print the exact
 block for your client, with this machine's absolute paths filled in:
 
 ```bash
-cd ~/workspace/muse-zouroboros
+cd ~/workspace/zouroboros-workshop
 bash scripts/connect-config.sh --list      # claude-code codex gemini opencode hermes kimi pi claude-desktop cursor vscode
 bash scripts/connect-config.sh codex       # prints the block and says which file it goes in
 ```

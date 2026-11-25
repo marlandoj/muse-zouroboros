@@ -1,7 +1,7 @@
-# Zouroboros for Muse
+# Zouroboros Workshop
 
 [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.1.4-green.svg)](package.json)
+[![Version](https://img.shields.io/badge/version-0.1.5-green.svg)](package.json)
 [![MCP](https://img.shields.io/badge/connects%20over-MCP-0668E1.svg)](docs/connect.md)
 
 ![Zouroboros — the workshop behind your personal AI.](docs/assets/hero-muse-workshop.png)
@@ -117,7 +117,7 @@ Two steps: install the workshop, then connect your AI client to it.
 The command needs nothing but `bash` and `curl`:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/marlandoj/muse-zouroboros/main/scripts/quickstart.sh | bash
+curl -fsSL https://raw.githubusercontent.com/marlandoj/zouroboros-workshop/main/scripts/quickstart.sh | bash
 ```
 
 Before it touches git or disk, the installer checks the workshop's
@@ -206,4 +206,4 @@ MIT. See LICENSE. The hooks build on fine open-source work that's credited in th
 
 ---
 
-*If this earns a place in your workflow, a ⭐ helps others find it. Questions and ideas welcome in [Issues](https://github.com/marlandoj/muse-zouroboros/issues) — and if you build something with it, we'd love to hear about it.*
+*If this earns a place in your workflow, a ⭐ helps others find it. Questions and ideas welcome in [Issues](https://github.com/marlandoj/zouroboros-workshop/issues) — and if you build something with it, we'd love to hear about it.*
