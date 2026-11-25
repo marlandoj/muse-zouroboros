@@ -7,15 +7,16 @@ rule that keeps this safe to operate:
 
 > **Status and work requests cross the bridge. Credentials never do.**
 
-Muse may ask the workshop "are the executors healthy?" and "build this
+Your AI client may ask the workshop "are the executors healthy?" and "build this
 ticket". It must never receive, transmit, or log an API key, OAuth token, or
 platform secret on the workshop's behalf — and neither may any package in
 this repo.
 
 ## How secrets are held
 
-- **Root-only files, loaded by the services that need them.** The convention:
-  API keys live in `~/.config/zouroboros/*.env` (mode `0600`), sourced by
+- **Owner-only files, loaded by the services that need them.** The convention:
+  API keys live in `~/.config/zouroboros/*.env` (mode `0600`, owned by the
+  user who installed the workshop — not root), sourced by
   the process profile that launches the service. They are never pasted into
   chat, never committed, never echoed into logs.
 - **Per-workload keys.** `OPENAI_API_KEY` (memory embeddings + generation),

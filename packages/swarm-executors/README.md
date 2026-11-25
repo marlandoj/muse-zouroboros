@@ -4,9 +4,9 @@
 
 # Zouroboros Swarm Executors
 
-> Turn any CLI tool into a first-class AI persona on [Zo Computer](https://zo.computer). Each executor gets consistent identity, shared memory, and full swarm integration through a simple bash bridge script.
+> Turn any CLI tool into a first-class AI persona in the Zouroboros swarm. Each executor gets consistent identity, shared memory, and full swarm integration through a simple bash bridge script.
 >
-> Part of the [Zouroboros](https://github.com/marlandoj/zouroboros) ecosystem — self-improving AI development tools for Zo Computer.
+> Part of the [Zouroboros](https://github.com/marlandoj/zouroboros) ecosystem — self-improving AI development tools. (First built for Zo Computer, retired on 2026-10-03.)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 

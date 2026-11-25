@@ -1,4 +1,4 @@
-# Muse × Zouroboros Ontology
+# Zouroboros Workshop Ontology
 
 _As of 2026-10-11 · derived from `marlandoj/muse-zouroboros @ 22a82c4` · class names and axioms cite the files that enforce them._
 
@@ -6,7 +6,7 @@ _As of 2026-10-11 · derived from `marlandoj/muse-zouroboros @ 22a82c4` · class
 
 This ontology names the things that exist in [marlandoj/muse-zouroboros](https://github.com/marlandoj/muse-zouroboros) (commit `22a82c4`), how they relate, and the rules the code enforces between them. It is derived from the repo's README, `docs/`, `walkthrough/`, the seven packages under `packages/`, and the factory lane under `factory/lane/`.
 
-The repo packages Zouroboros as a **workshop** for users of **Muse**, a personal assistant. One rule splits the world in two: anything about the user (conversation, schedule, relationships, personal memory, approvals) lives in Muse; anything about building (swarm work, work memory, review, delivery) lives in Zouroboros. Muse reaches the workshop only through narrow bridges that carry work requests and status, never personal data or credentials.
+The repo packages Zouroboros as a **workshop** behind the user's own **AI client** — any MCP-capable assistant, which acts as the front door. One rule splits the world in two: anything about the user (conversation, schedule, relationships, personal memory, approvals) lives in the client; anything about building (swarm work, work memory, review, delivery) lives in Zouroboros. The client reaches the workshop only through narrow bridges that carry work requests and status, never personal data or credentials.
 
 Conventions used throughout:
 
@@ -17,37 +17,37 @@ Conventions used throughout:
 
 ## Class hierarchy
 
-The top split is `Muse` versus `Workshop`; inside the workshop, every class belongs to one of four domains. The factory builds with the swarm, the swarm records into shared memory, and the hooks watch the harnesses the swarm drives.
+The top split is `Client` versus `Workshop`; inside the workshop, every class belongs to one of four domains. The factory builds with the swarm, the swarm records into shared memory, and the hooks watch the harnesses the swarm drives.
 
 ```mermaid
 flowchart TB
-  muse["Muse (front door)<br/>conversation · schedule · relationships · approvals · personal memory"]
+  client["Your AI client (front door)<br/>conversation · schedule · relationships · approvals · personal memory"]
   subgraph WS["Workshop: Zouroboros on your machine"]
     mem["Shared memory<br/>Fact · DecayClass (5 tiers)<br/>Episode · Procedure · OpenLoop<br/>MemoryGate · MemoryMcpServer"]
     sw["Multi-harness swarm<br/>Campaign ⊃ Task (DAG)<br/>7 Executors: 6 ACP, 1 bridge<br/>CircuitBreaker · Budget · DecisionRow"]
     hk["Prompt-time hooks (shadow first)<br/>Wayfinder · Verity · Sift"]
     fa["Factory lane and review panel<br/>IntakeTicket → GateDecision → Seed<br/>PipelineExecution → ReviewPanel<br/>EvidenceManifest → DraftPr"]
   end
-  muse -- "status (read)" --> WS
-  muse -- "work memory (read)" --> mem
-  muse <-- "work requests / results" --> sw
+  client -- "status (read)" --> WS
+  client -- "work memory (read)" --> mem
+  client <-- "work requests / results" --> sw
   sw -- records --> mem
   fa -- builds with --> sw
   hk -- watch harnesses --> sw
 ```
 
-The dispatch bridge is the only two-way link: work requests go in, and finished draft pull requests come back to Muse.
+The dispatch bridge is the only two-way link: work requests go in, and finished draft pull requests come back to the client.
 
-## Muse boundary and bridges
+## Client boundary and bridges
 
-Muse and the workshop share no personal state; three bridges carry status, work memory and work requests in one direction each. Credentials never cross any bridge.
+The client and the workshop share no personal state; three bridges carry status, work memory and work requests in one direction each. Credentials never cross any bridge.
 
 | Class | Definition | Key attributes | Realized in |
 | --- | --- | --- | --- |
-| `Muse` | The user's personal assistant and front door: conversation, schedule, relationships, approvals, personal memory | outside this repo; never writes into the shared work memory | `README.md`, `docs/architecture.md` |
+| `Client` | The user's own AI client and front door (any MCP-capable assistant): conversation, schedule, relationships, approvals, personal memory | outside this repo; connects per `docs/connect.md`; never writes personal facts into the shared work memory | `README.md`, `docs/architecture.md` |
 | `Workshop` | Zouroboros as packaged here: memory, swarm, hooks, factory, review panel | runs on the user's machine | `README.md` |
-| `Bridge` | A narrow connector from Muse into the workshop | carries status and work requests only | `docs/architecture.md` |
-| `StatusBridge ⊑ Bridge` | Read-only health check Muse can run | sections `memory`, `executors`, `orchestrator`, `factory`, `hooks`; text or `--json` | `examples/workshop-status.sh` |
+| `Bridge` | A narrow connector from the client into the workshop | carries status and work requests only | `docs/architecture.md` |
+| `StatusBridge ⊑ Bridge` | Read-only health check a client with a shell on the install host can run | sections `memory`, `executors`, `orchestrator`, `factory`, `hooks`; text or `--json` | `examples/workshop-status.sh` |
 | `MemoryReadBridge ⊑ Bridge` | One-way read of the shared work memory | via CLI or the `memory-system` MCP server | `docs/architecture.md` |
 | `DispatchBridge ⊑ Bridge` | Hands building work to the workshop | swarm MCP tools, or a factory ticket using the five-field contract | `docs/architecture.md` |
 | `WorkshopEnv` | The private file holding API keys | `~/.config/zouroboros/workshop.env`, mode 0600 | `scripts/bootstrap.sh`, `docs/security.md` |
@@ -55,7 +55,7 @@ Muse and the workshop share no personal state; three bridges carry status, work 
 
 ## Shared memory
 
-One SQLite database, `~/.zo/memory/shared-facts.db`, is the well that Claude Code, Codex and Muse all draw from. Its atomic unit is a `Fact` with a five-step decay class; without an OpenAI key it falls back to full-text search.
+One SQLite database, `~/.zo/memory/shared-facts.db`, is the well that Claude Code, Codex and the user's AI client all draw from. Its atomic unit is a `Fact` with a five-step decay class; without an OpenAI key it falls back to full-text search.
 
 | Class | Definition | Key attributes | Realized in |
 | --- | --- | --- | --- |
@@ -152,9 +152,9 @@ These object properties connect the classes above; cardinality is what the code 
 
 | Domain | Property | Range | Cardinality | Evidence |
 | --- | --- | --- | --- | --- |
-| `Muse` | `readsStatusVia` | `StatusBridge` | 0..1 | `examples/workshop-status.sh` |
-| `Muse` | `readsMemoryVia` | `MemoryReadBridge` | 0..1, read-only | `docs/architecture.md` |
-| `Muse` | `dispatchesVia` | `DispatchBridge` | 0..1 | `docs/architecture.md` |
+| `Client` | `readsStatusVia` | `StatusBridge` | 0..1 | `examples/workshop-status.sh` |
+| `Client` | `readsMemoryVia` | `MemoryReadBridge` | 0..1, read-only | `docs/architecture.md` |
+| `Client` | `dispatchesVia` | `DispatchBridge` | 0..1 | `docs/architecture.md` |
 | `Bridge` | `carries` | status or work request | never credentials or personal facts | `docs/security.md` |
 | `Fact` | `hasDecay` | `DecayClass` | exactly 1 | `schema.sql` |
 | `Fact` | `linksTo` | `Fact` | 0..n, typed | `schema.sql` (`fact_links`) |
@@ -190,7 +190,7 @@ The repo's one philosophy, observation before enforcement, shows up as defaults:
 
 | # | Axiom | Enforced in |
 | --- | --- | --- |
-| A1 | No credential and no personal fact crosses a `Bridge`; Muse never writes into the shared work memory. | `docs/security.md`, `docs/architecture.md` |
+| A1 | No credential and no personal fact crosses a `Bridge`; the client never writes personal facts into the shared work memory. | `docs/security.md`, `docs/architecture.md` |
 | A2 | `WorkshopEnv` stays at mode 0600, and memory, config and hook state directories at 0700. | `scripts/bootstrap.sh` |
 | A3 | Every `Hook` defaults to `shadow`; `Wayfinder` never blocks and logs only a SHA-256 of the prompt. | `wayfinder-hook.sh`, `run.py` |
 | A4 | `Verity` is model-free; in `shadow` it always answers `{}`, and in `live` a missing or crashed analyzer fails closed. | `verity-hook.sh` |
@@ -246,13 +246,13 @@ This OWL 2 starter in Turtle encodes the core classes, main relations and the ax
 @prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
 
 mz: a owl:Ontology ;
-    rdfs:label "Muse x Zouroboros ontology" ;
+    rdfs:label "Zouroboros workshop ontology" ;
     owl:versionInfo "commit 22a82c4" .
 
 # --- Boundary ---
-mz:Muse     a owl:Class .
+mz:Client   a owl:Class .
 mz:Workshop a owl:Class .
-mz:Muse owl:disjointWith mz:Workshop .
+mz:Client owl:disjointWith mz:Workshop .
 mz:Bridge           a owl:Class .
 mz:StatusBridge     rdfs:subClassOf mz:Bridge .
 mz:MemoryReadBridge rdfs:subClassOf mz:Bridge .

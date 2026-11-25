@@ -2,9 +2,9 @@
 
 ## The machine
 
-A Muse VM works out of the box (persistent home, shell, network). Any Linux
-host with the same shape works — the only hard assumption is a persistent
-`$HOME` and outbound HTTPS.
+Any Linux machine with a persistent `$HOME`, a shell and outbound HTTPS
+works — that's the only hard assumption. (A hosted dev VM, a home server,
+a cloud box or your laptop all fit.)
 
 ## Runtimes
 
@@ -88,7 +88,8 @@ chmod 600 ~/.config/zouroboros/apis.env
 echo 'source ~/.config/zouroboros/apis.env' >> ~/.bashrc
 ```
 
-Keys live in a root-only file, never in chat, never in the repo. If a key
+Keys live in a private file only your user can read (`apis.env`, mode
+600, owned by you — not root), never in chat, never in the repo. If a key
 ever touches a transcript, rotate it.
 
 ## Clone this repo

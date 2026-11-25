@@ -91,11 +91,15 @@ decisions, `session` for scratch. The auto-capture pipeline
 (`scripts/auto-capture.ts`) can extract facts from transcripts, but start
 manual so you learn what good facts look like before automating.
 
-**Muse seam (do this now):** give Muse one-way read access — the CLI
-(`bun scripts/memory.ts hybrid "..."`) or the same MCP server. Personal
-memory stays in Muse; work memory stays here. No sync. When Muse needs build
-context ("what did we decide about the router?"), it asks the workshop,
-not you.
+**Client seam (do this now):** connect the AI client you talk to every day
+the same way — the MCP server above, or, for a client with a shell on this
+machine, the CLI (`bun scripts/memory.ts hybrid "..."`). Be clear about what
+that grants: the memory server is **read-write** (it serves `memory_store`
+next to the search tools), so "read-only" is a convention you ask your client
+to keep, not something the server enforces. Your client's own personal memory
+stays in your client; work memory stays here. No sync. When your client needs
+build context ("what did we decide about the router?"), it asks the workshop,
+not you. Per-client steps: [docs/connect.md](../docs/connect.md).
 
 ## Prove it
 

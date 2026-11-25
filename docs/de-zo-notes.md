@@ -70,14 +70,16 @@ documentation.
 - `model-client.ts`: `/home/workspace/.zo/memory/model-call-log.jsonl` →
   `~/.zo/memory/model-call-log.jsonl`; `/home/.z/config/model.env` →
   `~/.config/zouroboros/model.env`.
-- `/home/workspace` references elsewhere in the packages are the Muse VM
-  workspace-root convention and resolve on any Muse VM — intentionally kept.
+- `/home/workspace` references elsewhere in the packages are the source
+  platform's workspace-root convention, kept as-is during vendoring. They
+  do not resolve on a generic Linux host; see the portability note in
+  `docs/packages.md`.
 
 ## What was NOT vendored (and why)
 
 - **Hetzner/Modal overflow executors, MoA consensus, prespec/signal-triage
   extras.** Retired upstream as mitigations for a flaky platform era; not
-  needed on a Muse VM and not part of the workshop core.
+  part of the workshop core.
 - **The Command Center web UI.** Operator convenience, not infrastructure.
   The `examples/workshop-status.sh` read bridge covers health checks without
   a web service to secure.

@@ -1,7 +1,7 @@
 ---
 name: verity
 description: Verity is a cross-harness done-gate with a clean-room engine. It records every edit and check in Claude Code, Codex CLI, Kimi Code and Gemini CLI, and refuses a "done" claim when code changed with no passing test, build, lint or type-check since; it also guards against secrets in written files, deleted tests and piped test commands. Defaults to shadow mode (log only); `scripts/verity.sh mode live` enforces, scoped per harness and per check. Use to review verdicts, switch shadow/live, decide promotion, or disable it.
-compatibility: Created for Zo Computer
+compatibility: Originally created for Zo Computer (retired 2026-10-03); runs on any Linux host as part of the Zouroboros workshop.
 metadata:
   author: marlandoj.zo.computer
 ---

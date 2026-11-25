@@ -7,14 +7,15 @@ to your first three wins in about half an hour, most of it installing one
 thing.
 
 The whole bet of this track: **you barely touch the workshop directly.**
-The easiest way to do it is to let Muse run the onboarding for you —
-that's the concierge path below. The manual path underneath it does the
-same thing by hand.
+The easiest way to do it is to let your own AI assistant run the onboarding
+for you — that's the concierge path below. The manual path underneath it
+does the same thing by hand.
 
 ## The concierge path (recommended)
 
-**Ask Muse to set up Zouroboros.** That's it — that's the step. Muse hands
-you one command, and it needs nothing but `bash` and `curl`:
+Two moves: install, then connect your AI client and hand it the result.
+
+**Install.** One command, and it needs nothing but `bash` and `curl`:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/marlandoj/muse-zouroboros/main/scripts/quickstart.sh | bash
@@ -31,17 +32,32 @@ It never installs them itself and never uses `sudo`: run the commands,
 then paste the installer command again. When everything is there, the
 installer clones the repo, runs the setup
 (answering its questions as they come), verifies the install, and prints a
-handoff block. **Paste the handoff block back to Muse.** From there, Muse
+handoff block.
+
+**Connect your AI client.** Follow your client's section of the connect
+guide, [docs/connect.md](../docs/connect.md): it wires both workshop MCP
+servers into the client and loads the concierge playbook the way that
+client loads instructions. Local clients (Codex CLI, Claude Code, Gemini
+CLI, OpenCode, Hermes Agent, Kimi Code, Pi, Claude Desktop, Cursor, VS Code)
+use a config block that `bash scripts/connect-config.sh <client>` prints for
+you. Web clients (Muse, our reference integration, plus ChatGPT and
+Claude.ai) connect over the opt-in OAuth remote endpoint; that path is
+proven at the protocol level with scripted clients, and the in-app
+connector registration is documented but not yet verified in each app.
+
+**Paste the handoff block into that client.** From there, your assistant
 reads what's green and red, walks you through anything that needs
 attention, and guides you to your first three wins — shared memory, a
-factory ticket, health at a glance — all in chat. You never open this
-manual unless you want to.
+factory ticket, health at a glance — in chat. You never open this manual
+unless you want to.
 
 How it works behind the curtain: the script does the mechanical work
-(clone, install, verify); Muse does the judgment (triage, explanations,
-decisions). The full playbook Muse follows lives in
+(clone, install, verify); your assistant does the judgment (triage,
+explanations, decisions). The full playbook it follows lives in
 [docs/concierge.md](../docs/concierge.md), if you're curious what it's
-thinking.
+thinking. Two of the wins need more than the MCP connection: the factory
+ticket needs Linear (Step 4), and the health check needs a client that can
+run a command on this machine (Step 5).
 
 ## The manual path
 
@@ -104,7 +120,7 @@ calls and zero configuration.
 
 ## Step 3 — First win: one memory everywhere (5 minutes)
 
-The most Muse-like magic in the system: teach something to one AI tool,
+The most magical part of the system: teach something to one AI tool,
 and every other tool knows it.
 
 ```bash
@@ -123,13 +139,29 @@ bun scripts/memory.ts search "quickstart"
 The fact you just stored comes back. That database is now the shared well
 for every harness you wire up. The cross-harness part — Claude Code stores
 a fact, Codex recalls it — needs the memory MCP server added to each
-harness's config; that's [walkthrough 03](03-memory.md), about ten
-minutes, and it's the single highest-leverage step in the whole system.
+harness's config; that's [walkthrough 03](03-memory.md) and the
+[connect guide](../docs/connect.md), about ten minutes, and it's the single
+highest-leverage step in the whole system.
 
-## Step 4 — Second win: "build this" from chat (10 minutes)
+## Step 4 — Second win: "build this" from chat (10 minutes, after setup)
 
-This is the win the factory exists for, and it has exactly one
-prerequisite: **a healthy executor.** Check yours:
+This is the win the factory exists for. Be clear about what it needs,
+because a fresh install does not have all of it yet:
+
+1. **At least one healthy executor** (a coding CLI the swarm can drive).
+2. **The lane's intake.** The factory takes work as a **Linear issue
+   labelled `factory-ready`** in your Linear Intake project; the puller in
+   `factory/lane` reads it. That needs a Linear workspace and the lane's
+   Linear settings in `factory/lane/line-config.json` — see
+   [walkthrough 06](06-factory.md). (A seed YAML is the build spec a ticket
+   carries, or one you run by hand per the operator's manual §3; there is
+   no watched drop folder to file into.)
+3. **A way for your assistant to file the issue.** No Community MCP tool
+   files a factory ticket. Your assistant can file it only if it also has
+   Linear access — a Linear connector or Linear MCP. Without that, your
+   assistant drafts the contract and you file the issue in Linear yourself.
+
+Check the executor first:
 
 ```bash
 cd ../swarm-executors
@@ -145,10 +177,11 @@ Now the actual win, and notice you don't touch the factory directly:
 > **You, in chat:** "File a factory ticket: write a tiny CLI that tells me
 > whether my workshop is healthy, with a test."
 >
-> **Muse** drafts the ticket contract — what to build, what "done" means,
-> what it may cost. **You** approve it. Muse files it. The swarm builds it
-> across your executors, the lane tests and reviews the result, and Muse
-> hands you the pull request.
+> **Your assistant** drafts the ticket contract — what to build, what
+> "done" means, what it may cost. **You** approve it. It files the Linear
+> issue (or hands you the text to file). The swarm builds it across your
+> executors, the lane tests and reviews the result, and the pull request
+> comes back to you.
 
 That loop — describe, approve, receive a verified PR — is the product.
 Everything else in this repo is machinery underneath it. When you want to
@@ -157,10 +190,13 @@ in [walkthrough 06](06-factory.md).
 
 ## Step 5 — Health at a glance (ongoing)
 
-From here on, "is the workshop healthy?" is a chat question, not a chore.
-Muse answers it by running `examples/workshop-status.sh` — one command,
-every system, graceful degradation instead of stack traces. Point Muse at
-that script once and you'll never run `verify.sh` by hand again.
+From here on, "is the workshop healthy?" is a chat question, not a chore —
+for a client that can run a command on this machine (the terminal agents,
+and the agent terminals in Cursor and VS Code). It answers by running
+`examples/workshop-status.sh` — one command, every system, graceful
+degradation instead of stack traces. Point your assistant at that script
+once and you'll never run `verify.sh` by hand again. Desktop and web
+clients without a shell cannot run it: no MCP tool wraps it yet.
 
 ## Where to go next
 
@@ -179,6 +215,6 @@ that script once and you'll never run `verify.sh` by hand again.
   ticket lands, when you have something worth guarding.
 - Without an API key, memory is keyword-only. It's still useful on day one;
   the semantic layer is an upgrade, not a requirement.
-- If you only ever use Muse for conversation and scheduling, you don't need
-  any of this yet. The workshop earns its keep the first time you say
-  "build this."
+- If you only ever use your AI assistant for conversation and scheduling,
+  you don't need any of this yet. The workshop earns its keep the first
+  time you say "build this."

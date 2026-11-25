@@ -1,7 +1,7 @@
 ---
 name: memory-system
-description: Hybrid SQLite + Vector persona memory system for Zo Computer. Episodic memory with temporal queries, graph-boosted search, BFS path finding, knowledge gap analysis, auto-capture pipeline, and per-workload model routing. Embeddings use hosted OpenAI `text-embedding-3-small`; generation workloads resolve per-workload through `scripts/model-client.ts`.
-compatibility: Created for Zo Computer. Requires Bun and `OPENAI_API_KEY` for hosted embeddings and default generation workloads. No local model runtime is installed or required.
+description: Hybrid SQLite + Vector persona memory system for the Zouroboros workshop. Episodic memory with temporal queries, graph-boosted search, BFS path finding, knowledge gap analysis, auto-capture pipeline, and per-workload model routing. Embeddings use hosted OpenAI `text-embedding-3-small`; generation workloads resolve per-workload through `scripts/model-client.ts`.
+compatibility: Originally created for Zo Computer (retired 2026-10-03); runs on any Linux host with Bun. `OPENAI_API_KEY` enables hosted embeddings and default generation workloads; without it, search runs keyword-only. No local model runtime is installed or required.
 metadata:
   author: marlandoj.zo.computer
   updated: 2026-03-29

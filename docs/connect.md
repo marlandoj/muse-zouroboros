@@ -401,7 +401,7 @@ Menu names follow OpenAI's documentation as of November 2026 and may move.
    that option needs Client ID Metadata Documents, which this server does not implement.
 3. Connect, approve on the consent page with the operator secret, then run the memory round trip.
 
-### Muse (Meta) custom connector — **UNTESTED in the app**
+### Muse (Meta) custom connector, our reference integration — **UNTESTED in the app**
 
 Meta documents custom connectors that you ask Muse to build in chat. It does
 not document MCP or OAuth for them. Third-party MCP providers report that a
@@ -428,14 +428,15 @@ instructions.
   `factory-ready`**. The puller (`factory/lane`) reads it. That needs a Linear
   workspace and the lane's Linear settings in `factory/lane/line-config.json`.
   A client with a Linear connector or Linear MCP can file the issue.
-  Otherwise you file it in Linear yourself. The docs also mention dropping a
-  seed YAML into "the lane's intake". This guide found no watched intake
-  directory in the Community lane, so treat Linear as the intake. Seeds
-  (`factory/lane/seed-*.yaml`) are the build spec a ticket carries. They are
-  not a filing channel. Neither path was tested here.
+  Otherwise you file it in Linear yourself. There is no watched seed-YAML
+  drop directory in the Community lane, so treat Linear as the intake. Seeds
+  (`factory/lane/seed-*.yaml`) are the build spec a ticket carries, or one
+  you run by hand (OPERATORS_MANUAL §3). They are not a filing channel.
+  Neither path was tested here.
 - **Health at a glance.** `examples/workshop-status.sh` is a shell script on
   the install host. Clients with a shell tool can run it: Claude Code, Codex,
   Gemini, OpenCode, Hermes, Kimi, Pi, and the agent terminals in Cursor and
   VS Code. Claude Desktop and the web clients cannot: no MCP tool wraps it.
-- **The installer's handoff block** still says "paste … to Muse". Paste it into
-  whichever client you connected. The playbook you loaded there reads it the same way.
+- **The installer's handoff block** is addressed to "your AI assistant".
+  Paste it into whichever client you connected. The playbook you loaded
+  there reads it the same way in every client.

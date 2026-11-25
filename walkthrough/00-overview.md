@@ -4,7 +4,7 @@
 > first three wins in about half an hour. This page is the full operator
 > path — every system, every check, every manual.
 
-This walkthrough takes you from a bare Muse VM to a working Zouroboros
+This walkthrough takes you from a bare Linux machine to a working Zouroboros
 workshop, in order. Each step ends with a check that proves it worked before
 you move on. Total time: an afternoon, most of it waiting on installs.
 
@@ -14,7 +14,7 @@ you move on. Total time: an afternoon, most of it waiting on installs.
 |---|---|---|
 | 01 | Prerequisites | A machine that's ready: Bun, Node, Python, git, jq, timeout, CLIs, one API key |
 | 02 | Core install | `scripts/bootstrap.sh`: directories, registry paths, key file |
-| 03 | Memory | the memory system storing and retrieving; MCP wired into one harness |
+| 03 | Memory | the memory system storing and retrieving; both MCP servers wired into your client ([connect guide](../docs/connect.md)) |
 | 04 | Swarm | Executors healthy in `doctor`; a real 2-task DAG run |
 | 05 | Hooks | wayfinder, verity, sift installed in shadow; first reports read |
 | 06 | Factory | `factory-mvp.ts smoke` green; your first real ticket filed |
@@ -29,18 +29,23 @@ you move on. Total time: an afternoon, most of it waiting on installs.
 - **Stay in shadow.** Nothing in steps 01–05 grants any component the power
   to block, prune, or merge. Enforcement decisions come in step 07, after
   evidence.
-- **Ask Muse for help.** This whole system is designed to be operated
-  conversationally — "is the swarm healthy?", "file this as a factory
-  ticket". If a step confuses you, paste the error into chat.
+- **Ask your AI assistant for help.** This whole system is designed to be
+  operated conversationally — "is the swarm healthy?", "draft this as a
+  factory ticket" — from whichever MCP-capable client you connect
+  ([docs/connect.md](../docs/connect.md)). If a step confuses you, paste the
+  error into chat.
 
 ## What "done" looks like
 
 At the end you have: one shared memory every harness can use, a dispatcher
 that routes work across your model subscriptions with an audit ledger, three
 prompt-time hooks observing (not enforcing), and a factory lane that turns
-tickets into verified PRs. Muse remains the front door — it reads workshop
-status, reads work memory, and files build tickets. The workshop never
-touches your personal memory, your schedule, or your connectors.
+tickets into verified PRs. Your AI client remains the front door — it reads
+and writes work memory and dispatches swarm runs through the workshop's MCP
+servers, reads workshop status if it can run a command on this machine, and
+files build tickets if it has Linear access (no Community MCP tool files a
+ticket; intake is a Linear issue labelled `factory-ready`). The workshop
+never touches your personal memory, your schedule, or your connectors.
 
 ## If something breaks
 

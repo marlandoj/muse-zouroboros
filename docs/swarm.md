@@ -66,13 +66,18 @@ Other useful scripts: `tier-resolve.ts` (which model tier a task qualifies
 for), `dep-graph.ts` (visualize the DAG), `swarm-bench.ts` (benchmark an
 executor mix), `generate-harness-matrix.ts` (executor capability matrix).
 
-## The MCP seam (Muse dispatches)
+## The MCP seam (your client dispatches)
 
 `bun scripts/mcp-server.ts` (stdio) or `mcp-server-http.ts` exposes the
-orchestrator to MCP clients — including Muse. This is the **dispatch bridge**:
-Muse stays in chat; the heavy multi-model run happens in the workshop and
-Muse reads back the ledger and results. Wire it into Muse like any MCP
-server and let Muse file runs instead of doing large builds inline.
+orchestrator to MCP clients — whichever AI client you connect. This is the
+**dispatch bridge**: your client stays in chat; the heavy multi-model run
+happens in the workshop and your client reads back the ledger and results.
+The per-client config (it is the `zouroboros-swarm` server in every block)
+is in [connect.md](connect.md); `bash scripts/connect-config.sh <client>`
+prints it. Then let your client file runs instead of doing large builds
+inline. `mcp-server-http.ts` binds 127.0.0.1 unless `ZO_SWARM_MCP_TOKEN` is
+set; web clients reach swarm tools only through remote mode with
+`ZO_REMOTE_EXPOSE_SWARM=1` (connect.md §11).
 
 ## Failure behavior (read this before trusting it)
 

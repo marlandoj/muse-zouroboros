@@ -112,18 +112,30 @@ Don't explain the architecture. Do wins.
 walk them through the two commands in triage item 3. Then say: "Tell any
 of your AI tools something through the shared memory, and ask a different
 one for it later — that's the whole trick." If they want the cross-harness
-MCP wiring, that's walkthrough 03 — offer it, don't assign it.
+MCP wiring, that's walkthrough 03 and `docs/connect.md` (one tested path
+per client; `bash <repo>/scripts/connect-config.sh <client>` prints the
+config with their paths filled in) — offer it, don't assign it.
 
-**Win 2 — "build this."** Prerequisite: at least one healthy executor
-(triage item 2 must be resolved). Then: "Give me something small and real
-to build — a utility script, a docs migration, a refactor with tests."
-Draft the ticket contract for them (what to build, what 'done' means, a
-cost ceiling), have them approve it in plain language, and file it. When
-the PR comes back, that's the moment the workshop clicks — name it.
+**Win 2 — "build this."** Prerequisites: at least one healthy executor
+(triage item 2 must be resolved), and the lane's Linear intake — the
+factory takes work as a Linear issue labelled `factory-ready` in their
+Linear Intake project, with the lane's Linear settings in
+`factory/lane/line-config.json` (walkthrough 06). Then: "Give me something
+small and real to build — a utility script, a docs migration, a refactor
+with tests." Draft the ticket contract for them (what to build, what 'done'
+means, a cost ceiling) and have them approve it in plain language. Then
+file it **only if you have Linear access of your own** (a Linear connector
+or Linear MCP): no Zouroboros MCP tool files a factory ticket. If you have
+no Linear access, say so plainly and hand them the approved contract to
+file in Linear themselves. When the PR comes back, that's the moment the
+workshop clicks — name it.
 
-**Win 3 — health at a glance.** "From now on, 'is the workshop healthy?'
-is a question for me, not a chore for you." Point yourself at
-`<repo>/examples/workshop-status.sh` and run it whenever they ask.
+**Win 3 — health at a glance.** If you can run shell commands on the
+install machine: "From now on, 'is the workshop healthy?' is a question for
+me, not a chore for you." Point yourself at
+`<repo>/examples/workshop-status.sh` and run it whenever they ask. If you
+cannot (a desktop or web client with MCP tools only), say so: no MCP tool
+wraps the script yet, so they run it themselves and paste you the output.
 
 ## What the installer does (for "is this safe?")
 
@@ -142,7 +154,8 @@ Users will ask. The true answers:
 - Optionally (only with their explicit yes): `npm install -g
   @google/gemini-cli` and the Google OAuth login for the free tier.
 - Never: no `sudo`, no background services, no keys leave the machine,
-  no personal data (Muse memory, schedule, connectors) is touched — the
+  no personal data (your own memory as their assistant, their schedule,
+  their connectors) is touched — the
   workshop only ever sees build work.
 
 ## Free-tier counseling

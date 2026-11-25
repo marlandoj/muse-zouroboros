@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # workshop-status.sh — read bridge example: one-command snapshot of the
-# Zouroboros workshop for Muse.
+# Zouroboros workshop for your AI client.
 #
 # Sections: memory, swarm executors, orchestrator, factory, hooks. Every
 # section degrades gracefully — a missing source prints "unavailable"
@@ -9,8 +9,9 @@
 # Usage: workshop-status.sh [--json]
 #   Default prints the human-readable brief; --json prints a machine object.
 #
-# Point Muse at this script. "Is the workshop healthy?" becomes a script
-# run, not a question for you.
+# Point your assistant at this script (any client with a shell on this
+# machine). "Is the workshop healthy?" becomes a script run, not a question
+# for you.
 
 set -u
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

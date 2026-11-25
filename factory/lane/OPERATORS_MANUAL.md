@@ -702,7 +702,7 @@ FACTORY_DISPATCH_OPERATOR_OVERRIDE=1 bun pool-worker.ts dispatch --campaign <id>
 
 The Hermes Kanban dispatcher (`hermes kanban dispatch`) throttles worker
 spawns when system `MemAvailable` drops below 15% ("elevated") or 5%
-("critical"). On memory-constrained Muse hosts (7.7 GiB, ~83% baseline),
+("critical"). On memory-constrained hosts (7.7 GiB, ~83% baseline),
 this stalls all factory work intermittently with no clear error.
 
 **Policy:** cap concurrent Kanban workers at 2 via `~/.hermes/config.yaml`:
