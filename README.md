@@ -4,7 +4,7 @@
 [![Version](https://img.shields.io/badge/version-0.1.5-green.svg)](package.json)
 [![MCP](https://img.shields.io/badge/connects%20over-MCP-0668E1.svg)](docs/connect.md)
 
-![Zouroboros — the workshop behind your personal AI.](docs/assets/hero-muse-workshop.png)
+![Zouroboros Workshop — the workshop behind your AI client.](docs/assets/hero-zouroboros-workshop.png)
 
 **The workshop behind your personal AI.**
 
