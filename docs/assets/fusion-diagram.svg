@@ -43,7 +43,7 @@
   </g>
 
   <!-- Title -->
-  <text x="800" y="72" text-anchor="middle" font-size="46" font-weight="bold" fill="#f2f4f8" letter-spacing="4">MUSE x ZOUROBOROS</text>
+  <text x="800" y="72" text-anchor="middle" font-size="46" font-weight="bold" fill="#f2f4f8" letter-spacing="4">YOUR AI CLIENT x ZOUROBOROS</text>
   <text x="800" y="108" text-anchor="middle" font-size="20" fill="#9aa3b5" letter-spacing="2">THE SYMBIOTIC ARCHITECTURE - FRONT DOOR + WORKSHOP</text>
 
   <!-- You -->
@@ -54,21 +54,21 @@
   <line x1="730" y1="204" x2="380" y2="278" stroke="#8b93a7" stroke-width="2" marker-end="url(#ahW)" opacity=".8"/>
   <line x1="870" y1="204" x2="1220" y2="278" stroke="#8b93a7" stroke-width="2" marker-end="url(#ahW)" opacity=".8"/>
 
-  <!-- LEFT CARD : Muse -->
+  <!-- LEFT CARD : Your AI Client -->
   <g filter="url(#soft)">
     <rect x="80" y="280" width="560" height="470" rx="20" fill="url(#goldCard)" stroke="#f5c96b" stroke-opacity=".45" stroke-width="1.5"/>
     <rect x="80" y="280" width="560" height="470" rx="20" fill="none" stroke="url(#goldBar)" stroke-width="3" stroke-opacity=".55" filter="url(#glowG)"/>
     <rect x="80" y="280" width="560" height="86" rx="20" fill="#f5c96b" opacity=".08"/>
     <text x="120" y="322" font-size="15" font-weight="bold" fill="#f5c96b" letter-spacing="3">THE FRONT DOOR</text>
-    <text x="120" y="352" font-size="30" font-weight="bold" fill="#f7f9fc">Muse</text>
+    <text x="120" y="352" font-size="30" font-weight="bold" fill="#f7f9fc">Your AI Client</text>
     <g font-size="17" fill="#c9d1e0">
       <text x="120" y="408">&#8226;  Chat everywhere - web, iOS, Android, Mac, WhatsApp</text>
-      <text x="120" y="446">&#8226;  Connectors - Gmail, Calendar, Messenger,</text>
-      <text x="120" y="484">    Instagram, Threads</text>
+      <text x="120" y="446">&#8226;  Connectors - email, calendar, messaging apps,</text>
+      <text x="120" y="484">    and the services you already use</text>
       <text x="120" y="522">&#8226;  Personal memory - knows you, your people, commitments</text>
-      <text x="120" y="560">&#8226;  Approvals and Vault - your word required</text>
+      <text x="120" y="560">&#8226;  Approvals - your word required on what matters</text>
       <text x="120" y="598">&#8226;  Scheduling and notifications - crons, watches, push</text>
-      <text x="120" y="636">&#8226;  Default-assistant SMS from your phone</text>
+      <text x="120" y="636">&#8226;  Messaging - reaches you where you already are</text>
     </g>
     <rect x="120" y="648" width="480" height="62" rx="12" fill="#f5c96b" opacity=".12" stroke="#f5c96b" stroke-opacity=".4"/>
     <text x="360" y="687" text-anchor="middle" font-size="19" font-weight="bold" fill="#f5c96b">Owns everything about YOU</text>
@@ -82,12 +82,12 @@
     <text x="1000" y="322" font-size="15" font-weight="bold" fill="#5eead4" letter-spacing="3">THE WORKSHOP</text>
     <text x="1000" y="352" font-size="30" font-weight="bold" fill="#f7f9fc">Zouroboros System</text>
     <g font-size="17" fill="#c9d1e0">
-      <text x="1000" y="408">&#8226;  Swarm - multi-harness dispatch on subs you already pay for</text>
+      <text x="1000" y="408">&#8226;  Swarm - multi-harness dispatch, one verified result</text>
       <text x="1000" y="446">&#8226;  Software factory - contract &gt; build &gt; verified PR</text>
-      <text x="1000" y="484">&#8226;  memory system - shared knowledge substrate, MCP-wired</text>
-      <text x="1000" y="522">&#8226;  Consensus panel - shadow review, already caught a bug</text>
-      <text x="1000" y="560">&#8226;  Command Center - operator console, terminal on phone</text>
-      <text x="1000" y="598">&#8226;  Decision ledger - hash-chained proof of agent actions</text>
+      <text x="1000" y="484">&#8226;  Memory system - shared knowledge substrate, MCP-wired</text>
+      <text x="1000" y="522">&#8226;  Consensus panel - independent shadow review</text>
+      <text x="1000" y="560">&#8226;  Verification gate - the same checks for every builder</text>
+      <text x="1000" y="598">&#8226;  Receipts - a verifiable record of what shipped</text>
     </g>
     <rect x="1000" y="648" width="480" height="62" rx="12" fill="#5eead4" opacity=".12" stroke="#5eead4" stroke-opacity=".4"/>
     <text x="1240" y="687" text-anchor="middle" font-size="19" font-weight="bold" fill="#5eead4">Owns everything about BUILDING</text>
@@ -106,14 +106,14 @@
     <rect x="120" y="790" width="1360" height="118" rx="16" fill="#131a30" stroke="#2a3552" stroke-width="1.5"/>
     <text x="160" y="828" font-size="15" font-weight="bold" fill="#9aa3b5" letter-spacing="3">THE ROLLOUT</text>
     <circle cx="180" cy="864" r="9" fill="#f5c96b"/>
-    <text x="200" y="871" font-size="19" fill="#e6ebf4">Phase 1 - now: read bridges, Muse sees the workshop</text>
+    <text x="200" y="871" font-size="19" fill="#e6ebf4">Phase 1 - now: read bridges, your client sees the workshop</text>
     <circle cx="180" cy="894" r="9" fill="#5eead4"/>
     <text x="200" y="901" font-size="19" fill="#e6ebf4">Phase 2 - next: "build X" files a factory ticket</text>
-    <text x="920" y="871" font-size="19" fill="#9aa3b5">Phase 3 - unified ops: one console for everything you own</text>
-    <text x="920" y="901" font-size="19" fill="#9aa3b5">Never: credentials through the tunnel, no second scheduler</text>
+    <text x="920" y="871" font-size="19" fill="#9aa3b5">Phase 3 - unified ops: one workshop behind every client</text>
+    <text x="920" y="901" font-size="19" fill="#9aa3b5">Never: personal and work memory, never mixed</text>
   </g>
 
   <!-- footer rule -->
-  <text x="800" y="962" text-anchor="middle" font-size="23" font-weight="bold" fill="#f2f4f8">About YOU, think Muse    -    about BUILDING, think Zouroboros</text>
+  <text x="800" y="962" text-anchor="middle" font-size="23" font-weight="bold" fill="#f2f4f8">About YOU, think your client    -    about BUILDING, think Zouroboros</text>
   <text x="800" y="996" text-anchor="middle" font-size="16" fill="#6b7488" letter-spacing="1">Infrastructure + product - exactly how good systems are shaped.</text>
 </svg>

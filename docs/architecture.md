@@ -163,13 +163,12 @@ adoption:
 
 ## Visual reference
 
-`docs/assets/fusion-diagram.svg` is an older vector diagram of this
+`docs/assets/fusion-diagram.svg` is a vector diagram of this
 architecture (front door, workshop, dispatch and read-status bridges,
-rollout phases), and `docs/assets/fusion-diagram.png` is an older, separate
-drawing — not a render of the SVG. Both predate this edition's
-client-neutral framing and are due for a redraw. Read them as history, not
-as a component list: their workshop column shows operator-side components
-(a console and an action ledger) that are not part of this repository.
+rollout phases), and `docs/assets/fusion-diagram.png` is a render of the
+same SVG. Both follow this edition's client-neutral framing: the front
+door is your AI client, whichever one you use, and the workshop column
+lists only components that are part of this repository.
 
 ## Where the code lives
 
